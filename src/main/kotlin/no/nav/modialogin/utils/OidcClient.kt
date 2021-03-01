@@ -1,7 +1,5 @@
 package no.nav.modialogin.utils
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.*
@@ -17,7 +15,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.EnvConfig
 
-interface OidcClient {
+class OidcClient(private val envConfig: EnvConfig) {
     @Serializable
     class Config(
         @SerialName("jwks_uri") val jwksUrl: String,
@@ -33,11 +31,6 @@ interface OidcClient {
         @SerialName("refresh_token") val refreshToken: String?
     )
 
-    val config: Config
-    suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult
-}
-
-class OidcClientImpl(private val envConfig: EnvConfig) : OidcClient {
     private val client = HttpClient(CIO) {
         install(Auth) {
             basic {
@@ -60,14 +53,14 @@ class OidcClientImpl(private val envConfig: EnvConfig) : OidcClient {
         }
     }
 
-    override val config: OidcClient.Config = runBlocking {
+    val config: Config = runBlocking {
         client.get(envConfig.idpDiscoveryUrl)
     }
 
-    override suspend fun openAmExchangeAuthCodeForToken(
+    suspend fun openAmExchangeAuthCodeForToken(
         code: String,
         loginUrl: String,
-    ): OidcClient.TokenExchangeResult {
+    ): TokenExchangeResult {
         return client.post(config.tokenEndpoint) {
             body = FormDataContent(
                 Parameters.build {
@@ -79,22 +72,4 @@ class OidcClientImpl(private val envConfig: EnvConfig) : OidcClient {
             )
         }
     }
-}
-
-class OidcClientMock : OidcClient {
-    override val config = OidcClient.Config(
-        jwksUrl = "https://dummy.io/jwks",
-        tokenEndpoint = "https://dummy.io/token",
-        authorizationEndpoint = "https://dummy.io/auth",
-        issuer = "mock-issuer"
-    )
-
-    override suspend fun openAmExchangeAuthCodeForToken(
-        code: String,
-        loginUrl: String
-    ) = OidcClient.TokenExchangeResult(
-        idToken = JWT.create().withSubject("Subject").sign(Algorithm.HMAC256("secret")),
-        refreshToken = JWT.create().withSubject("Subject").sign(Algorithm.none()),
-        accessToken = JWT.create().withSubject("Subject").sign(Algorithm.HMAC256("secret"))
-    )
 }

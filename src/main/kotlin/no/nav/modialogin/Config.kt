@@ -4,8 +4,6 @@ import dev.nohus.autokonfig.*
 import dev.nohus.autokonfig.types.BooleanSetting
 import dev.nohus.autokonfig.types.StringSetting
 import no.nav.modialogin.utils.OidcClient
-import no.nav.modialogin.utils.OidcClientImpl
-import no.nav.modialogin.utils.OidcClientMock
 
 data class ApplicationState(
     var isAlive: Boolean = true,
@@ -28,23 +26,23 @@ class Config(
     companion object {
         fun create(useMock: Boolean): Config {
             val state = ApplicationState()
-            return when (useMock) {
-                true -> setupMock(state)
-                false -> setupConfig(state)
+            when (useMock) {
+                false -> loadConfig()
+                true -> loadMockConfig()
             }
+
+            val envConfig = EnvConfig()
+            return Config(envConfig, OidcClient(envConfig), state)
         }
 
-        private fun setupConfig(state: ApplicationState): Config {
+        private fun loadConfig() {
             AutoKonfig
                 .clear()
                 .withSystemProperties()
                 .withEnvironmentVariables()
-
-            val envConfig = EnvConfig()
-            return Config(envConfig, OidcClientImpl(envConfig), state)
         }
 
-        private fun setupMock(state: ApplicationState): Config {
+        private fun loadMockConfig() {
             AutoKonfig
                 .clear()
                 .withSystemProperties()
@@ -56,9 +54,6 @@ class Config(
                         "IDP_CLIENT_SECRET" to "secret here"
                     )
                 )
-
-            val envConfig = EnvConfig()
-            return Config(envConfig, OidcClientMock(), state)
         }
     }
 }
