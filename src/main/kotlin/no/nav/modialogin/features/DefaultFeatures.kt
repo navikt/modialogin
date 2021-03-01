@@ -7,11 +7,13 @@ import io.ktor.request.*
 import io.ktor.response.*
 import org.slf4j.event.Level
 
-fun Application.installDefaultFeatures() {
-    install(StatusPages) {
-        exception<Throwable> {
-            call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
-            throw it
+fun Application.installDefaultFeatures(skipStatusPages: Boolean = false) {
+    if (!skipStatusPages) {
+        install(StatusPages) {
+            exception<Throwable> {
+                call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
+                throw it
+            }
         }
     }
 

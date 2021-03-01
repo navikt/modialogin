@@ -24,36 +24,17 @@ class Config(
     val state: ApplicationState
 ) {
     companion object {
-        fun create(useMock: Boolean): Config {
-            val state = ApplicationState()
-            when (useMock) {
-                false -> loadConfig()
-                true -> loadMockConfig()
-            }
-
-            val envConfig = EnvConfig()
-            return Config(envConfig, OidcClient(envConfig), state)
-        }
-
-        private fun loadConfig() {
+        init {
             AutoKonfig
                 .clear()
                 .withSystemProperties()
                 .withEnvironmentVariables()
         }
 
-        private fun loadMockConfig() {
-            AutoKonfig
-                .clear()
-                .withSystemProperties()
-                .withMap(
-                    mapOf(
-                        "HOST_STATIC_FILES" to "false", // Optional
-                        "IDP_DISCOVERY_URL" to "http://localhost:8081/.well-known/openid-configuration",
-                        "IDP_CLIENT_ID" to "modia",
-                        "IDP_CLIENT_SECRET" to "secret here"
-                    )
-                )
+        fun create(): Config {
+            val state = ApplicationState()
+            val envConfig = EnvConfig()
+            return Config(envConfig, OidcClient(envConfig), state)
         }
     }
 }

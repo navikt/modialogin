@@ -12,35 +12,22 @@ import java.util.concurrent.TimeUnit
 
 object AuthFeature {
     private const val cookieName = "ID_token"
+
     data class Config(
-        var useMock: Boolean = false,
         var jwksUrl: String = "",
         var acceptedAudience: String = ""
     )
+
     class SubjectPrincipal(val subject: String) : Principal
 
     fun Application.installAuthFeature(block: Config.() -> Unit) {
         val config = Config().apply(block)
         install(Authentication) {
-            if (config.useMock) {
-                setupMock(SubjectPrincipal("Z999999"))
-            } else {
-                setupJWT(config)
+            jwt {
+                authHeader(AuthFeature::useJwtFromCookie)
+                verifier(makeJwkProvider(config.jwksUrl))
+                validate { validateJWT(it, config.acceptedAudience) }
             }
-        }
-    }
-
-    private fun Authentication.Configuration.setupMock(mockPrincipal: SubjectPrincipal) {
-        mock {
-            principal = mockPrincipal
-        }
-    }
-
-    private fun Authentication.Configuration.setupJWT(config: Config) {
-        jwt {
-            authHeader(AuthFeature::useJwtFromCookie)
-            verifier(makeJwkProvider(config.jwksUrl))
-            validate { validateJWT(it, config.acceptedAudience) }
         }
     }
 
@@ -69,31 +56,5 @@ object AuthFeature {
             "Audience $requiredAudience not found in token, found: $tokenAudience"
         }
         return SubjectPrincipal(credentials.payload.subject)
-    }
-
-    private fun Authentication.Configuration.mock(
-        name: String? = null,
-        configure: MockAuthenticationProvider.Configuration.() -> Unit
-    ) {
-        val provider = MockAuthenticationProvider.Configuration(name).apply(configure).build()
-        val principal = provider.principal
-
-        provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
-            if (principal != null) {
-                context.principal(principal)
-            }
-        }
-
-        register(provider)
-    }
-
-    class MockAuthenticationProvider internal constructor(config: Configuration) : AuthenticationProvider(config) {
-        internal val principal: Principal? = config.principal
-
-        class Configuration internal constructor(name: String?) : AuthenticationProvider.Configuration(name) {
-            var principal: Principal? = null
-
-            fun build(): MockAuthenticationProvider = MockAuthenticationProvider(this)
-        }
     }
 }

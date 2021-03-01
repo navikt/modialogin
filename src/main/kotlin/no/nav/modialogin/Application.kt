@@ -11,18 +11,17 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 val log: Logger = LoggerFactory.getLogger("modialogin")
-fun startApplication(useMock: Boolean) {
-    val config = Config.create(useMock)
+fun startApplication() {
+    val config = Config.create()
     val server = embeddedServer(Netty, 8080) {
-        installDefaultFeatures()
         installAuthFeature {
-            this.useMock = useMock
             this.jwksUrl = config.oidc.config.jwksUrl
             this.acceptedAudience = config.env.idpClientId
         }
         installNaisFeature(config)
         installLoginFeature(config)
 
+        installDefaultFeatures(skipStatusPages = config.env.hostStaticFiles)
         if (config.env.hostStaticFiles) {
             hostStaticFiles(config)
         }

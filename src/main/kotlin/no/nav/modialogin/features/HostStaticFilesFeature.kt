@@ -29,6 +29,10 @@ fun Application.hostStaticFiles(config: Config) {
             )
             call.respondRedirect(permanent = false, url = redirectUrl)
         }
+        exception<Throwable> {
+            call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
+            throw it
+        }
     }
     routing {
         trailingSlashRoute(config.env.appname) {
