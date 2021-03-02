@@ -48,9 +48,17 @@ object LoginFeature {
                             code = code,
                             loginUrl = loginUrl(call.request, config)
                         )
-                        call.respondWithCookie("ID_token", token.idToken)
+                        call.respondWithCookie(
+                            name = "ID_token",
+                            value = token.idToken,
+                            path = "/modia"
+                        )
                         if (token.refreshToken != null) {
-                            call.respondWithCookie("refresh_token", token.refreshToken)
+                            call.respondWithCookie(
+                                name = "refresh_token",
+                                value = token.refreshToken,
+                                path = "/modia"
+                            )
                         }
                         call.removeCookie(state)
 

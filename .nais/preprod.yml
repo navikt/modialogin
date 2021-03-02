@@ -28,7 +28,8 @@ spec:
       cpu: 2000m
       memory: 512Mi
   ingresses:
-    - https://modia-{{ namespace }}.dev.intern.nav.no/modialogin
+    - https://app-{{ namespace }}.adeo.no/modialogin
+#    - https://modialogin-{{ namespace }}.dev.adeo.no/modialogin
   replicas:
     min: 1
     max: 1
