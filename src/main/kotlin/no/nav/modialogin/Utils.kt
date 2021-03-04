@@ -22,7 +22,7 @@ object Utils {
                 domain = domain,
                 path = path,
                 maxAge = maxAgeInSeconds,
-                secure = true,
+                secure = false, // HTTPS håndteres av trafik
                 httpOnly = true
             )
         )
