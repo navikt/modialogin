@@ -16,6 +16,11 @@ fun Application.installDefaultFeatures(skipStatusPages: Boolean = false) {
             }
         }
     }
+    install(XForwardedHeaderSupport) {
+        // These change the request.host which makes the redirect fail
+        hostHeaders.clear()
+        forHeaders.clear()
+    }
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().contains("/internal/").not() }
