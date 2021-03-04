@@ -22,6 +22,7 @@ object Utils {
                 domain = domain,
                 path = path,
                 maxAge = maxAgeInSeconds,
+                encoding = CookieEncoding.RAW,
                 secure = true,
                 httpOnly = true
             )
