@@ -35,6 +35,12 @@ class OidcClient(private val envConfig: EnvConfig) {
     private val client = HttpClient(CIO) {
         install(Auth) {
             basic {
+                /**
+                 * By default, ktor wait for the server to respond with 401 Unauthorized,
+                 * and only then sends the authorization header.
+                 * OIDC responds with 400 Bad request if the header is not present, hence why we need this configuration.
+                 */
+                sendWithoutRequest = true
                 username = envConfig.idpClientId
                 password = envConfig.idpClientSecret
             }
