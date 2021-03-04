@@ -22,7 +22,10 @@ object LoginFeature {
                             "URL parameter 'url' is missing"
                         }
                         val stateNounce = generateStateNounce()
-                        call.respondWithCookie(stateNounce, Utils.encode(returnUrl))
+                        call.respondWithCookie(
+                            name = stateNounce,
+                            value = Utils.encode(returnUrl)
+                        )
 
                         val redirectUrl = callbackUrl(
                             authorizationEndpoint = config.oidc.config.authorizationEndpoint,
@@ -50,14 +53,12 @@ object LoginFeature {
                         )
                         call.respondWithCookie(
                             name = "ID_token",
-                            value = token.idToken,
-                            path = "/modia"
+                            value = token.idToken
                         )
                         if (token.refreshToken != null) {
                             call.respondWithCookie(
                                 name = "refresh_token",
-                                value = token.refreshToken,
-                                path = "/modia"
+                                value = token.refreshToken
                             )
                         }
                         call.removeCookie(state)
