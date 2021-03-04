@@ -22,7 +22,7 @@ object Utils {
                 domain = domain,
                 path = path,
                 maxAge = maxAgeInSeconds,
-                secure = false,
+                secure = true,
                 httpOnly = true
             )
         )

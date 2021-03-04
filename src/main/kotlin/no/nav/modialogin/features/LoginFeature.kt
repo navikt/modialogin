@@ -79,8 +79,9 @@ object LoginFeature {
     }
 
     fun loginUrl(request: ApplicationRequest, config: Config): String {
-        val port = request.port().let { if (it == 80) "" else ":$it" }
-        return "http://${request.host()}$port/${config.env.appname}/api/login"
+        // Only localhost val port = request.port().let { if (it == 80) "" else ":$it" }
+        val port = ""
+        return "https://${request.host()}$port/${config.env.appname}/api/login"
     }
 
     fun callbackUrl(authorizationEndpoint: String, clientId: String, stateNounce: String, callbackUrl: String): String {
