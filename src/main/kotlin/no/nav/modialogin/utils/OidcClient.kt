@@ -7,6 +7,7 @@ import io.ktor.client.features.auth.*
 import io.ktor.client.features.auth.providers.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -38,6 +39,11 @@ class OidcClient(private val envConfig: EnvConfig) {
                 password = envConfig.idpClientSecret
             }
         }
+
+        install(Logging) {
+            level = LogLevel.ALL
+        }
+
         install(JsonFeature) {
             serializer = KotlinxSerializer(
                 kotlinx.serialization.json.Json {
@@ -57,10 +63,7 @@ class OidcClient(private val envConfig: EnvConfig) {
         client.get(envConfig.idpDiscoveryUrl)
     }
 
-    suspend fun openAmExchangeAuthCodeForToken(
-        code: String,
-        loginUrl: String,
-    ): TokenExchangeResult {
+    suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String,): TokenExchangeResult {
         return client.post(config.tokenEndpoint) {
             body = FormDataContent(
                 Parameters.build {
