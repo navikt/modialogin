@@ -16,7 +16,7 @@ fun Application.installDefaultFeatures(skipStatusPages: Boolean = false) {
             }
         }
     }
-
+    install(XForwardedHeaderSupport)
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().contains("/internal/").not() }
