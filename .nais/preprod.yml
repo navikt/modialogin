@@ -39,6 +39,3 @@ spec:
     paths:
       - kvPath: /apikey/appdynamics/dev
         mountPath: /var/run/secrets/nais.io/vault
-  env:
-    - name: IDP_DISCOVERY_URL
-      value: "https://isso-q.adeo.no/isso/oauth2/.well-known/openid-configuration"
