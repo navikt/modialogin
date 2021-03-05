@@ -5,6 +5,7 @@ import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
+import io.ktor.serialization.*
 import org.slf4j.event.Level
 
 fun Application.installDefaultFeatures(skipStatusPages: Boolean = false) {
@@ -15,6 +16,9 @@ fun Application.installDefaultFeatures(skipStatusPages: Boolean = false) {
                 throw it
             }
         }
+    }
+    install(ContentNegotiation) {
+        json()
     }
     install(XForwardedHeaderSupport) {
         // These change the request.host which makes the redirect fail

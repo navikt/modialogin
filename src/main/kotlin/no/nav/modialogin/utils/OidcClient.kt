@@ -32,6 +32,11 @@ class OidcClient(private val envConfig: EnvConfig) {
         @SerialName("refresh_token") val refreshToken: String?
     )
 
+    @Serializable
+    private class RefreshIdTokenResponse(
+        @SerialName("id_token") val idToken: String
+    )
+
     private val client = HttpClient(CIO) {
         install(Auth) {
             basic {
@@ -80,5 +85,19 @@ class OidcClient(private val envConfig: EnvConfig) {
                 }
             )
         }
+    }
+
+    suspend fun refreshIdToken(refreshToken: String): String {
+        val response: RefreshIdTokenResponse = client.post(config.tokenEndpoint) {
+            body = FormDataContent(
+                Parameters.build {
+                    set("grant_type", "refresh_token")
+                    set("scope", "openid")
+                    set("realm", "/")
+                    set("refresh_token", refreshToken)
+                }
+            )
+        }
+        return response.idToken
     }
 }

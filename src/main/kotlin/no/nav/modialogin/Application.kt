@@ -14,6 +14,7 @@ val log: Logger = LoggerFactory.getLogger("modialogin")
 fun startApplication() {
     val config = Config.create()
     val server = embeddedServer(Netty, 8080) {
+        installDefaultFeatures(skipStatusPages = config.env.hostStaticFiles)
         installAuthFeature {
             this.jwksUrl = config.oidc.config.jwksUrl
             this.acceptedAudience = config.env.idpClientId
@@ -21,7 +22,6 @@ fun startApplication() {
         installNaisFeature(config)
         installLoginFeature(config)
 
-        installDefaultFeatures(skipStatusPages = config.env.hostStaticFiles)
         if (config.env.hostStaticFiles) {
             hostStaticFiles(config)
         }
