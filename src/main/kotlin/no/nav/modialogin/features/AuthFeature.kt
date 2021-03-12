@@ -50,10 +50,14 @@ object AuthFeature {
     private fun validateJWT(credentials: JWTCredential, requiredAudience: String): Principal {
         val tokenAudience = credentials.payload.audience
         requireNotNull(tokenAudience) {
-            "Audience not present"
+            val error = "Audience not present"
+            log.error(error)
+            error
         }
         require(tokenAudience.contains(requiredAudience)) {
-            "Audience $requiredAudience not found in token, found: $tokenAudience"
+            val error = "Audience $requiredAudience not found in token, found: $tokenAudience"
+            log.error(error)
+            error
         }
         return SubjectPrincipal(credentials.payload.subject)
     }
