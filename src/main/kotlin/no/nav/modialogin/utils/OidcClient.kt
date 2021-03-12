@@ -51,10 +51,6 @@ class OidcClient(private val envConfig: EnvConfig) {
             }
         }
 
-        install(Logging) {
-            level = LogLevel.ALL
-        }
-
         install(JsonFeature) {
             serializer = KotlinxSerializer(
                 kotlinx.serialization.json.Json {
