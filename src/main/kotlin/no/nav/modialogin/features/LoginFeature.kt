@@ -84,12 +84,12 @@ object LoginFeature {
             loginUrl = loginUrl(call.request, config)
         )
         call.respondWithCookie(
-            name = "ID_token",
+            name = AuthFeature.idToken,
             value = token.idToken
         )
         if (token.refreshToken != null) {
             call.respondWithCookie(
-                name = "refresh_token",
+                name = AuthFeature.refreshToken,
                 value = token.refreshToken
             )
         }

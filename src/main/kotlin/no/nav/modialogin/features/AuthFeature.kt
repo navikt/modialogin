@@ -11,7 +11,8 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 object AuthFeature {
-    private const val cookieName = "ID_token"
+    const val idToken = "modia_ID_token"
+    const val refreshToken = "modia_refresh_token"
 
     data class Config(
         var jwksUrl: String = "",
@@ -33,10 +34,10 @@ object AuthFeature {
 
     private fun useJwtFromCookie(call: ApplicationCall): HttpAuthHeader? {
         return try {
-            val token = call.request.cookies[cookieName]
+            val token = call.request.cookies[idToken]
             parseAuthorizationHeader("Bearer $token")
         } catch (ex: Throwable) {
-            log.warn("Could not get JWT from cookie '$cookieName'", ex)
+            log.warn("Could not get JWT from cookie '$idToken'", ex)
             null
         }
     }
