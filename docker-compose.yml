@@ -1,0 +1,45 @@
+version: '3.4'
+services:
+  oidc-stub:
+    build:
+      context: .
+      dockerfile: oidc-stub/Dockerfile
+      network: host
+    ports:
+      - 8080:8080
+    environment:
+      DOCKER_COMPOSE: "true"
+  modialogin:
+    build:
+      context: .
+      dockerfile: login-app/Dockerfile
+      network: host
+    ports:
+      - 8081:8080
+    depends_on:
+      - oidc-stub
+    environment:
+      APPNAME: "modialogin"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
+      IDP_CLIENT_ID: "modia-p"
+      IDP_CLIENT_SECRET: "modia-p"
+      X_FORWARDING_PORT: "8081"
+      DOCKER_COMPOSE: "true"
+  modiafrontend:
+    build:
+      context: .
+      dockerfile: frontend-app/Dockerfile
+      network: host
+    ports:
+      - 8082:8080
+    depends_on:
+      - oidc-stub
+      - modialogin
+    environment:
+      APPNAME: "modiafrontend"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
+      IDP_CLIENT_ID: "modia-p"
+      DELEGATED_LOGIN_URL: "http://localhost:8081/modialogin/api/start"
+      X_FORWARDING_PORT: "8082"
+      DOCKER_COMPOSE: "true"
+
