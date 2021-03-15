@@ -1,3 +1,2 @@
-FROM docker.pkg.github.com/navikt/pus-nais-java-app/pus-nais-java-app:java11
-
+FROM navikt/java:11
 COPY build/libs/app.jar app.jar

@@ -25,25 +25,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v1
+      - name: Setup cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+          continue-on-error: true
+      - name: Build
+        run: ./gradlew build
       - name: Setup test-containers
         run: docker-compose up --build -d
       - name: Test
         run: node test/test.js
       - name: Teardown test-container
         run: docker-compose down
-     -  name: Publish beta-image
+      - name: Publish beta-image
         if: github.ref == 'refs/heads/dev'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
-          docker build --tag ${BETA_IMAGE} nginx
-          docker push ${IMAGE}
+          docker build --tag ${BETA_IMAGE} frontend-image
+          docker push ${BETA_IMAGE}
       - name: Publish image
         if: github.ref == 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
-          docker build --tag ${IMAGE} nginx
+          docker build --tag ${IMAGE} frontend-image
           docker push ${IMAGE}
