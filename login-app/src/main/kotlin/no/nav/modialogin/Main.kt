@@ -1,10 +1,7 @@
 package no.nav.modialogin
 
-import io.ktor.application.*
-import io.ktor.features.*
-import no.nav.modialogin.features.LoginFlowFeature
-import no.nav.modialogin.features.DefaultFeatures
 import no.nav.modialogin.features.DefaultFeatures.installDefaultFeatures
+import no.nav.modialogin.features.LoginFlowFeature
 import no.nav.modialogin.features.LoginFlowFeature.Companion.installLoginFlowFeature
 import no.nav.modialogin.features.installNaisFeature
 import no.nav.modialogin.infra.AppState
@@ -20,15 +17,16 @@ fun startApplication() {
     server(port) { naisState ->
         val config = AppState(naisState, appConfig)
 
-        install(StatusPages, DefaultFeatures.statusPageConfig)
         installDefaultFeatures()
-        installNaisFeature(config.config.appname, config.nais)
+        installNaisFeature(config.config.appName, config.config.appVersion, config.nais)
         installLoginFlowFeature(
             LoginFlowFeature.Config(
-                appname = config.config.appname,
+                appname = config.config.appName,
                 idpDiscoveryUrl = config.config.idpDiscoveryUrl,
                 idpClientId = config.config.idpClientId,
                 idpClientSecret = config.config.idpClientSecret,
+                authTokenResolver = config.config.authTokenResolver,
+                refreshTokenResolver = config.config.refreshTokenResolver,
                 xForwardingPort = config.config.xForwardingPort
             )
         )

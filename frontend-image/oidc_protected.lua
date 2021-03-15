@@ -8,7 +8,7 @@ local opts = {
     token_signing_alg_values_expected = { "RS256" },
     jwk_expires_in = 24 * 60 * 60,
     access_token_expires_leeway = 240,
-    auth_accept_token_as = authTokenLocation
+    auth_accept_token_as = authTokenLocation == 'header' and authTokenLocation or ('cookie:'..authTokenLocation),
 }
 
 -- Verify token;

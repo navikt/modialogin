@@ -23,6 +23,14 @@ server {
     set $delegated_login_url    "${DELEGATED_LOGIN_URL}";
     set $auth_token_location    "${AUTH_TOKEN_RESOLVER}";
 
+    # Disable caching of resources
+    add_header              Cache-Control 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+    add_header              Last-Modified $date_gmt;
+    add_header              X-Application-Id "${APP_NAME}:${APP_VERSION}";
+    etag                    off;
+    expires                 off;
+    if_modified_since       off;
+
     location = "/${APP_NAME}/internal/isAlive" {
         default_type text/plan;
         return 200 "Alive";

@@ -9,14 +9,13 @@ import io.ktor.serialization.*
 import org.slf4j.event.Level
 
 object DefaultFeatures {
-    val statusPageConfig: StatusPages.Configuration.() -> Unit = {
-        exception<Throwable> {
-            call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
-            throw it
-        }
-    }
-
     fun Application.installDefaultFeatures() {
+        install(StatusPages) {
+            exception<Throwable> {
+                call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
+                throw it
+            }
+        }
         install(ContentNegotiation) {
             json()
         }

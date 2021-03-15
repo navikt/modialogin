@@ -15,9 +15,13 @@ services:
     depends_on:
       - oidc-stub
     environment:
+      APP_NAME: "modialogin"
+      APP_VERSION: "localhost"
       IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
       IDP_CLIENT_ID: "foo"
       IDP_CLIENT_SECRET: "bar"
+      AUTH_TOKEN_RESOLVER: "modia_ID_token"
+      REFRESH_TOKEN_RESOLVER: "modia_refresh_token"
       X_FORWARDING_PORT: "8082"
       DOCKER_COMPOSE: "true"
   frontend:
@@ -34,4 +38,4 @@ services:
       IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
       IDP_CLIENT_ID: "foo"
       DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
-      AUTH_TOKEN_RESOLVER: "cookie:modia_ID_token"
+      AUTH_TOKEN_RESOLVER: "modia_ID_token"

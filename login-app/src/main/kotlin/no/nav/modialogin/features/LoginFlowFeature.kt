@@ -7,10 +7,10 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.oidc.OidcClient
 import no.nav.modialogin.utils.KtorUtils
 import no.nav.modialogin.utils.KtorUtils.removeCookie
 import no.nav.modialogin.utils.KtorUtils.respondWithCookie
-import no.nav.modialogin.oidc.OidcClient
 import java.math.BigInteger
 import kotlin.random.Random
 
@@ -19,9 +19,6 @@ class LoginFlowFeature(private val config: Config) {
         fun Application.installLoginFlowFeature(config: Config) {
             LoginFlowFeature(config).install(this)
         }
-
-        const val idTokenName = "modia_ID_token"
-        const val refreshTokenName = "modia_refresh_token"
     }
 
     class Config(
@@ -29,6 +26,8 @@ class LoginFlowFeature(private val config: Config) {
         val idpDiscoveryUrl: String,
         val idpClientId: String,
         val idpClientSecret: String,
+        val authTokenResolver: String,
+        val refreshTokenResolver: String,
         val xForwardingPort: Int,
     )
 
@@ -89,13 +88,12 @@ class LoginFlowFeature(private val config: Config) {
             loginUrl = loginUrl(call.request, config.xForwardingPort, config.appname)
         )
         call.respondWithCookie(
-            name = idTokenName,
+            name = config.authTokenResolver,
             value = token.idToken
         )
         if (token.refreshToken != null) {
-            println("Refresh token: ${token.refreshToken}")
             call.respondWithCookie(
-                name = refreshTokenName,
+                name = config.refreshTokenResolver,
                 value = token.refreshToken
             )
         }

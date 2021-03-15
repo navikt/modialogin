@@ -1,15 +1,12 @@
-# Modialogin
+# Modialogin mono-repo
 
-Modialogin er en standalone app som implementerer delegert autentisering for sluttbrukere.
-Autentiseringen skjer via en ekstern identify provider (idp), som kan konfigureres via `IDP_DISCOVERY_URL` verdien.
+Dette repoet inneholder to artifakter:
+- login-app
+- frontend-image
 
-## Konfigurasjon
-| Navn | Påkrevd | Beskrivelse |
-|------|---------|-------------|
-| IDP_DISCOVERY_URL | Ja | Url til discovery-url for idp (typisk noe som slutter på .well-known/openid-configuration) |
-| IDP_CLIENT_ID | Ja | Systembrukernavn for autentisering mot idp |
-| IDP_CLIENT_SECRET | Ja | Systempassord for autentisering mot idp |
-| HOST_STATIC_FILES | Nei | Styrer hvorvidt appen også skal host en frontend. Default: `false`. Om satt til `true` mountes `/app` som root for frontend appen. |
+Login-app deployes automatisk som modialogin, men kan også deployes under ett annet navn om ønskelig. [Se dokumentasjon](login-app/README.md)
+
+Frontend-image er ett tilhørende docker-image som brukes login-app for innlogging av bruker. [Se dokumentasjon](frontend-image/README.md)
 
 
 ## Kjøre lokal

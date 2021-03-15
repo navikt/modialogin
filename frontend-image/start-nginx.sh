@@ -14,10 +14,6 @@ _shutdown_() {
 }
 trap _shutdown_ SIGTERM
 
-# Setting default values for environment variables
-export AUTH_TOKEN_RESOLVER="${AUTH_TOKEN_RESOLVER:-cookie:modia_ID_token}"
-export APP_VERSION="${APP_VERSION:localhost}"
-
 # Setting nginx resolver, so that containers can communicate.
 export RESOLVER=$(cat /etc/resolv.conf | grep -v '^#' | grep -m 1 nameserver | awk '{print $2}') # Picking the first nameserver.
 

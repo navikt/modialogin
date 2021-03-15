@@ -6,7 +6,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.modialogin.infra.NaisState
 
-fun Application.installNaisFeature(appname: String, config: NaisState) {
+fun Application.installNaisFeature(appname: String, appversion: String, config: NaisState) {
     routing {
         route(appname) {
             route("internal") {
@@ -23,6 +23,9 @@ fun Application.installNaisFeature(appname: String, config: NaisState) {
                     } else {
                         call.respondText("Not ready", status = HttpStatusCode.InternalServerError)
                     }
+                }
+                get("selftest") {
+                    call.respondText("Application: $appname\nVersion: $appversion")
                 }
             }
         }
