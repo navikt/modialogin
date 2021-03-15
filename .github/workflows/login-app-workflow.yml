@@ -3,6 +3,7 @@ name: Login app
 on:
   push:
     paths-ignore:
+      - '.github/workflows/frontend-image-workflow.yml'
       - 'oidc-stub/**'
       - 'frontend-image/**'
       - '**.md'

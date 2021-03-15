@@ -3,6 +3,7 @@ name: Frontend app
 on:
   push:
     paths-ignore:
+      - '.github/workflows/login-app-workflow.yml'
       - 'oidc-stub/**'
       - 'login-app/**'
       - '**.md'
@@ -28,7 +29,7 @@ jobs:
         run: docker-compose up --build -d
       - name: Test
         run: node test/test.js
-      - name: Teardown test-containers
+      - name: Teardown test-container
         run: docker-compose down
      -  name: Publish beta-image
         if: github.ref == 'refs/heads/dev'
