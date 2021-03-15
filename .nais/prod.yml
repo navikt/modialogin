@@ -40,3 +40,12 @@ spec:
         mountPath: /var/run/secrets/nais.io/appdynamics
       - kvPath: /kv/prod/fss/modialogin/default
         mountPath: /var/run/secrets/nais.io/vault
+  env:
+    - name: APP_NAME
+      value: "modialogin"
+    - name: APP_VERSION
+      value: "{{ version }}"
+    - name: AUTH_TOKEN_RESOLVER
+      value: "modia_ID_token"
+    - name: REFRESH_TOKEN_RESOLVER
+      value: "modia_refresh_token"
