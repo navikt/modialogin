@@ -42,4 +42,34 @@ services:
       DELEGATED_LOGIN_URL: "http://localhost:8081/modialogin/api/start"
       X_FORWARDING_PORT: "8082"
       DOCKER_COMPOSE: "true"
+  nginxfrontend:
+    build:
+      context: nginx-frontend-app
+      network: host
+    ports:
+      - 8085:8085
+    depends_on:
+      - oidc-stub
+      - modialogin
+    environment:
+      APP_NAME: "nginxfrontend"
+      APP_VERSION: "localhost"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
+      IDP_CLIENT_ID: "modia-p"
+      DELEGATED_LOGIN_URL: "http://localhost:8086/nginxlogin/api/start"
+      AUTH_TOKEN_RESOLVER: "cookie:modia_ID_token"
+  nginxlogin:
+    build:
+      context: nginx-login-app
+      network: host
+    ports:
+      - 8086:8086
+    depends_on:
+      - oidc-stub
+    environment:
+      APP_NAME: "nginxlogin"
+      APP_VERSION: "localhost"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
+      IDP_CLIENT_ID: "modia-p"
+      IDP_CLIENT_SECRET: "modia-p"
 

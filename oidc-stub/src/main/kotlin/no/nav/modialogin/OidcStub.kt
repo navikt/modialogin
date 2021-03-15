@@ -11,6 +11,7 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import io.ktor.application.*
 import io.ktor.features.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
@@ -34,8 +35,9 @@ class TokenExchangeResult(
     @SerialName("access_token") val accessToken: String?,
     @SerialName("refresh_token") val refreshToken: String?
 )
-
 val TOKEN_LIFESPAN = 10 * 60 * 1000
+var lastNonce: String? = null
+
 fun main() {
     val usingDockerCompose = System.getenv("DOCKER_COMPOSE").toBoolean()
     val rsaKey: RSAKey = RSAKeyGenerator(2048)
@@ -81,14 +83,18 @@ fun main() {
             get("authorize") {
                 val redirectUri = requireNotNull(call.parameters["redirect_uri"])
                 val state = requireNotNull(call.parameters["state"])
-
+                val nonce = call.parameters["nonce"]
                 val code = UUID.randomUUID().toString()
+                lastNonce = nonce
+
                 call.respondRedirect(
                     permanent = false,
                     url = "$redirectUri?code=$code&state=$state"
                 )
             }
             post("oauth/token") {
+                val nonce = lastNonce
+                lastNonce = null
                 call.respond(
                     TokenExchangeResult(
                         idToken = SignedJWT(
@@ -96,15 +102,18 @@ fun main() {
                                 .keyID(rsaKey.keyID)
                                 .build(),
                             JWTClaimsSet.Builder()
+                                .issuer("stub")
                                 .audience("modia-p")
                                 .subject("Z999999")
+                                .issueTime(Date())
                                 .expirationTime(Date(System.currentTimeMillis() + TOKEN_LIFESPAN))
+                                .claim("nonce", nonce)
                                 .build()
                         )
                             .apply { sign(signer) }
                             .serialize(),
-                        accessToken = "rnadom acces",
-                        refreshToken = null
+                        accessToken = "random acces",
+                        refreshToken = "refresh token"
                     )
                 )
             }
