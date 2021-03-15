@@ -32,7 +32,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
     implementation("dev.nohus:AutoKonfig:1.0.0")
-    implementation(project(":common"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.7")

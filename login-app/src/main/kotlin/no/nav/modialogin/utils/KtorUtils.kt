@@ -1,35 +1,13 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets.UTF_8
 
 object KtorUtils {
-    private val log: Logger = LoggerFactory.getLogger("KtorServer")
-
-    fun server(port: Int, module: Application.(NaisState) -> Unit) {
-        val naisState = NaisState()
-        val server = embeddedServer(Netty, port) {
-            module(naisState)
-            naisState.isReady = true
-        }
-        Runtime.getRuntime().addShutdownHook(
-            Thread {
-                log.info("Shutting down...")
-                naisState.isReady = false
-                server.stop(500, 500)
-            }
-        )
-        server.start(wait = true)
-    }
-
     fun ApplicationCall.respondWithCookie(
         name: String,
         value: String,

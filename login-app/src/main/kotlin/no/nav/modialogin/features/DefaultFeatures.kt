@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.features
 
 import io.ktor.application.*
 import io.ktor.features.*

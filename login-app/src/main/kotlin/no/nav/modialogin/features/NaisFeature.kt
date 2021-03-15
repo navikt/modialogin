@@ -1,10 +1,10 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.features
 
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import no.nav.modialogin.common.NaisState
+import no.nav.modialogin.infra.NaisState
 
 fun Application.installNaisFeature(appname: String, config: NaisState) {
     routing {

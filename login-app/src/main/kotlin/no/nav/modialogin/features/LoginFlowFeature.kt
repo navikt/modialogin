@@ -1,24 +1,27 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.features
 
 import io.ktor.application.*
+import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.common.KtorUtils
-import no.nav.modialogin.common.KtorUtils.removeCookie
-import no.nav.modialogin.common.KtorUtils.respondWithCookie
-import no.nav.modialogin.common.LoginStateHelpers.callbackUrl
-import no.nav.modialogin.common.LoginStateHelpers.generateStateNounce
-import no.nav.modialogin.common.LoginStateHelpers.loginUrl
-import no.nav.modialogin.common.Oidc
+import no.nav.modialogin.utils.KtorUtils
+import no.nav.modialogin.utils.KtorUtils.removeCookie
+import no.nav.modialogin.utils.KtorUtils.respondWithCookie
+import no.nav.modialogin.oidc.OidcClient
+import java.math.BigInteger
+import kotlin.random.Random
 
 class LoginFlowFeature(private val config: Config) {
     companion object {
         fun Application.installLoginFlowFeature(config: Config) {
             LoginFlowFeature(config).install(this)
         }
+
+        const val idTokenName = "modia_ID_token"
+        const val refreshTokenName = "modia_refresh_token"
     }
 
     class Config(
@@ -29,8 +32,8 @@ class LoginFlowFeature(private val config: Config) {
         val xForwardingPort: Int,
     )
 
-    private val oidcClient = Oidc.TokenExchangeClient(
-        Oidc.TokenExchangeConfig(
+    private val oidcClient = OidcClient.TokenExchangeClient(
+        OidcClient.TokenExchangeConfig(
             discoveryUrl = config.idpDiscoveryUrl,
             clientId = config.idpClientId,
             clientSecret = config.idpClientSecret
@@ -86,12 +89,13 @@ class LoginFlowFeature(private val config: Config) {
             loginUrl = loginUrl(call.request, config.xForwardingPort, config.appname)
         )
         call.respondWithCookie(
-            name = ModiaLoginConstants.idToken,
+            name = idTokenName,
             value = token.idToken
         )
         if (token.refreshToken != null) {
+            println("Refresh token: ${token.refreshToken}")
             call.respondWithCookie(
-                name = ModiaLoginConstants.refreshToken,
+                name = refreshTokenName,
                 value = token.refreshToken
             )
         }
@@ -114,5 +118,37 @@ class LoginFlowFeature(private val config: Config) {
         val body = call.receive<RefreshIdTokenRequest>()
         val newIdToken = oidcClient.refreshIdToken(body.refreshToken)
         call.respond(RefreshIdTokenResponse(newIdToken))
+    }
+
+    private fun generateStateNounce(): String {
+        val bytes = Random.nextBytes(20)
+        return "state_${BigInteger(1, bytes).toString(16)}"
+    }
+
+    private fun callbackUrl(authorizationEndpoint: String, clientId: String, stateNounce: String, callbackUrl: String): String {
+        val requestParameters = Parameters.build {
+            set("client_id", clientId)
+            set("state", stateNounce)
+            set("redirect_uri", callbackUrl)
+        }
+
+        val parameters = kerberosTriggerParameters + openidCodeFlowParameters + requestParameters
+        return "$authorizationEndpoint?${parameters.formUrlEncode()}"
+    }
+
+    private fun loginUrl(request: ApplicationRequest, xForwardingPort: Int, appname: String): String {
+        val port = if (xForwardingPort == 8080) "" else ":$xForwardingPort"
+        val scheme = if (xForwardingPort == 8080) "https" else "http"
+        return "$scheme://${request.host()}$port/$appname/api/login"
+    }
+
+    private val kerberosTriggerParameters = Parameters.build {
+        set("session", "winssochain")
+        set("authIndexType", "service")
+        set("authIndexValue", "winssochain")
+    }
+    private val openidCodeFlowParameters = Parameters.build {
+        set("response_type", "code")
+        set("scope", "openid")
     }
 }

@@ -12,7 +12,8 @@ on:
       - 'docker-compose.yml'
 
 env:
-  IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin-frontend:${{ github.sha }}
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}
+  BETA_IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}-beta
   CI: true
   TZ: Europe/Oslo
 jobs:
@@ -21,44 +22,27 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v1
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - uses: actions/cache@v1
-        with:
-          path: ~/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-          continue-on-error: true
-      - name: Build
-        run:  ./gradlew build
-
-  build-and-push:
-    name: Build and push Docker container
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - uses: actions/cache@v1
-        with:
-          path: ~/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-        continue-on-error: true
-      - name: Build
-        run: ./gradlew build
-      - name: Publish Docker image
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Setup test-containers
+        run: docker-compose up --build -d
+      - name: Test
+        run: node test/test.js
+      - name: Teardown test-containers
+        run: docker-compose down
+     -  name: Publish beta-image
+        if: github.ref == 'refs/heads/dev'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
-          docker build --tag ${IMAGE} login-app/
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          docker build --tag ${BETA_IMAGE} nginx
+          docker push ${IMAGE}
+      - name: Publish image
+        if: github.ref == 'refs/heads/master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          docker build --tag ${IMAGE} nginx
           docker push ${IMAGE}

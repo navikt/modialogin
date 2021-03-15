@@ -5,7 +5,7 @@ import dev.nohus.autokonfig.types.IntSetting
 import dev.nohus.autokonfig.types.StringSetting
 
 class LoginAppConfig {
-    val appname by StringSetting()
+    val appname = "modialogin"
     val idpDiscoveryUrl by StringSetting()
     val idpClientId by StringSetting()
     val idpClientSecret by StringSetting()

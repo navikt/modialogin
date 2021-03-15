@@ -103,7 +103,7 @@ fun main() {
                                 .build(),
                             JWTClaimsSet.Builder()
                                 .issuer("stub")
-                                .audience("modia-p")
+                                .audience("foo")
                                 .subject("Z999999")
                                 .issueTime(Date())
                                 .expirationTime(Date(System.currentTimeMillis() + TOKEN_LIFESPAN))
@@ -113,7 +113,7 @@ fun main() {
                             .apply { sign(signer) }
                             .serialize(),
                         accessToken = "random acces",
-                        refreshToken = "refresh token"
+                        refreshToken = "refresh_token"
                     )
                 )
             }

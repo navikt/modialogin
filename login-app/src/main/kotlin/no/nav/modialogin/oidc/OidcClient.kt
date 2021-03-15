@@ -1,4 +1,4 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.oidc
 
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-sealed class Oidc {
+class OidcClient {
     @Serializable
     class JwksConfig(
         @SerialName("jwks_uri") val jwksUrl: String,

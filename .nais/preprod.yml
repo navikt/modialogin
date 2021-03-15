@@ -29,8 +29,6 @@ spec:
       memory: 512Mi
   ingresses:
     - https://app-{{ namespace }}.adeo.no/modialogin
-    - https://modia-{{ namespace }}.dev.adeo.no/modialogin
-#    - https://modialogin-{{ namespace }}.dev.adeo.no/modialogin
   replicas:
     min: 1
     max: 1

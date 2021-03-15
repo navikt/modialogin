@@ -2,15 +2,13 @@ package no.nav.modialogin
 
 import io.ktor.application.*
 import io.ktor.features.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import no.nav.modialogin.common.AppState
-import no.nav.modialogin.common.KtorUtils.server
-import no.nav.modialogin.common.features.DefaultFeatures
-import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
-import no.nav.modialogin.common.features.LoginFlowFeature
-import no.nav.modialogin.common.features.LoginFlowFeature.Companion.installLoginFlowFeature
-import no.nav.modialogin.common.features.installNaisFeature
+import no.nav.modialogin.features.LoginFlowFeature
+import no.nav.modialogin.features.DefaultFeatures
+import no.nav.modialogin.features.DefaultFeatures.installDefaultFeatures
+import no.nav.modialogin.features.LoginFlowFeature.Companion.installLoginFlowFeature
+import no.nav.modialogin.features.installNaisFeature
+import no.nav.modialogin.infra.AppState
+import no.nav.modialogin.infra.KtorServer.server
 
 fun main() {
     startApplication()

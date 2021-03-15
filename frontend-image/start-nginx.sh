@@ -27,17 +27,29 @@ echo "Resolver: ${RESOLVER}"
 # fetching env from vault file.
 if test -d /var/run/secrets/nais.io/vault;
 then
-    for FILE in /var/run/secrets/nais.io/vault/*.env
+    for FILE in $(find /var/run/secrets/nais.io/vault -maxdepth 1 -name "*.env")
     do
-        for line in $(cat ${FILE}); do
-            # shellcheck disable=SC2006
-            echo "exporting secret: `echo "${line}" | cut -d '=' -f 1`"
-            export "${line}"
+        _oldIFS=$IFS
+        IFS='
+'
+        for line in $(cat "$FILE"); do
+            _key=${line%%=*}
+            _val=${line#*=}
+
+            if test "$_key" != "$line"
+            then
+                echo "- exporting $_key"
+            else
+                echo "- (warn) exporting contents of $FILE which is not formatted as KEY=VALUE"
+            fi
+
+            export "$_key"="$(echo "$_val"|sed -e "s/^['\"]//" -e "s/['\"]$//")"
         done
+        IFS=$_oldIFS
     done
 fi
 
-envsubst '$APP_NAME $APP_VERSION $IDP_DISCOVERY_URL $IDP_CLIENT_ID $IDP_CLIENT_SECRET $RESOLVER' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
+envsubst '$APP_NAME $APP_VERSION $IDP_DISCOVERY_URL $IDP_CLIENT_ID $DELEGATED_LOGIN_URL $AUTH_TOKEN_RESOLVER $RESOLVER' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
 echo "---------------------------"
 cat /etc/nginx/conf.d/default.conf

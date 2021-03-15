@@ -37,4 +37,6 @@ spec:
     enabled: true
     paths:
       - kvPath: /apikey/appdynamics/dev
+        mountPath: /var/run/secrets/nais.io/appdynamics
+      - kvPath: /kv/prod/fss/modialogin/default
         mountPath: /var/run/secrets/nais.io/vault
