@@ -11,6 +11,11 @@ lua_use_default_type off;
 resolver "${RESOLVER}" ipv6=off;
 resolver_timeout 3s;
 
+map $http_x_forwarded_proto $real_scheme {
+    https   https;
+    default $scheme;
+}
+
 server {
     server_name _;
     listen 8080;

@@ -39,7 +39,7 @@ if err or not res or res.aud ~= acceptedAudience then
         ngx.header['Redirect-Reason'] = "unknown reason"
     end
 
-    local full_url = ngx.var.scheme.."://"..ngx.var.http_host..ngx.var.request_uri
+    local full_url = ngx.var.real_scheme.."://"..ngx.var.http_host..ngx.var.request_uri
     ngx.log(ngx.INFO, 'redirect: '..full_url)
     ngx.redirect(delegatedLoginUrl.."?url="..ngx.escape_uri(full_url))
 end
