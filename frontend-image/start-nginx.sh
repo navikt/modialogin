@@ -14,6 +14,25 @@ _shutdown_() {
 }
 trap _shutdown_ SIGTERM
 
+# Checks all variables are defined in environment
+requireEnv() {
+  MISSING=0
+  IFS=' '
+  read -ra VARS <<<$1
+  echo "Found ${#VARS[*]} required environment variables."
+  for name in "${VARS[@]}"; do
+    value=$(eval "echo $name")
+    if [[ -z $value ]]; then
+      echo "Missing! $name not set"
+      MISSING=1
+    fi
+  done
+  if [ $MISSING == 1 ]; then
+    exit 1
+  fi
+}
+
+
 # Setting nginx resolver, so that containers can communicate.
 export RESOLVER=$(cat /etc/resolv.conf | grep -v '^#' | grep -m 1 nameserver | awk '{print $2}') # Picking the first nameserver.
 
@@ -45,6 +64,7 @@ then
     done
 fi
 
+requireEnv '$APP_NAME $APP_VERSION $IDP_DISCOVERY_URL $IDP_CLIENT_ID $DELEGATED_LOGIN_URL $AUTH_TOKEN_RESOLVER $RESOLVER'
 envsubst '$APP_NAME $APP_VERSION $IDP_DISCOVERY_URL $IDP_CLIENT_ID $DELEGATED_LOGIN_URL $AUTH_TOKEN_RESOLVER $RESOLVER' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
 echo "---------------------------"
