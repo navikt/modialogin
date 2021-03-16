@@ -1,13 +1,18 @@
 const { test, assertThat, isDefined, startsWith, contains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
-test('all apps should be running', async () => {
+test('oidc-stub is running', async () => {
     const oidcConfig = await fetchJson('http://localhost:8080/.well-known/openid-configuration');
-    const loginapp = await fetch('http://localhost:8082/modialogin/internal/isAlive');
-    const frontendapp = await fetch('http://localhost:8083/frontend/internal/isAlive');
-
     assertThat(oidcConfig.statusCode, 200, 'oidcConfig is running');
+});
+
+test('modialogin is running', async () => {
+    const loginapp = await fetch('http://localhost:8082/modialogin/internal/isAlive');
     assertThat(loginapp.statusCode, 200, 'loginapp is running');
+});
+
+test('frontendapp is running', async () => {
+    const frontendapp = await fetch('http://localhost:8083/frontend/internal/isAlive');
     assertThat(frontendapp.statusCode, 200, 'frontendapp is running');
 });
 
