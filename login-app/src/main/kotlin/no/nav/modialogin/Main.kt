@@ -13,7 +13,7 @@ fun main() {
 
 fun startApplication() {
     val appConfig = LoginAppConfig()
-    val port = if (appConfig.dockerCompose) 8080 else appConfig.xForwardingPort
+    val port = if (appConfig.dockerCompose) 8080 else appConfig.exposedPort
     server(port) { naisState ->
         val config = AppState(naisState, appConfig)
 
@@ -27,7 +27,7 @@ fun startApplication() {
                 idpClientSecret = config.config.idpClientSecret,
                 authTokenResolver = config.config.authTokenResolver,
                 refreshTokenResolver = config.config.refreshTokenResolver,
-                xForwardingPort = config.config.xForwardingPort
+                exposedPort = config.config.exposedPort
             )
         )
     }

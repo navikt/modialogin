@@ -12,6 +12,6 @@ class LoginAppConfig {
     val idpClientSecret by StringSetting()
     val authTokenResolver by StringSetting(default = "ID_token")
     val refreshTokenResolver by StringSetting(default = "refresh_token")
-    val xForwardingPort by IntSetting(default = 8080)
     val dockerCompose by BooleanSetting(default = false)
+    val exposedPort by IntSetting(default = 8080)
 }

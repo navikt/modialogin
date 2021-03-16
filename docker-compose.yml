@@ -22,7 +22,7 @@ services:
       IDP_CLIENT_SECRET: "bar"
       AUTH_TOKEN_RESOLVER: "modia_ID_token"
       REFRESH_TOKEN_RESOLVER: "modia_refresh_token"
-      X_FORWARDING_PORT: "8082"
+      EXPOSED_PORT: "8082"
       DOCKER_COMPOSE: "true"
   frontend:
     build:

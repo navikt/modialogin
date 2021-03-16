@@ -28,7 +28,7 @@ class LoginFlowFeature(private val config: Config) {
         val idpClientSecret: String,
         val authTokenResolver: String,
         val refreshTokenResolver: String,
-        val xForwardingPort: Int,
+        val exposedPort: Int,
     )
 
     private val oidcClient = OidcClient.TokenExchangeClient(
@@ -67,7 +67,7 @@ class LoginFlowFeature(private val config: Config) {
             authorizationEndpoint = oidcClient.jwksConfig.authorizationEndpoint,
             clientId = config.idpClientId,
             stateNounce = stateNounce,
-            callbackUrl = loginUrl(call.request, config.xForwardingPort, config.appname)
+            callbackUrl = loginUrl(call.request, config.exposedPort, config.appname)
         )
         call.respondRedirect(permanent = false, url = redirectUrl)
     }
@@ -85,7 +85,7 @@ class LoginFlowFeature(private val config: Config) {
 
         val token = oidcClient.openAmExchangeAuthCodeForToken(
             code = code,
-            loginUrl = loginUrl(call.request, config.xForwardingPort, config.appname)
+            loginUrl = loginUrl(call.request, config.exposedPort, config.appname)
         )
         call.respondWithCookie(
             name = config.authTokenResolver,
@@ -134,9 +134,11 @@ class LoginFlowFeature(private val config: Config) {
         return "$authorizationEndpoint?${parameters.formUrlEncode()}"
     }
 
-    private fun loginUrl(request: ApplicationRequest, xForwardingPort: Int, appname: String): String {
-        val port = if (xForwardingPort == 8080) "" else ":$xForwardingPort"
-        val scheme = if (xForwardingPort == 8080) "https" else "http"
+    private fun loginUrl(request: ApplicationRequest, exposedPort: Int, appname: String): String {
+        // exposedPort == 8080, hints at the app running on nais. Hence we remove port for the url, and enforce https.
+        // within docker-compose, exposedPort will typically be something other than 8080 and thus we append it to the url.
+        val port = if (exposedPort == 8080) "" else ":$exposedPort"
+        val scheme = if (exposedPort == 8080) "https" else "http"
         return "$scheme://${request.host()}$port/$appname/api/login"
     }
 
