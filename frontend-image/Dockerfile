@@ -19,7 +19,7 @@ RUN mkdir -p /app
 
 # Only used to test loading of secrets, should be commented out.
 COPY testsecrets.env /var/run/secrets/nais.io/vault/
-COPY default-index.html /app/index.html
+COPY default-app /app
 
 EXPOSE 8080
 

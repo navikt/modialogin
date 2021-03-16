@@ -59,11 +59,12 @@ server {
         return 301 "${APP_NAME}/";
     }
     location "/${APP_NAME}/" {
+        alias "/app/";
         access_by_lua_file oidc_protected.lua;
         try_files $uri @rewrites;
     }
 
-    # No matching file, send to default-index.html as we expect it to handle this uri.
+    # No matching file, send to index.html as we expect it to handle this uri.
     location @rewrites {
         index index.html;
         try_files $uri $uri/ /index.html;
