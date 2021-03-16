@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Modialogin frontend-image</title>
+</head>
+<body>
+<h1>Modialogin frontend-image</h1>
+<p>
+    Om denne dukker opp så har du forhåpentligvis startet appen i test-modus.
+    Hvis ikke kan det tyde på at docker-imaget ikke er riktig satt opp.
+</p>
+<p>
+    <b>Eksempel på Dockerfile:</b>
+</p>
+<pre>
+FROM docker.pkg.github.com/navikt/modialogin/frontend:ecd23b296051ce8d436025e242b79521d9244b32
+# Hvor "build" mappen inneholder filene du ønsker skal hostes.
+COPY build /app
+</pre>
+</body>
+</html>

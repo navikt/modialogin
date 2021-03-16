@@ -1,0 +1,111 @@
+name: Login app
+
+on:
+  push:
+    paths-ignore:
+      - '.github/workflows/frontend-image-workflow.yml'
+      - 'oidc-stub/**'
+      - 'frontend-image/**'
+      - '**.md'
+      - '.editorconfig'
+      - '.gitignore'
+      - 'CODEOWNERS'
+      - 'docker-compose.yml'
+
+env:
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin:${{ github.sha }}
+  CI: true
+  TZ: Europe/Oslo
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+          continue-on-error: true
+      - name: Build
+        run:  ./gradlew build
+      - name: Setup test-containers
+        run: docker-compose up --build -d
+      - name: Test
+        run: node test/test.js
+      - name: Teardown test-container
+        run: docker-compose down
+
+  build-and-push:
+    name: Build and push Docker container
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+          continue-on-error: true
+      - name: Build
+        run:  ./gradlew build
+      - name: Setup test-containers
+        run: docker-compose up --build -d
+      - name: Test
+        run: node test/test.js
+      - name: Teardown test-container
+        run: docker-compose down
+      - name: Publish Docker image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
+          docker build --tag ${IMAGE} login-app/
+          docker push ${IMAGE}
+  deploy-qa:
+    name: Deploy to preprod
+    needs: build-and-push
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        namespace: [ q0, q1 ]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          PRINT_PAYLOAD: true
+          CLUSTER: dev-fss
+          RESOURCE: .nais/preprod.yml
+          VAR: namespace=${{ matrix.namespace }},version=${{github.sha}}
+
+  deploy-prod:
+    name: Deploy to prod
+    needs: build-and-push
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          PRINT_PAYLOAD: true
+          CLUSTER: prod-fss
+          RESOURCE: .nais/prod.yml
+          VAR: version=${{github.sha}}

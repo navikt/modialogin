@@ -1,0 +1,61 @@
+name: Frontend app
+
+on:
+  push:
+    paths-ignore:
+      - '.github/workflows/login-app-workflow.yml'
+      - 'oidc-stub/**'
+      - 'login-app/**'
+      - '**.md'
+      - '.editorconfig'
+      - '.gitignore'
+      - 'CODEOWNERS'
+      - 'docker-compose.yml'
+
+env:
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}
+  BETA_IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}-beta
+  CI: true
+  TZ: Europe/Oslo
+jobs:
+  build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Setup cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+          continue-on-error: true
+      - name: Build
+        run: ./gradlew build
+      - name: Setup test-containers
+        run: docker-compose up --build -d
+      - name: Test
+        run: node test/test.js
+      - name: Teardown test-container
+        run: docker-compose down
+      - name: Publish beta-image
+        if: github.ref == 'refs/heads/dev'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          docker build --tag ${BETA_IMAGE} frontend-image
+          docker push ${BETA_IMAGE}
+      - name: Publish image
+        if: github.ref == 'refs/heads/master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          docker build --tag ${IMAGE} frontend-image
+          docker push ${IMAGE}
