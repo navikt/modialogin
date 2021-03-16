@@ -31,7 +31,10 @@ function fetch(url, headers = {}) {
                 resolve({ statusCode, statusMessage, redirectURI, headers, body });
             });
         })
-            .on('error', (error) => reject(error));
+            .on('error', (error) => {
+                console.error('Error while fetching: ', url, headers);
+                return reject(error);
+            });
     });
 }
 
