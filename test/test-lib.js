@@ -17,26 +17,32 @@ function test(name, exec) {
 
 function runTests() {
     (async function asynsTestRunner() {
-        console.log('');
-        for (const { name, exec } of tests) {
-            __assertions = [];
-            await exec();
-            const errors = __assertions.filter((assertion) => assertion.state !== 'ok');
-            console.log(`${CYAN}[TEST]${RESET} ${name}`);
-            __assertions
-                .forEach((assertion) => {
-                    const prefix = assertion.state === 'ok' ? `${GREEN} [OK] ${RESET}` : `${RED} [KO] ${RESET}`;
-                    console.log(`${prefix} ${assertion.message}`);
-                });
+        try {
             console.log('');
-            if (errors.length > 0) {
-                testsWithErrors.push(name);
+            for (const { name, exec } of tests) {
+                __assertions = [];
+                await exec();
+                const errors = __assertions.filter((assertion) => assertion.state !== 'ok');
+                console.log(`${CYAN}[TEST]${RESET} ${name}`);
+                __assertions
+                    .forEach((assertion) => {
+                        const prefix = assertion.state === 'ok' ? `${GREEN} [OK] ${RESET}` : `${RED} [KO] ${RESET}`;
+                        console.log(`${prefix} ${assertion.message}`);
+                    });
+                console.log('');
+                if (errors.length > 0) {
+                    testsWithErrors.push(name);
+                }
             }
-        }
-        if (testsWithErrors.length > 0) {
-            console.log('');
-            console.log(`${RED}Not all tests passed, found ${testsWithErrors.length} failing tests.${RESET}`);
-            console.log('');
+            if (testsWithErrors.length > 0) {
+                console.log('');
+                console.log(`${RED}Not all tests passed, found ${testsWithErrors.length} failing tests.${RESET}`);
+                console.log('');
+                process.exit(1);
+            }
+        } catch (e) {
+            console.log(`${RED} [ERROR] ${RESET} test threw exception, exiting with non-zero exit code.`, e);
+            process.exit(1);
         }
     })();
 }
