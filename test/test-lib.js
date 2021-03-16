@@ -17,9 +17,9 @@ function test(name, exec) {
 
 function runTests() {
     (async function asynsTestRunner() {
-        try {
-            console.log('');
-            for (const { name, exec } of tests) {
+        console.log('');
+        for (const {name, exec} of tests) {
+            try {
                 __assertions = [];
                 await exec();
                 const errors = __assertions.filter((assertion) => assertion.state !== 'ok');
@@ -33,15 +33,15 @@ function runTests() {
                 if (errors.length > 0) {
                     testsWithErrors.push(name);
                 }
+            } catch (e) {
+                console.log(`${RED} [ERROR] ${RESET} "${name}" threw exception, exiting with non-zero exit code.`, e);
+                testsWithErrors.push(name);
             }
-            if (testsWithErrors.length > 0) {
-                console.log('');
-                console.log(`${RED}Not all tests passed, found ${testsWithErrors.length} failing tests.${RESET}`);
-                console.log('');
-                process.exit(1);
-            }
-        } catch (e) {
-            console.log(`${RED} [ERROR] ${RESET} test threw exception, exiting with non-zero exit code.`, e);
+        }
+        if (testsWithErrors.length > 0) {
+            console.log('');
+            console.log(`${RED}Not all tests passed, found ${testsWithErrors.length} failing tests.${RESET}`);
+            console.log('');
             process.exit(1);
         }
     })();
@@ -50,13 +50,16 @@ function runTests() {
 function assertThat(actual, expected, message) {
     const verifier = typeof expected === 'function' ? expected : (() => {
         const result = JSON.stringify(actual) === JSON.stringify(expected);
-        return { result, expected: JSON.stringify(expected) };
+        return {result, expected: JSON.stringify(expected)};
     });
     const verification = verifier(actual);
     if (verification.result) {
-        __assertions.push({ state: 'ok', message});
+        __assertions.push({state: 'ok', message});
     } else {
-        __assertions.push({ state: 'error', message: `${message}. Expected: '${verification.expected}', but got: '${verification.actual}'`});
+        __assertions.push({
+            state: 'error',
+            message: `${message}. Expected: '${verification.expected}', but got: '${verification.actual}'`
+        });
     }
 }
 

@@ -38,7 +38,9 @@ jobs:
       - name: Build
         run: ./gradlew build
       - name: Setup test-containers
-        run: docker-compose up --build -d
+        run: |
+          docker-compose up --build -d
+          docker ps
       - name: Test
         run: node test/test.js
       - name: Teardown test-container
