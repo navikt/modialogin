@@ -10,7 +10,6 @@ on:
       - '.editorconfig'
       - '.gitignore'
       - 'CODEOWNERS'
-      - 'docker-compose.yml'
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin:${{ github.sha }}
