@@ -46,4 +46,4 @@ services:
   echo-server:
     image: mendhak/http-https-echo
     ports:
-      - 8084:80
+      - 8089:80
