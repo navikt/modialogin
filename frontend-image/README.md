@@ -15,3 +15,29 @@ Docker-image som sikrer ressursene sine, og bruker en tilhørende `login-app` fo
 **NB** Om `AUTH_TOKEN_RESOLVER` settes til `header` vil applikasjonen forvente at access_token kommer via
 http-headeren `Authorization: Bearer <token>`.
 
+## Proxying
+
+Appen støtter oppsett av proxyer ved å legge til egne nginx-filer i `/nginx` mappen.
+For eksempel;
+```nginx
+# file: proxy.nginx
+# /frontend er her ett eksempel, men bør være lik `APP_NAME`.
+# NB: trailing-slashes har her en betydning, fjernes den fra `proxy_pass` så vil hele pathen bli videreført
+location  /frontend/proxy/open-endpoint/ {
+    proxy_pass http://echo-server/;
+}
+location  /frontend/proxy/authenticated-endpoint/ {
+    access_by_lua_file oidc_protected.lua;
+    proxy_pass http://echo-server/;
+}
+
+# file Dockerfile
+# Vi legger til oppsettet, og det plukkes deretter opp av nginx under oppstart.
+COPY proxy.nginx /nginx
+```
+
+Man har i stor grad mulighet til å styre hva som blir sendt videre.
+F.eks;
+- Fjerne cookies slik at tjenesten ikke får deres `ID_token`: `proxy_set_header Cookie "";`
+- Rename cookie før proxy; `proxy_set_header Cookie "deres_custom_cookie_navn=$cookie_ID_token;";`
+- Legge til ny cookie: `proxy_set_header Cookie "helt_ny_cookie=ny_verdiher; $http_cookie";`

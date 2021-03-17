@@ -50,7 +50,7 @@ function runTests() {
 function assertThat(actual, expected, message) {
     const verifier = typeof expected === 'function' ? expected : (() => {
         const result = JSON.stringify(actual) === JSON.stringify(expected);
-        return {result, expected: JSON.stringify(expected)};
+        return {result, expected: JSON.stringify(expected), actual };
     });
     const verification = verifier(actual);
     if (verification.result) {
@@ -68,6 +68,11 @@ const isDefined = (value) => ({
     expected: '<any value>',
     actual: value
 });
+const isNotDefined = value => ({
+    result: value === null || value === undefined,
+    expected: '<not defined>',
+    actual: value
+})
 const startsWith = (prefix) => (value) => ({
     result: value && value.startsWith(prefix),
     expected: 'value.startsWith(' + prefix + ')',
@@ -78,6 +83,11 @@ const contains = (content) => (value) => ({
     expected: 'value.includes(' + content + ')',
     actual: value
 });
+const notContains = (content) => (value) => ({
+    result: value && !value.includes(content),
+    expected: 'not(value.includes(' + content + '))',
+    actual: value
+});
 const hasLengthGreaterThen = (minLength) => (value) => ({
     result: value && value.length > minLength,
     expected: 'value.length > ' + minLength,
@@ -86,5 +96,5 @@ const hasLengthGreaterThen = (minLength) => (value) => ({
 
 module.exports = {
     test, assertThat,
-    isDefined, startsWith, contains, hasLengthGreaterThen
+    isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
 };

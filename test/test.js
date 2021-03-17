@@ -1,4 +1,4 @@
-const { test, assertThat, isDefined, startsWith, contains, hasLengthGreaterThen } = require('./test-lib');
+const { test, assertThat, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
 test('oidc-stub is running', async () => {
@@ -24,7 +24,7 @@ test('oidc-stub provides jwks', async () => {
 
 test('attempts to get frontend resource without trailing slash', async () => {
     const initial = await fetch('http://localhost:8083/frontend');
-    assertThat(initial.statusCode, 301, 'frontend app returns 301');
+    assertThat(initial.statusCode, 301, '/frontend returns 301');
     assertThat(initial.redirectURI.path, 'frontend/', 'appends trailing slash');
 });
 
@@ -113,4 +113,63 @@ test('attempts to get frontend resource should result in login-flow', async () =
         'Cookie': idtoken
     });
     assertThat(pageLoadAfterLogin.statusCode, 200, '/frontend returns 200');
+});
+
+test('proxying to open endpoint when not logged in', async () => {
+    const openEndpointWithoutCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data');
+    assertThat(openEndpointWithoutCookie.statusCode, 200, '/frontend proxied to open endpoint');
+    assertThat(openEndpointWithoutCookie.body.path, '/data', '/frontend removed url prefix');
+    assertThat(openEndpointWithoutCookie.body.headers['cookie'], isNotDefined, '/frontend did not send cookie');
+});
+
+test('proxying to open endpoint when logged in', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const openEndpointWithCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data', {
+        'Cookie': tokens.body['id_token']
+    });
+    assertThat(openEndpointWithCookie.statusCode, 200, '/frontend proxied to open endpoint');
+    assertThat(openEndpointWithCookie.body.path, '/data', '/frontend removed url prefix');
+    assertThat(openEndpointWithCookie.body.headers['cookie'], isDefined, '/frontend did send cookie');
+});
+
+test('proxying to open endpoint that removes cookie when logged in', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const openEndpointWithCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint-no-cookie/data', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(openEndpointWithCookie.statusCode, 200, '/frontend proxied to open endpoint');
+    assertThat(openEndpointWithCookie.body.path, '/data', '/frontend removed url prefix');
+    assertThat(openEndpointWithCookie.body.headers['cookie'], isNotDefined, '/frontend did not send cookie');
+});
+
+test('proxying to protected endpoint when not logged in', async () => {
+    const protectedEndpoint = await fetch('http://localhost:8083/frontend/proxy/protected-endpoint/data');
+    assertThat(protectedEndpoint.statusCode, 302, '/frontend returns 302');
+    assertThat(
+        protectedEndpoint.redirectURI.path,
+        'http://localhost:8082/modialogin/api/start',
+        '/frontend redirects to /modialogin/api/start'
+    );
+});
+
+test('proxying to protected endpoint when logged in', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const protectedEndpoint = await fetchJson('http://localhost:8083/frontend/proxy/protected-endpoint/data', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(protectedEndpoint.statusCode, 200, '/frontend returns 200');
+    assertThat(protectedEndpoint.body.path, '/data', '/frontend removed url prefix');
+    assertThat(protectedEndpoint.body.headers['cookie'], isDefined, '/frontend did send cookie');
+    assertThat(protectedEndpoint.body.headers['cookie'], startsWith('modia_ID_token'), '/frontend sent modia_ID_token cookie');
+});
+
+test('proxying to protected endpoint when logged in, and rewriting cookie name', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const protectedEndpoint = await fetchJson('http://localhost:8083/frontend/proxy/protected-endpoint-with-cookie-rewrite/data', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(protectedEndpoint.statusCode, 200, '/frontend returns 200');
+    assertThat(protectedEndpoint.body.path, '/data', '/frontend removed url prefix');
+    assertThat(protectedEndpoint.body.headers['cookie'], startsWith('ID_token'), '/frontend sent ID_token cookie');
+    assertThat(protectedEndpoint.body.headers['cookie'], notContains('modia_ID_token'), '/frontend did not send modia_ID_token cookie');
 });

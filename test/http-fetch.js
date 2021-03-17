@@ -1,9 +1,12 @@
 const http = require('http');
 
-function fetch(url, headers = {}) {
-    const options = { headers };
+function fetch(url, headers = {}, body) {
+    const options = {headers, method: 'GET'};
+    if (body) {
+        options.method = 'POST';
+    }
     return new Promise((resolve, reject) => {
-        http.get(url, options, (resp) => {
+        const req = http.request(url, options, (resp) => {
             const statusCode = resp.statusCode;
             const statusMessage = resp.statusMessage;
             const headers = resp.headers;
@@ -35,14 +38,18 @@ function fetch(url, headers = {}) {
                 console.error('Error while fetching: ', url, headers);
                 return reject(error);
             });
+        if (body) {
+            req.write(JSON.stringify(body));
+        }
+        req.end();
     });
 }
 
-function fetchJson(url) {
-    return fetch(url)
-        .then(({ statusCode, statusMessage, redirectURI, body }) => {
+function fetchJson(url, headers, body) {
+    return fetch(url, headers, body)
+        .then(({statusCode, statusMessage, redirectURI, body}) => {
             if (body) {
-                return { statusCode, statusMessage, redirectURI, body: JSON.parse(body) }
+                return {statusCode, statusMessage, redirectURI, body: JSON.parse(body)}
             } else {
                 throw new Error(`${url} did not return json, body: ${body}`);
             }

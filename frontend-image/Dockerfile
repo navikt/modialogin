@@ -17,8 +17,7 @@ RUN chmod u+x /usr/sbin/start-nginx
 RUN mkdir -p /nginx
 RUN mkdir -p /app
 
-# Only used to test loading of secrets, should be commented out.
-COPY testsecrets.env /var/run/secrets/nais.io/vault/
+# Just a small default-app that show how the image may be used.
 COPY default-app /app
 
 EXPOSE 8080

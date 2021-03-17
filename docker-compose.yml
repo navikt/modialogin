@@ -32,6 +32,7 @@ services:
     depends_on:
       - oidc-stub
       - modialogin
+      - echo-server
     environment:
       APP_NAME: "frontend"
       APP_VERSION: "localhost"
@@ -39,3 +40,10 @@ services:
       IDP_CLIENT_ID: "foo"
       DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
       AUTH_TOKEN_RESOLVER: "modia_ID_token"
+    volumes:
+      - ./test/nginx-env:/var/run/secrets/nais.io/vault/
+      - ./test/nginx-proxy:/nginx
+  echo-server:
+    image: mendhak/http-https-echo
+    ports:
+      - 8084:80
