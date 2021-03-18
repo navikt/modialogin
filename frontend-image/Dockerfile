@@ -1,8 +1,7 @@
 FROM openresty/openresty:alpine-fat
 
 # User env var is needed for luarocks to not complain.
-ENV APP_DIR="/app" \
-    USER="root"
+ENV USER="root"
 
 RUN apk add --no-cache --update bash
 RUN luarocks install lua-resty-session \

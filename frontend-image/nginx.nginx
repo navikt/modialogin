@@ -19,7 +19,7 @@ map $http_x_forwarded_proto $real_scheme {
 server {
     server_name _;
     listen 8080;
-    root "/app";
+    root "/app-source";
 
     # Setting some variables for use within lua-scripts
     set $app_name               "${APP_NAME}";
@@ -76,7 +76,7 @@ server {
         return 301 "${APP_NAME}/";
     }
     location "/${APP_NAME}/" {
-        alias "/app/";
+        alias "/app-source/";
         access_by_lua_file oidc_protected.lua;
         try_files $uri @rewrites;
     }
@@ -87,5 +87,5 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    include /nginx/*.nginx;
+    include /nginx-source/*.nginx;
 }

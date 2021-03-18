@@ -173,3 +173,16 @@ test('proxying to protected endpoint when logged in, and rewriting cookie name',
     assertThat(protectedEndpoint.body.headers['cookie'], startsWith('ID_token'), '/frontend sent ID_token cookie');
     assertThat(protectedEndpoint.body.headers['cookie'], notContains('modia_ID_token'), '/frontend did not send modia_ID_token cookie');
 });
+
+test('environments variables are injected into nginx config', async () => {
+    const page = await fetch('http://localhost:8083/frontend/env-data');
+    assertThat(page.body, 'APP_NAME: frontend', 'Page contains environmentvariable value')
+});
+
+test('environments variables are injected into html config', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(page.body, contains('&amp;{APP_NAME}: frontend'), 'Page contains environmentvariable value')
+});
