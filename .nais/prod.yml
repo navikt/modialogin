@@ -1,0 +1,51 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: modialogin
+  namespace: default
+  labels:
+    team: personoversikt
+spec:
+  image: {{image}}
+  port: 8080
+  webproxy: true
+  team: personoversikt
+  liveness:
+    path: /modialogin/internal/isAlive
+    initialDelay: 20
+    timeout: 1
+    periodSeconds: 5
+    failureThreshold: 10
+  readiness:
+    path: /modialogin/internal/isReady
+    initialDelay: 20
+    timeout: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 2000m
+      memory: 512Mi
+  ingresses:
+    - https://app.adeo.no/modialogin
+  replicas:
+    min: 2
+    max: 4
+    cpuThresholdPercentage: 90
+  vault:
+    enabled: true
+    paths:
+      - kvPath: /apikey/appdynamics/dev
+        mountPath: /var/run/secrets/nais.io/appdynamics
+      - kvPath: /kv/prod/fss/modialogin/default
+        mountPath: /var/run/secrets/nais.io/vault
+  env:
+    - name: APP_NAME
+      value: "modialogin"
+    - name: APP_VERSION
+      value: "{{ version }}"
+    - name: AUTH_TOKEN_RESOLVER
+      value: "modia_ID_token"
+    - name: REFRESH_TOKEN_RESOLVER
+      value: "modia_refresh_token"
