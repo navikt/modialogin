@@ -96,7 +96,9 @@ function retry({ retry, interval }, exec) {
             try {
                 await exec(count + 1);
                 return;
-            } catch (e) {}
+            } catch (e) {
+                console.log(`${RED} [KO] ${RESET} ${e}`);
+            }
             count++;
             await sleep(interval);
         } while (count < retry);
