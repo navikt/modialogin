@@ -25,7 +25,7 @@ map "${CSP_REPORT_ONLY}" $csp_enforce_directives {
 }
 server {
     server_name _;
-    listen 8080;
+    listen "${APP_PORT}";
     root "/app-source";
 
     # Setting some variables for use within lua-scripts
