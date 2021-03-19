@@ -1,20 +1,20 @@
-const { test, assertThat, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
+const { test, assertThat, verify, setup, retry, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
-test('oidc-stub is running', async () => {
+setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
     const oidcConfig = await fetchJson('http://localhost:8080/.well-known/openid-configuration');
-    assertThat(oidcConfig.statusCode, 200, 'oidcConfig is running');
-});
+    verify(oidcConfig.statusCode, 200, 'oidcConfig is running');
+}));
 
-test('modialogin is running', async () => {
+setup('modialogin is running', retry({ retry: 10, interval: 2}, async () => {
     const loginapp = await fetch('http://localhost:8082/modialogin/internal/isAlive');
-    assertThat(loginapp.statusCode, 200, 'loginapp is running');
-});
+    verify(loginapp.statusCode, 200, 'loginapp is running');
+}));
 
-test('frontendapp is running', async () => {
+setup('frontendapp is running', retry({ retry: 10, interval: 2}, async () => {
     const frontendapp = await fetch('http://localhost:8083/frontend/internal/isAlive');
-    assertThat(frontendapp.statusCode, 200, 'frontendapp is running');
-});
+    verify(frontendapp.statusCode, 200, 'frontendapp is running');
+}));
 
 test('oidc-stub provides jwks', async () => {
     const jwks = await fetchJson('http://localhost:8080/.well-known/jwks.json');
