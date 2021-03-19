@@ -36,6 +36,10 @@ requireEnv() {
 # Setting nginx resolver, so that containers can resolve domain names correctly.
 export RESOLVER=$(cat /etc/resolv.conf | grep -v '^#' | grep -m 1 nameserver | awk '{print $2}') # Picking the first nameserver.
 
+# Settings default environment variabels
+export CSP_DIRECTIVES="${CSP_DIRECTIVES:-default-src: 'self;'}"
+export CSP_REPORT_ONLY="${CSP_REPORT_ONLY:-false}"
+
 
 echo "Startup: ${APP_NAME}:${APP_VERSION}"
 echo "Resolver: ${RESOLVER}"
@@ -65,10 +69,22 @@ then
     done
 fi
 
+declare -a ENV_VARIABLES=(
+  '$APP_NAME'
+  '$APP_VERSION'
+  '$IDP_DISCOVERY_URL'
+  '$IDP_CLIENT_ID'
+  '$DELEGATED_LOGIN_URL'
+  '$AUTH_TOKEN_RESOLVER'
+  '$RESOLVER'
+  '$CSP_DIRECTIVES'
+  '$CSP_REPORT_ONLY'
+)
+ALL_ENV_VARIABLES="${ENV_VARIABLES[*]}"
 # Checks all required variables are defined in environment
-requireEnv '$APP_NAME $APP_VERSION $IDP_DISCOVERY_URL $IDP_CLIENT_ID $DELEGATED_LOGIN_URL $AUTH_TOKEN_RESOLVER $RESOLVER'
+requireEnv "$ALL_ENV_VARIABLES"
 # Inject environment variables into nginx.conf
-envsubst '$APP_NAME $APP_VERSION $IDP_DISCOVERY_URL $IDP_CLIENT_ID $DELEGATED_LOGIN_URL $AUTH_TOKEN_RESOLVER $RESOLVER' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
+envsubst "$ALL_ENV_VARIABLES" < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
 echo "---------------------------"
 cat /etc/nginx/conf.d/default.conf
 echo "---------------------------"

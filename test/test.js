@@ -186,3 +186,14 @@ test('environments variables are injected into html config', async () => {
     });
     assertThat(page.body, contains('&amp;{APP_NAME}: frontend'), 'Page contains environmentvariable value')
 });
+
+test('csp directive is added to request', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+
+    const cspPolicy = page.headers['content-security-policy-report-only'];
+    assertThat(cspPolicy, isDefined, '/frontend has report-only CSP-policy');
+    assertThat(cspPolicy, contains('script-src'), '/frontend has report-only CSP-policy');
+});
