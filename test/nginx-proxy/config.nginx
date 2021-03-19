@@ -17,3 +17,8 @@ location  /frontend/proxy/protected-endpoint-with-cookie-rewrite/ {
     proxy_set_header Cookie "ID_token=$cookie_modia_ID_token;";
     proxy_pass http://echo-server/;
 }
+
+location /frontend/env-data {
+    add_header Content-Type text/plain;
+    return 200 'APP_NAME: ${APP_NAME}';
+}
