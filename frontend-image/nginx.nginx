@@ -8,6 +8,8 @@ lua_shared_dict jwks 1m;
 lua_code_cache on; # Need to be set for session storage to work.
 lua_use_default_type off;
 
+absolute_redirect off;
+
 resolver "${RESOLVER}" ipv6=off;
 resolver_timeout 3s;
 
