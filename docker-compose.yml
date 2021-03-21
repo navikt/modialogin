@@ -34,12 +34,16 @@ services:
       - modialogin
       - echo-server
     environment:
+      APP_PORT: "8080"
       APP_NAME: "frontend"
       APP_VERSION: "localhost"
       IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
       IDP_CLIENT_ID: "foo"
       DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
       AUTH_TOKEN_RESOLVER: "modia_ID_token"
+      # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
+      CSP_REPORT_ONLY: "true"
+      CSP_DIRECTIVES: "default-src: 'self'; script-src: 'self'"
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx

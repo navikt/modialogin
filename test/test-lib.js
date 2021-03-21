@@ -8,6 +8,11 @@ const tests = [];
 const testsWithErrors = [];
 let __assertions = [];
 let __scheduled = null;
+let __preconditions = [];
+
+function setup(name, exec) {
+    __preconditions.push({ name, exec })
+}
 
 function test(name, exec) {
     tests.push({name, exec});
@@ -18,6 +23,11 @@ function test(name, exec) {
 function runTests() {
     (async function asynsTestRunner() {
         console.log('');
+        for (const { name, exec } of __preconditions) {
+            console.log(`${CYAN}[ UP ]${RESET} ${name}`);
+            await exec();
+            console.log();
+        }
         for (const {name, exec} of tests) {
             try {
                 __assertions = [];
@@ -63,6 +73,42 @@ function assertThat(actual, expected, message) {
     }
 }
 
+function verify(actual, expected, message) {
+    const verifier = typeof expected === 'function' ? expected : (() => {
+        const result = JSON.stringify(actual) === JSON.stringify(expected);
+        return {result, expected: JSON.stringify(expected), actual };
+    });
+
+    const verification = verifier(actual);
+    if (verification.result) {
+        console.log(`${GREEN} [OK] ${RESET} ${message}`);
+    } else {
+        console.log(`${RED} [KO] ${RESET} ${message}. Expected: '${verification.expected}', but got: '${verification.actual}'`);
+        throw new Error('retry');
+    }
+}
+
+const sleep = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+function retry({ retry, interval }, exec) {
+    let count = 0;
+    return async () => {
+        do {
+            try {
+                await exec(count + 1);
+                return;
+            } catch (e) {
+                console.log(`${RED} [KO] ${RESET} ${e}`);
+            }
+            count++;
+            await sleep(interval);
+        } while (count < retry);
+        console.log();
+        console.log(`${RED} [KO] ${RESET} Setup failed. Exiting...`);
+        console.log();
+        process.exit(1);
+    };
+}
+
 const isDefined = (value) => ({
     result: value !== null && value !== undefined,
     expected: '<any value>',
@@ -95,6 +141,6 @@ const hasLengthGreaterThen = (minLength) => (value) => ({
 });
 
 module.exports = {
-    test, assertThat,
+    test, assertThat, setup, verify, retry,
     isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
 };

@@ -15,10 +15,17 @@ map $http_x_forwarded_proto $real_scheme {
     https   https;
     default $scheme;
 }
-
+map "${CSP_REPORT_ONLY}" $csp_report_directives {
+    "true"    "${CSP_DIRECTIVES}";
+    default   '';
+}
+map "${CSP_REPORT_ONLY}" $csp_enforce_directives {
+    "true"    '';
+    default   "${CSP_DIRECTIVES}";
+}
 server {
     server_name _;
-    listen 8080;
+    listen "${APP_PORT}";
     root "/app-source";
 
     # Setting some variables for use within lua-scripts
@@ -52,6 +59,10 @@ server {
     etag                    off;
     expires                 off;
     if_modified_since       off;
+
+    # Adding CSP header
+    add_header              Content-Security-Policy-Report-Only $csp_report_directives;
+    add_header              Content-Security-Policy $csp_enforce_directives;
 
     location = "/${APP_NAME}/internal/isAlive" {
         default_type text/plan;

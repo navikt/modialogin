@@ -35,8 +35,7 @@ function fetch(url, headers = {}, body) {
             });
         })
             .on('error', (error) => {
-                console.error('Error while fetching: ', url, headers);
-                return reject(error);
+                return reject(`Error while fetching: ${url}  ${error}`);
             });
         if (body) {
             req.write(JSON.stringify(body));
