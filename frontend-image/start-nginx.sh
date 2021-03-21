@@ -38,7 +38,7 @@ export RESOLVER=$(cat /etc/resolv.conf | grep -v '^#' | grep -m 1 nameserver | a
 
 # Settings default environment variabels
 export APP_PORT="${APP_PORT:-443}"
-export CSP_DIRECTIVES="${CSP_DIRECTIVES:-default-src: 'self;'}"
+export CSP_DIRECTIVES="${CSP_DIRECTIVES:-default-src 'self';}"
 export CSP_REPORT_ONLY="${CSP_REPORT_ONLY:-false}"
 
 

@@ -43,7 +43,7 @@ services:
       AUTH_TOKEN_RESOLVER: "modia_ID_token"
       # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
       CSP_REPORT_ONLY: "true"
-      CSP_DIRECTIVES: "default-src: 'self'; script-src: 'self'"
+      CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx
