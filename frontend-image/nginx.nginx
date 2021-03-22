@@ -33,7 +33,7 @@ access_log  /dev/stdout  main;
 
 server {
     server_name _;
-    listen "${APP_PORT}";
+    listen 8080;
     root "/app-source";
 
     # Setting some variables for use within lua-scripts

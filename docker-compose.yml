@@ -34,7 +34,6 @@ services:
       - modialogin
       - echo-server
     environment:
-      APP_PORT: "8080"
       APP_NAME: "frontend"
       APP_VERSION: "localhost"
       IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
