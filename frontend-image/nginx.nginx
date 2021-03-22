@@ -8,6 +8,8 @@ lua_shared_dict jwks 1m;
 lua_code_cache on; # Need to be set for session storage to work.
 lua_use_default_type off;
 
+absolute_redirect off;
+
 resolver "${RESOLVER}" ipv6=off;
 resolver_timeout 3s;
 
@@ -15,11 +17,24 @@ map $http_x_forwarded_proto $real_scheme {
     https   https;
     default $scheme;
 }
+map "${CSP_REPORT_ONLY}" $csp_report_directives {
+    "true"    "${CSP_DIRECTIVES}";
+    default   '';
+}
+map "${CSP_REPORT_ONLY}" $csp_enforce_directives {
+    "true"    '';
+    default   "${CSP_DIRECTIVES}";
+}
+
+log_format main         '[$time_local] '
+                        '"$request_masked" $status "$sent_http_location_masked" '
+                        '"$http_referer_masked" "$http_user_agent"';
+access_log  /dev/stdout  main;
 
 server {
     server_name _;
-    listen 8080;
-    root "/app";
+    listen "${APP_PORT}";
+    root "/app-source";
 
     # Setting some variables for use within lua-scripts
     set $app_name               "${APP_NAME}";
@@ -28,6 +43,11 @@ server {
     set $idp_client_id          "${IDP_CLIENT_ID}";
     set $delegated_login_url    "${DELEGATED_LOGIN_URL}";
     set $auth_token_location    "${AUTH_TOKEN_RESOLVER}";
+
+    # Setting variables needed in logformat (masking long digits)
+    set_by_lua_file $request_masked mask_log.lua $request;
+    set_by_lua_file $sent_http_location_masked mask_log.lua $sent_http_location;
+    set_by_lua_file $http_referer_masked mask_log.lua $http_referer;
 
     # Default configuration for proxy-passes.
     proxy_buffering         off;
@@ -53,6 +73,10 @@ server {
     expires                 off;
     if_modified_since       off;
 
+    # Adding CSP header
+    add_header              Content-Security-Policy-Report-Only $csp_report_directives;
+    add_header              Content-Security-Policy $csp_enforce_directives;
+
     location = "/${APP_NAME}/internal/isAlive" {
         default_type text/plan;
         return 200 "Alive";
@@ -76,7 +100,7 @@ server {
         return 301 "${APP_NAME}/";
     }
     location "/${APP_NAME}/" {
-        alias "/app/";
+        alias "/app-source/";
         access_by_lua_file oidc_protected.lua;
         try_files $uri @rewrites;
     }
@@ -87,5 +111,5 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    include /nginx/*.nginx;
+    include /nginx-source/*.nginx;
 }

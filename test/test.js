@@ -1,20 +1,20 @@
-const { test, assertThat, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
+const { test, assertThat, verify, setup, retry, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
-test('oidc-stub is running', async () => {
+setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
     const oidcConfig = await fetchJson('http://localhost:8080/.well-known/openid-configuration');
-    assertThat(oidcConfig.statusCode, 200, 'oidcConfig is running');
-});
+    verify(oidcConfig.statusCode, 200, 'oidcConfig is running');
+}));
 
-test('modialogin is running', async () => {
+setup('modialogin is running', retry({ retry: 10, interval: 2}, async () => {
     const loginapp = await fetch('http://localhost:8082/modialogin/internal/isAlive');
-    assertThat(loginapp.statusCode, 200, 'loginapp is running');
-});
+    verify(loginapp.statusCode, 200, 'loginapp is running');
+}));
 
-test('frontendapp is running', async () => {
+setup('frontendapp is running', retry({ retry: 10, interval: 2}, async () => {
     const frontendapp = await fetch('http://localhost:8083/frontend/internal/isAlive');
-    assertThat(frontendapp.statusCode, 200, 'frontendapp is running');
-});
+    verify(frontendapp.statusCode, 200, 'frontendapp is running');
+}));
 
 test('oidc-stub provides jwks', async () => {
     const jwks = await fetchJson('http://localhost:8080/.well-known/jwks.json');
@@ -172,4 +172,28 @@ test('proxying to protected endpoint when logged in, and rewriting cookie name',
     assertThat(protectedEndpoint.body.path, '/data', '/frontend removed url prefix');
     assertThat(protectedEndpoint.body.headers['cookie'], startsWith('ID_token'), '/frontend sent ID_token cookie');
     assertThat(protectedEndpoint.body.headers['cookie'], notContains('modia_ID_token'), '/frontend did not send modia_ID_token cookie');
+});
+
+test('environments variables are injected into nginx config', async () => {
+    const page = await fetch('http://localhost:8083/frontend/env-data');
+    assertThat(page.body, 'APP_NAME: frontend', 'Page contains environmentvariable value')
+});
+
+test('environments variables are injected into html config', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(page.body, contains('&amp;{APP_NAME}: frontend'), 'Page contains environmentvariable value')
+});
+
+test('csp directive is added to request', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+
+    const cspPolicy = page.headers['content-security-policy-report-only'];
+    assertThat(cspPolicy, isDefined, '/frontend has report-only CSP-policy');
+    assertThat(cspPolicy, contains('script-src'), '/frontend has report-only CSP-policy');
 });

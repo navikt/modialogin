@@ -1,8 +1,7 @@
 FROM openresty/openresty:alpine-fat
 
 # User env var is needed for luarocks to not complain.
-ENV APP_DIR="/app" \
-    USER="root"
+ENV USER="root"
 
 RUN apk add --no-cache --update bash
 RUN luarocks install lua-resty-session \
@@ -12,6 +11,7 @@ RUN luarocks install lua-resty-session \
 
 COPY nginx.nginx          /etc/nginx/conf.d/nginx.conf.template
 COPY oidc_protected.lua   /usr/local/openresty/nginx/
+COPY mask_log.lua         /usr/local/openresty/nginx/
 COPY start-nginx.sh       /usr/sbin/start-nginx
 RUN chmod u+x /usr/sbin/start-nginx
 RUN mkdir -p /nginx
@@ -20,6 +20,6 @@ RUN mkdir -p /app
 # Just a small default-app that show how the image may be used.
 COPY default-app /app
 
-EXPOSE 8080
+EXPOSE 8080 443
 
 CMD ["start-nginx"]
