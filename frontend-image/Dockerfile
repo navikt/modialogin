@@ -20,6 +20,6 @@ RUN mkdir -p /app
 # Just a small default-app that show how the image may be used.
 COPY default-app /app
 
-EXPOSE 8080 443
+EXPOSE 8080
 
 CMD ["start-nginx"]

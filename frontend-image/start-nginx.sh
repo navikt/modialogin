@@ -37,7 +37,6 @@ requireEnv() {
 export RESOLVER=$(cat /etc/resolv.conf | grep -v '^#' | grep -m 1 nameserver | awk '{print $2}') # Picking the first nameserver.
 
 # Settings default environment variabels
-export APP_PORT="${APP_PORT:-443}"
 export CSP_DIRECTIVES="${CSP_DIRECTIVES:-default-src 'self';}"
 export CSP_REPORT_ONLY="${CSP_REPORT_ONLY:-false}"
 
@@ -71,7 +70,6 @@ then
 fi
 
 declare -a ENV_VARIABLES=(
-  '$APP_PORT'
   '$APP_NAME'
   '$APP_VERSION'
   '$IDP_DISCOVERY_URL'
