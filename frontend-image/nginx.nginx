@@ -25,6 +25,12 @@ map "${CSP_REPORT_ONLY}" $csp_enforce_directives {
     "true"    '';
     default   "${CSP_DIRECTIVES}";
 }
+
+log_format main         '[$time_local] '
+                        '"$request_masked" $status "$sent_http_location_masked" '
+                        '"$http_referer_masked" "$http_user_agent"';
+access_log  /dev/stdout  main;
+
 server {
     server_name _;
     listen "${APP_PORT}";
@@ -37,6 +43,11 @@ server {
     set $idp_client_id          "${IDP_CLIENT_ID}";
     set $delegated_login_url    "${DELEGATED_LOGIN_URL}";
     set $auth_token_location    "${AUTH_TOKEN_RESOLVER}";
+
+    # Setting variables needed in logformat (masking long digits)
+    set_by_lua_file $request_masked mask_log.lua $request;
+    set_by_lua_file $sent_http_location_masked mask_log.lua $sent_http_location;
+    set_by_lua_file $http_referer_masked mask_log.lua $http_referer;
 
     # Default configuration for proxy-passes.
     proxy_buffering         off;

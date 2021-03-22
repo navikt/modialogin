@@ -11,6 +11,7 @@ RUN luarocks install lua-resty-session \
 
 COPY nginx.nginx          /etc/nginx/conf.d/nginx.conf.template
 COPY oidc_protected.lua   /usr/local/openresty/nginx/
+COPY mask_log.lua         /usr/local/openresty/nginx/
 COPY start-nginx.sh       /usr/sbin/start-nginx
 RUN chmod u+x /usr/sbin/start-nginx
 RUN mkdir -p /nginx
