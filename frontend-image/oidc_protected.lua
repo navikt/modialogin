@@ -23,7 +23,6 @@ local res, err = require("resty.openidc").bearer_jwt_verify(opts)
 if err or not res or res.aud ~= acceptedAudience then
     ngx.status = 302
     if err then
-        ngx.log(ngx.INFO, "Redirect-Reason: "..err)
         ngx.header['Redirect-Reason'] = err
     elseif not res then
         ngx.log(ngx.INFO, "Redirect-Reason: no result")
