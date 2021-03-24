@@ -1,4 +1,5 @@
 charset utf-8;
+access_log   off; # Handled by trafic
 error_log    /dev/stdout  info;
 
 lua_package_path '~/lua/?.lua;;';
@@ -25,12 +26,6 @@ map "${CSP_REPORT_ONLY}" $csp_enforce_directives {
     "true"    '';
     default   "${CSP_DIRECTIVES}";
 }
-
-#log_format main         '[$time_local] '
-#                        '"$request_masked" $status "$sent_http_location_masked" '
-#                        '"$http_referer_masked" "$http_user_agent"';
-#access_log  /dev/stdout  main;
-access_log off; # Handled by trafic
 
 server {
     server_name _;
