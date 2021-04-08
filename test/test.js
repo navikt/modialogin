@@ -113,6 +113,22 @@ test('attempts to get frontend resource should result in login-flow', async () =
         'Cookie': idtoken
     });
     assertThat(pageLoadAfterLogin.statusCode, 200, '/frontend returns 200');
+    assertThat(pageLoadAfterLogin.body, contains('<!DOCTYPE html>'), '/frontend returns HTML')
+});
+
+test('static resources returns 302 login redirect, if not logged in', async () => {
+    const staticResource = await fetch('http://localhost:8083/frontend/static/css/index.css');
+    assertThat(staticResource.statusCode, 302, '/frontend returns 302');
+    assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
+});
+
+test('static resources returns 200 ok if logged in', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const staticResource = await fetch('http://localhost:8083/frontend/static/css/index.css', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(staticResource.statusCode, 200, '/frontend returns 302');
+    assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
 test('proxying to open endpoint when not logged in', async () => {
