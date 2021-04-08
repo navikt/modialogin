@@ -89,6 +89,13 @@ server {
     }
 
 
+    # Static files are served directly with authenticating.
+    # Html is not included in list, since we want to autenticate user before loading the page
+    location ~* ^/${APP_NAME}(/.+\.css|js|jpe?g|gif|ico|png|xml|otf|ttf|eot|woff|svg|map|json)$ {
+        alias "/app-source/";
+        access_by_lua_file oidc_protected.lua;
+        try_files $1 =404;
+    }
     location = / {
         return 301 "${APP_NAME}/";
     }
@@ -97,15 +104,9 @@ server {
     }
     location "/${APP_NAME}/" {
         alias "/app-source/";
-        access_by_lua_file oidc_protected.lua;
-        try_files $uri @rewrites;
-    }
-
-    # No matching file, send to index.html as we expect it to handle this uri.
-    location @rewrites {
         index index.html;
+        access_by_lua_file oidc_protected.lua;
         try_files $uri $uri/ /index.html;
     }
-
     include /nginx-source/*.nginx;
 }
