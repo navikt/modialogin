@@ -131,6 +131,15 @@ test('static resources returns 200 ok if logged in', async () => {
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
+test('missing static resource returns 404 instead of fallback to index.html', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const staticResource = await fetch('http://localhost:8083/frontend/static/css/missing.css',{
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(staticResource.statusCode, 404, '/frontend returns 404');
+    assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
+});
+
 test('proxying to open endpoint when not logged in', async () => {
     const openEndpointWithoutCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data');
     assertThat(openEndpointWithoutCookie.statusCode, 200, '/frontend proxied to open endpoint');
