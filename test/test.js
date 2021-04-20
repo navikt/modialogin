@@ -102,9 +102,11 @@ test('attempts to get frontend resource should result in login-flow', async () =
 
     assertThat(idtoken, startsWith('modia_ID_token'), '/modialogin/api/login sets modia_ID_token cookie');
     assertThat(idtoken, hasLengthGreaterThen(80), 'modia_ID_token has some content');
+    assertThat(idtoken, contains("Max-Age=3600;"), 'modia_ID_token is valid for 1 hour');
 
     assertThat(refreshtoken, startsWith('modia_refresh_token'), '/modialogin/api/login sets modia_refresh_token cookie');
     assertThat(refreshtoken, hasLengthGreaterThen(80), 'modia_refresh_token has some content');
+    assertThat(refreshtoken, contains("Max-Age=72000;"), 'modia_ID_token is valid for 24 hours');
 
     assertThat(removeStateCookie, startsWith(state), '/modialogin/api/login sets modia_ID_token cookie');
     assertThat(removeStateCookie, contains('01 Jan 1970'), '/modialogin/api/login removes state cookie');
