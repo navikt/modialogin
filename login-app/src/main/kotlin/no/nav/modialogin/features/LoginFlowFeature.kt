@@ -94,7 +94,8 @@ class LoginFlowFeature(private val config: Config) {
         if (token.refreshToken != null) {
             call.respondWithCookie(
                 name = config.refreshTokenResolver,
-                value = token.refreshToken
+                value = token.refreshToken,
+                maxAgeInSeconds = 20 * 3600
             )
         }
         call.removeCookie(state)
