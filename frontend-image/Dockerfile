@@ -9,6 +9,7 @@ RUN luarocks install lua-resty-session \
     && luarocks install lua-resty-jwt \
     && luarocks install lua-resty-openidc
 
+COPY default.nginx        /etc/nginx/conf.d/default.conf
 COPY nginx.nginx          /etc/nginx/conf.d/nginx.conf.template
 COPY oidc_protected.lua   /usr/local/openresty/nginx/
 COPY mask_log.lua         /usr/local/openresty/nginx/

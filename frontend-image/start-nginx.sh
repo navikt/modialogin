@@ -84,14 +84,14 @@ ALL_ENV_VARIABLES="${ENV_VARIABLES[*]}"
 # Checks all required variables are defined in environment
 requireEnv "$ALL_ENV_VARIABLES"
 # Inject environment variables into nginx.conf
-envsubst "$ALL_ENV_VARIABLES" < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
+envsubst "$ALL_ENV_VARIABLES" < /etc/nginx/conf.d/nginx.conf.template > /tmp/default.conf
 echo "---------------------------"
-cat /etc/nginx/conf.d/default.conf
+cat /tmp/default.conf
 echo "---------------------------"
 
 # Copying template folders so that we can modifiy files without changing externally mounted volumes
-cp -r /app/. /app-source
-cp -r /nginx/. /nginx-source
+cp -r /app/. /tmp/app-source
+cp -r /nginx/. /tmp/nginx-source
 
 # Find all environment variables starting with: APP_
 export APP_VARIABLES=$(echo $(env | cut -d= -f1 | grep "^APP_" | sed -e 's/^/\$/'))
@@ -100,13 +100,13 @@ echo "Startup inject envs:"
 echo $APP_VARIABLES
 
 # Inject environment variabels starting with: APP_ into all static resources and nginx-config
-find /app-source -type f -regex '.*\.\(js\|css\|html\|json\|map\)' -print0 |
+find /tmp/app-source -type f -regex '.*\.\(js\|css\|html\|json\|map\)' -print0 |
 while IFS= read -r -d '' file; do
   echo "Injecting environment variables into $file"
   envsubst "$APP_VARIABLES" < $file > $file.tmp
   mv $file.tmp $file
 done
-find /nginx-source -type f -regex '.*\.nginx' -print0 |
+find /tmp/nginx-source -type f -regex '.*\.nginx' -print0 |
 while IFS= read -r -d '' file; do
   echo "Injecting environment variables into $file"
   envsubst "$APP_VARIABLES" < $file > $file.tmp
