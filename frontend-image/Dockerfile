@@ -1,4 +1,4 @@
-FROM openresty/openresty:alpine-fat
+FROM openresty/openresty:1.19.9.1-alpine-fat
 
 # User env var is needed for luarocks to not complain.
 ENV USER="root"
@@ -9,8 +9,8 @@ RUN luarocks install lua-resty-session \
     && luarocks install lua-resty-jwt \
     && luarocks install lua-resty-openidc
 
-COPY default.nginx        /etc/nginx/conf.d/default.conf
 COPY nginx.nginx          /etc/nginx/conf.d/nginx.conf.template
+COPY openresty.nginx      /usr/local/openresty/nginx/conf/nginx.conf
 COPY oidc_protected.lua   /usr/local/openresty/nginx/
 COPY mask_log.lua         /usr/local/openresty/nginx/
 COPY start-nginx.sh       /usr/sbin/start-nginx
@@ -19,7 +19,6 @@ RUN mkdir -p /app
 RUN mkdir -p /app-source
 RUN mkdir -p /nginx
 RUN mkdir -p /nginx-source
-RUN mkdir -p /var/run/openresty
 RUN mkdir -p /usr/local/openresty
 
 # Just a small default-app that show how the image may be used.
@@ -32,7 +31,6 @@ RUN chown -R apprunner /app
 RUN chown -R apprunner /app-source
 RUN chown -R apprunner /nginx
 RUN chown -R apprunner /nginx-source
-RUN chown -R apprunner /var/run/openresty
 RUN chown -R apprunner /usr/local/openresty
 RUN chown -R apprunner /etc/nginx/conf.d/
 RUN chown apprunner /usr/sbin/start-nginx

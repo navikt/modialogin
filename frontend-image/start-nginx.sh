@@ -93,6 +93,9 @@ echo "---------------------------"
 cp -r /app/. /tmp/app-source
 cp -r /nginx/. /tmp/nginx-source
 
+# Make necessary tmp folder for openresty. Cannot be created in Dockerfile since nais remounts /tmp and changes would be lost
+mkdir -p /tmp/openresty
+
 # Find all environment variables starting with: APP_
 export APP_VARIABLES=$(echo $(env | cut -d= -f1 | grep "^APP_" | sed -e 's/^/\$/'))
 
