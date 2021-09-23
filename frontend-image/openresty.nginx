@@ -31,7 +31,7 @@ pcre_jit on;
 #error_log  logs/error.log  notice;
 #error_log  logs/error.log  info;
 
-#pid        logs/nginx.pid;
+pid        /tmp/nginx.pid;
 
 
 events {
