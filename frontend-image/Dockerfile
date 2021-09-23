@@ -13,13 +13,29 @@ COPY nginx.nginx          /etc/nginx/conf.d/nginx.conf.template
 COPY oidc_protected.lua   /usr/local/openresty/nginx/
 COPY mask_log.lua         /usr/local/openresty/nginx/
 COPY start-nginx.sh       /usr/sbin/start-nginx
-RUN chmod u+x /usr/sbin/start-nginx
-RUN mkdir -p /nginx
+
 RUN mkdir -p /app
+RUN mkdir -p /app-source
+RUN mkdir -p /nginx
+RUN mkdir -p /nginx-source
+RUN mkdir -p /var/run/openresty
+RUN mkdir -p /usr/local/openresty
 
 # Just a small default-app that show how the image may be used.
 COPY default-app /app
 
 EXPOSE 8080
+
+RUN addgroup -S apprunner && adduser -S apprunner -G apprunner
+RUN chown -R apprunner /app
+RUN chown -R apprunner /app-source
+RUN chown -R apprunner /nginx
+RUN chown -R apprunner /nginx-source
+RUN chown -R apprunner /var/run/openresty
+RUN chown -R apprunner /usr/local/openresty
+RUN chown -R apprunner /etc/nginx/conf.d/
+RUN chown apprunner /usr/sbin/start-nginx
+RUN chmod +x /usr/sbin/start-nginx
+USER apprunner
 
 CMD ["start-nginx"]
