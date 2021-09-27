@@ -30,7 +30,7 @@ map "${CSP_REPORT_ONLY}" $csp_enforce_directives {
 server {
     server_name _;
     listen 8080;
-    root "/app-source";
+    root "/tmp/app-source";
 
     # Setting some variables for use within lua-scripts
     set $app_name               "${APP_NAME}";
@@ -92,7 +92,7 @@ server {
     # Static files are served directly with authenticating.
     # Html is not included in list, since we want to autenticate user before loading the page
     location ~* ^/${APP_NAME}(/.+\.css|js|jpe?g|gif|ico|png|xml|otf|ttf|eot|woff|svg|map|json)$ {
-        alias "/app-source/";
+        alias "/tmp/app-source/";
         access_by_lua_file oidc_protected.lua;
         try_files $1 =404;
     }
@@ -103,10 +103,10 @@ server {
         return 301 "${APP_NAME}/";
     }
     location "/${APP_NAME}/" {
-        alias "/app-source/";
+        alias "/tmp/app-source/";
         index index.html;
         access_by_lua_file oidc_protected.lua;
         try_files $uri $uri/ /index.html;
     }
-    include /nginx-source/*.nginx;
+    include /tmp/nginx-source/*.nginx;
 }
