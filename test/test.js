@@ -130,6 +130,7 @@ test('static resources returns 200 ok if logged in', async () => {
         'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
     assertThat(staticResource.statusCode, 200, '/frontend returns 302');
+    assertThat(staticResource.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 

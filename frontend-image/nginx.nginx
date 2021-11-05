@@ -69,9 +69,10 @@ server {
     expires                 off;
     if_modified_since       off;
 
-    # Adding CSP header
+    # Adding security headers
     add_header              Content-Security-Policy-Report-Only $csp_report_directives;
     add_header              Content-Security-Policy $csp_enforce_directives;
+    add_header              Referrer-Policy "${REFERRER_POLICY}";
 
     location = "/${APP_NAME}/internal/isAlive" {
         default_type text/plan;

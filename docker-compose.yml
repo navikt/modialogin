@@ -43,6 +43,7 @@ services:
       # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
       CSP_REPORT_ONLY: "true"
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
+      REFERRER_POLICY: "no-referrer"
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx

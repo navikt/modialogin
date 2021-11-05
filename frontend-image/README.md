@@ -13,6 +13,7 @@ Docker-image som sikrer ressursene sine, og bruker en tilhørende `login-app` fo
 | AUTH_TOKEN_RESOLVER | Ja | Hvor appen kan forvente å finne ID_token. F.eks `ID_token` eller `header` |
 | CSP_DIRECTIVES | Nei | CSP-header som skal brukes, er default satt til `default-src: 'self'` | 
 | CSP_REPORT_ONLY | Nei | `true` eller `false`, styrer hvorvidt CSP skal være i `Report-Only` modus |
+| REFERRER_POLICY | Nei | Default `origin`. Forhindrer at url-path blir sendt som http header ved lenke klikk. [Les mer her](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#examples) |
 
 **NB** Om `AUTH_TOKEN_RESOLVER` settes til `header` vil applikasjonen forvente at access_token kommer via
 http-headeren `Authorization: Bearer <token>`.
