@@ -39,6 +39,7 @@ export RESOLVER=$(cat /etc/resolv.conf | grep -v '^#' | grep -m 1 nameserver | a
 # Settings default environment variabels
 export CSP_DIRECTIVES="${CSP_DIRECTIVES:-default-src 'self';}"
 export CSP_REPORT_ONLY="${CSP_REPORT_ONLY:-false}"
+export REFERRER_POLICY="${REFERRER_POLICY:-origin}"
 
 
 echo "Startup: ${APP_NAME}:${APP_VERSION}"
@@ -79,6 +80,7 @@ declare -a ENV_VARIABLES=(
   '$RESOLVER'
   '$CSP_DIRECTIVES'
   '$CSP_REPORT_ONLY'
+  '$REFERRER_POLICY'
 )
 ALL_ENV_VARIABLES="${ENV_VARIABLES[*]}"
 # Checks all required variables are defined in environment
