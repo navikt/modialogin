@@ -2,7 +2,7 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: modialogin
-  namespace: default
+  namespace: personoversikt
   labels:
     team: personoversikt
 spec:
