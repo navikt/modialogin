@@ -38,7 +38,7 @@ spec:
     paths:
       - kvPath: /apikey/appdynamics/dev
         mountPath: /var/run/secrets/nais.io/appdynamics
-      - kvPath: /kv/prod/fss/modialogin/default
+      - kvPath: /kv/prod/fss/modialogin/personoversikt
         mountPath: /var/run/secrets/nais.io/vault
   env:
     - name: APP_NAME
