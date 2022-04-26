@@ -1,8 +1,8 @@
 apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
-  name: modialogin
-  namespace: {{ namespace }}
+  name: modialogin-{{ q_env }}
+  namespace: personoversikt
   labels:
     team: personoversikt
 spec:
@@ -28,7 +28,7 @@ spec:
       cpu: 2000m
       memory: 512Mi
   ingresses:
-    - https://app-{{ namespace }}.adeo.no/modialogin
+    - https://app-{{ q_env }}.adeo.no/modialogin
   replicas:
     min: 1
     max: 1
@@ -38,7 +38,7 @@ spec:
     paths:
       - kvPath: /apikey/appdynamics/dev
         mountPath: /var/run/secrets/nais.io/appdynamics
-      - kvPath: /kv/preprod/fss/modialogin/{{ namespace }}
+      - kvPath: /kv/preprod/fss/modialogin-{{ q_env }}/personoversikt
         mountPath: /var/run/secrets/nais.io/vault
   env:
     - name: APP_NAME
