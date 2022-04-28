@@ -6,8 +6,8 @@ val logbackVersion = "1.2.3"
 val logstashVersion = "5.1"
 
 plugins {
-    kotlin("jvm") version "1.4.30"
-    kotlin("plugin.serialization") version "1.4.30"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
 }
 
 group = "no.nav"

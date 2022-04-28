@@ -6,8 +6,8 @@ val logstashVersion = "5.1"
 
 plugins {
     `java-library`
-    kotlin("jvm") version "1.4.30"
-    kotlin("plugin.serialization") version "1.4.30"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
 }
 
 repositories {
