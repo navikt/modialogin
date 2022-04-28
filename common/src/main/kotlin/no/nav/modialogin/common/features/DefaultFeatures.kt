@@ -1,4 +1,4 @@
-package no.nav.modialogin.features
+package no.nav.modialogin.common.features
 
 import io.ktor.application.*
 import io.ktor.features.*
@@ -9,13 +9,14 @@ import io.ktor.serialization.*
 import org.slf4j.event.Level
 
 object DefaultFeatures {
-    fun Application.installDefaultFeatures() {
-        install(StatusPages) {
-            exception<Throwable> {
-                call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
-                throw it
-            }
+    val statusPageConfig: StatusPages.Configuration.() -> Unit = {
+        exception<Throwable> {
+            call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
+            throw it
         }
+    }
+
+    fun Application.installDefaultFeatures() {
         install(ContentNegotiation) {
             json()
         }

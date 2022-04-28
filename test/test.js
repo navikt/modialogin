@@ -21,12 +21,14 @@ test('oidc-stub provides jwks', async () => {
     assertThat(jwks.body, isDefined, 'jwks.json returns a json body');
     assertThat(jwks.body.keys.length, 1, 'jwks has one key');
 });
-
-test('attempts to get frontend resource without trailing slash', async () => {
-    const initial = await fetch('http://localhost:8083/frontend');
-    assertThat(initial.statusCode, 301, '/frontend returns 301');
-    assertThat(initial.redirectURI.path, 'frontend/', 'appends trailing slash');
-});
+/**
+ * Redirect not required
+ */
+// test('attempts to get frontend resource without trailing slash', async () => {
+//     const initial = await fetch('http://localhost:8083/frontend');
+//     assertThat(initial.statusCode, 301, '/frontend returns 301');
+//     assertThat(initial.redirectURI.path, 'frontend/', 'appends trailing slash');
+// });
 
 test('attempts to get frontend resource should result in login-flow', async () => {
     const initial = await fetch('http://localhost:8083/frontend/');

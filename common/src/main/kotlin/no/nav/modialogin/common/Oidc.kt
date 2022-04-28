@@ -1,4 +1,4 @@
-package no.nav.modialogin.oidc
+package no.nav.modialogin.common
 
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -16,8 +16,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KtorServer.log
 
-class OidcClient {
+sealed class Oidc {
     @Serializable
     class JwksConfig(
         @SerialName("jwks_uri") val jwksUrl: String,
@@ -54,6 +55,7 @@ class OidcClient {
         }
 
         val jwksConfig: JwksConfig = runBlocking {
+            log.info("Fetching oidc from ${config.discoveryUrl}")
             client.get(config.discoveryUrl)
         }
     }

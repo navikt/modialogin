@@ -1,11 +1,14 @@
 package no.nav.modialogin
 
-import no.nav.modialogin.features.DefaultFeatures.installDefaultFeatures
-import no.nav.modialogin.features.LoginFlowFeature
-import no.nav.modialogin.features.LoginFlowFeature.Companion.installLoginFlowFeature
-import no.nav.modialogin.features.installNaisFeature
-import no.nav.modialogin.infra.AppState
-import no.nav.modialogin.infra.KtorServer.server
+import io.ktor.application.*
+import io.ktor.features.*
+import no.nav.modialogin.common.AppState
+import no.nav.modialogin.common.KtorServer.server
+import no.nav.modialogin.common.features.DefaultFeatures
+import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
+import no.nav.modialogin.common.features.LoginFlowFeature
+import no.nav.modialogin.common.features.LoginFlowFeature.Companion.installLoginFlowFeature
+import no.nav.modialogin.common.features.installNaisFeature
 
 fun main() {
     startApplication()
@@ -17,6 +20,7 @@ fun startApplication() {
     server(port) { naisState ->
         val config = AppState(naisState, appConfig)
 
+        install(StatusPages, DefaultFeatures.statusPageConfig)
         installDefaultFeatures()
         installNaisFeature(config.config.appName, config.config.appVersion, config.nais)
         installLoginFlowFeature(

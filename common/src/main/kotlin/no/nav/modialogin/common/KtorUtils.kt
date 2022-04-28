@@ -1,4 +1,4 @@
-package no.nav.modialogin.utils
+package no.nav.modialogin.common
 
 import io.ktor.application.*
 import io.ktor.http.*

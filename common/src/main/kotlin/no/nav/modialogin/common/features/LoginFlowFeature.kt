@@ -1,4 +1,4 @@
-package no.nav.modialogin.features
+package no.nav.modialogin.common.features
 
 import io.ktor.application.*
 import io.ktor.http.*
@@ -7,10 +7,10 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.oidc.OidcClient
-import no.nav.modialogin.utils.KtorUtils
-import no.nav.modialogin.utils.KtorUtils.removeCookie
-import no.nav.modialogin.utils.KtorUtils.respondWithCookie
+import no.nav.modialogin.common.KtorUtils
+import no.nav.modialogin.common.KtorUtils.removeCookie
+import no.nav.modialogin.common.KtorUtils.respondWithCookie
+import no.nav.modialogin.common.Oidc
 import java.math.BigInteger
 import kotlin.random.Random
 
@@ -31,8 +31,8 @@ class LoginFlowFeature(private val config: Config) {
         val exposedPort: Int,
     )
 
-    private val oidcClient = OidcClient.TokenExchangeClient(
-        OidcClient.TokenExchangeConfig(
+    private val oidcClient = Oidc.TokenExchangeClient(
+        Oidc.TokenExchangeConfig(
             discoveryUrl = config.idpDiscoveryUrl,
             clientId = config.idpClientId,
             clientSecret = config.idpClientSecret

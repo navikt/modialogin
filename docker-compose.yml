@@ -44,6 +44,8 @@ services:
       CSP_REPORT_ONLY: "true"
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
+      EXPOSED_PORT: '8083'
+      DOCKER_COMPOSE: 'true'
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx
