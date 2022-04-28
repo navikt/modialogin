@@ -1,9 +1,9 @@
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "1.5.2"
-val logbackVersion = "1.2.3"
-val logstashVersion = "5.1"
+val ktorVersion = "2.0.0"
+val logbackVersion = "1.2.11"
+val logstashVersion = "7.1.1"
 
 plugins {
     application
@@ -22,7 +22,8 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("com.nimbusds:nimbus-jose-jwt:9.7")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
 }

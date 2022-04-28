@@ -26,7 +26,7 @@ services:
       DOCKER_COMPOSE: "true"
   frontend:
     build:
-      context: frontend-image
+      context: frontend-app
     ports:
       - 8083:8080
     depends_on:

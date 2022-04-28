@@ -1,7 +1,7 @@
 package no.nav.modialogin
 
-import io.ktor.application.*
-import io.ktor.features.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
 import no.nav.modialogin.common.AppState
 import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.features.DefaultFeatures
@@ -19,7 +19,6 @@ fun startApplication() {
     val port = if (appConfig.dockerCompose) 8080 else appConfig.exposedPort
     server(port) { naisState ->
         val config = AppState(naisState, appConfig)
-
         install(StatusPages, DefaultFeatures.statusPageConfig)
         installDefaultFeatures()
         installNaisFeature(config.config.appName, config.config.appVersion, config.nais)

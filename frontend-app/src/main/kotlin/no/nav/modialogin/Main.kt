@@ -1,7 +1,7 @@
 package no.nav.modialogin
 
-import io.ktor.application.*
-import io.ktor.features.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.defaultheaders.*
 import no.nav.modialogin.common.AppState
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorServer.server

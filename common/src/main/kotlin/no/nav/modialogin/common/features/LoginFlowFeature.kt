@@ -1,10 +1,10 @@
 package no.nav.modialogin.common.features
 
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.KtorUtils

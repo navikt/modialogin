@@ -3,10 +3,10 @@ package no.nav.modialogin.common.features
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.interfaces.Payload
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
 import io.ktor.http.auth.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URL

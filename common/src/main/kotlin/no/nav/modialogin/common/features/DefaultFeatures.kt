@@ -1,18 +1,21 @@
 package no.nav.modialogin.common.features
 
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.serialization.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.forwardedheaders.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import org.slf4j.event.Level
 
 object DefaultFeatures {
-    val statusPageConfig: StatusPages.Configuration.() -> Unit = {
-        exception<Throwable> {
-            call.respond(HttpStatusCode.InternalServerError, it.message ?: it.localizedMessage)
-            throw it
+    val statusPageConfig: StatusPagesConfig.() -> Unit = {
+        exception<Throwable> { call, cause ->
+            call.respond(HttpStatusCode.InternalServerError, cause.message ?: cause.localizedMessage)
+            throw cause
         }
     }
 
@@ -20,8 +23,7 @@ object DefaultFeatures {
         install(ContentNegotiation) {
             json()
         }
-        install(XForwardedHeaderSupport) {
-            // These change the request.host which makes the redirect fail
+        install(XForwardedHeaders) {
             hostHeaders.clear()
             forHeaders.clear()
         }

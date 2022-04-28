@@ -1,9 +1,9 @@
 package no.nav.modialogin.common.features
 
-import io.ktor.features.*
+import io.ktor.server.plugins.defaultheaders.*
 
 object CSPFeature {
-    fun DefaultHeaders.Configuration.applyCSPFeature(cspReportOnly: Boolean, cspDirectives: String) {
+    fun DefaultHeadersConfig.applyCSPFeature(cspReportOnly: Boolean, cspDirectives: String) {
         if (cspReportOnly) {
             header("Content-Security-Policy-Report-Only", cspDirectives)
         } else {

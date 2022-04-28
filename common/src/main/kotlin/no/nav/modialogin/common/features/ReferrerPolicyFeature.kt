@@ -1,9 +1,9 @@
 package no.nav.modialogin.common.features
 
-import io.ktor.features.*
+import io.ktor.server.plugins.defaultheaders.*
 
 object ReferrerPolicyFeature {
-    fun DefaultHeaders.Configuration.applyReferrerPolicyFeature(policy: String) {
+    fun DefaultHeadersConfig.applyReferrerPolicyFeature(policy: String) {
         header("Referrer-Policy", policy)
     }
 }

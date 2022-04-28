@@ -1,13 +1,14 @@
 package no.nav.modialogin.common.features
 
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.http.content.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.modialogin.common.KtorUtils
 import java.io.File
 
@@ -26,7 +27,7 @@ class HostStaticFilesFeature(val config: Config) {
     fun install(application: Application) {
         with(application) {
             install(StatusPages) {
-                status(HttpStatusCode.Unauthorized) {
+                status(HttpStatusCode.Unauthorized) { call, _ ->
                     val port = if (config.xForwardedPort == 8080) "" else ":${config.xForwardedPort}"
                     val originalUri = KtorUtils.encode("${call.request.origin.scheme}://${call.request.host()}$port${call.request.uri}")
                     call.respondRedirect("${config.startLoginUrl}?url=$originalUri")
