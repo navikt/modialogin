@@ -8,6 +8,8 @@ import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.Oidc
 import no.nav.modialogin.common.features.AuthFeature
 import no.nav.modialogin.common.features.AuthFeature.Companion.installAuthFeature
+import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature
+import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
 import no.nav.modialogin.common.features.CSPFeature.applyCSPFeature
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
 import no.nav.modialogin.common.features.HostStaticFilesFeature
@@ -44,12 +46,19 @@ fun startApplication() {
                 authTokenResolver = config.config.authTokenResolver
             )
         )
+
         installHostStaticFilesFeature(
             HostStaticFilesFeature.Config(
                 appname = config.config.appName,
                 xForwardedPort = config.config.exposedPort,
                 startLoginUrl = config.config.delegatedLoginUrl,
-                rootFolder = if (port == 8080) "/" else "./frontend-app"
+                rootFolder = if (port == 8080) "/app" else "./frontend-app/www"
+            )
+        )
+        installBFFProxy(
+            BFFProxyFeature.Config(
+                appName = appConfig.appName,
+                proxyConfig = appConfig.proxyConfig
             )
         )
     }

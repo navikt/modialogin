@@ -9,7 +9,9 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.modialogin.common.FileUtils
 import no.nav.modialogin.common.KtorUtils
+import no.nav.modialogin.common.Templating
 import java.io.File
 
 class HostStaticFilesFeature(val config: Config) {
@@ -26,11 +28,23 @@ class HostStaticFilesFeature(val config: Config) {
     )
     fun install(application: Application) {
         with(application) {
+            val rootFolder = File(config.rootFolder)
+            val tmplFolder = File("/tmp/www")
+            FileUtils.copyAndProcessFiles(rootFolder, tmplFolder) {
+                Templating.replaceVariableReferences(it, null)
+            }
+
             install(StatusPages) {
                 status(HttpStatusCode.Unauthorized) { call, _ ->
                     val port = if (config.xForwardedPort == 8080) "" else ":${config.xForwardedPort}"
                     val originalUri = KtorUtils.encode("${call.request.origin.scheme}://${call.request.host()}$port${call.request.uri}")
                     call.respondRedirect("${config.startLoginUrl}?url=$originalUri")
+                }
+                status(HttpStatusCode.NotFound) { call, _ ->
+                    if (!call.isRequestForFile()) {
+                        call.response.status(HttpStatusCode.OK)
+                        call.respondFile(File(rootFolder, "app/index.html"))
+                    }
                 }
 
                 DefaultFeatures.statusPageConfig(this)
@@ -40,9 +54,9 @@ class HostStaticFilesFeature(val config: Config) {
                 trailingSlashRoute(config.appname) {
                     authenticate {
                         static {
-                            staticRootFolder = File(config.rootFolder)
-                            files("app")
-                            default("app/index.html")
+                            staticRootFolder = File("/tmp")
+                            files("www")
+                            default("www/index.html")
                         }
                     }
                 }
@@ -54,4 +68,10 @@ class HostStaticFilesFeature(val config: Config) {
         route(path, build)
         return route("$path/", build)
     }
+}
+
+private val fileRegex = Regex("\\.(?:css|js|jpe?g|gif|ico|png|xml|otf|ttf|eot|woff|svg|map|json)$")
+private fun ApplicationCall.isRequestForFile(): Boolean {
+    val uri = this.request.uri
+    return fileRegex.containsMatchIn(uri)
 }
