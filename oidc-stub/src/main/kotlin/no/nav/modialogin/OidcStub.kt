@@ -8,7 +8,9 @@ import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -115,6 +117,12 @@ fun main() {
                         refreshToken = "refresh_token"
                     )
                 )
+            }
+            post("oboflow") {
+                val accessToken = PlainJWT(
+                    JWTClaimsSet.Builder().expirationTime(Date(System.currentTimeMillis() + 10_000)).build()
+                ).serialize()
+                call.respondText("{ \"token_type\": \"bearer\", \"access_token\": \"$accessToken\" }", ContentType.Application.Json, HttpStatusCode.OK)
             }
         }
     }.start(wait = true)

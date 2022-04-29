@@ -34,6 +34,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("dev.nohus:AutoKonfig:1.0.4")
+    implementation("no.nav.common:token-client:2.2022.04.25_07.57-b8b4682228e7")
 }
 
 java {

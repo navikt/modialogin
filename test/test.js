@@ -1,4 +1,4 @@
-const { test, assertThat, verify, setup, retry, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
+const { test, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
 setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
@@ -206,6 +206,20 @@ test('proxying to protected endpoint when logged in, and rewriting cookie name',
     assertThat(protectedEndpoint.body.path, '/data', '/frontend removed url prefix');
     assertThat(protectedEndpoint.body.headers['cookie'], startsWith('ID_token'), '/frontend sent ID_token cookie');
     assertThat(protectedEndpoint.body.headers['cookie'], notContains('modia_ID_token'), '/frontend did not send modia_ID_token cookie');
+});
+
+test('proxying with obo-flow-directive exchanges the provided token', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const token = tokens.body['id_token']
+    const apiEndpoint = await fetchJson('http://localhost:8083/frontend/api/some/data/endpoint', {
+        'Cookie': `modia_ID_token=${token};`
+    });
+
+    assertThat(apiEndpoint.statusCode, 200, '/api returns 200')
+    assertThat(apiEndpoint.body.path, '/modiapersonoversikt-api/some/data/endpoint', 'correct path is used by proxy')
+    assertThat(apiEndpoint.body.headers['cookie'], equals(''), 'authorization header is set')
+    assertThat(apiEndpoint.body.headers['authorization'], startsWith("Bearer "), 'authorization header is different from token')
+    assertThat(apiEndpoint.body.headers['authorization'], notContains(token), 'authorization header is different from token')
 });
 
 test('environments variables are injected into nginx config', async () => {

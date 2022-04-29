@@ -51,7 +51,7 @@ object BFFProxyFeature {
             } else {
                 val request = call.request
                 val proxyRequestPath = request.uri.removePrefix("/$appName/${config.prefix}/")
-                val proxyRequestURI = "${config.url}/${proxyRequestPath}"
+                val proxyRequestURI = "${config.url}/$proxyRequestPath"
                 val proxyRequestHeaders = request.headers
 
                 val proxyResponse = withContext(Dispatchers.IO) {
@@ -62,7 +62,7 @@ object BFFProxyFeature {
                             }
                         }
 
-                        requestHandler?.invoke(this, request)
+                        requestHandler?.invoke(this, call)
                     }
                 }
 

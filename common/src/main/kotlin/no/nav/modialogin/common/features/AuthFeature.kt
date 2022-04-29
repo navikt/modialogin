@@ -25,7 +25,7 @@ class AuthFeature(private val config: Config) {
         val authTokenResolver: String,
         var acceptedAudience: String = ""
     )
-    class PayloadPrincipal(val payload: Payload) : Principal, Payload by payload
+    class PayloadPrincipal(val payload: Payload, val token: String) : Principal, Payload by payload
 
     fun install(application: Application) {
         with(application) {
@@ -40,12 +40,11 @@ class AuthFeature(private val config: Config) {
     }
 
     fun useJwtFromCookie(call: ApplicationCall): HttpAuthHeader? {
-        val idToken = config.authTokenResolver
         return try {
-            val token = call.request.cookies[idToken]
+            val token = getToken(call)
             parseAuthorizationHeader("Bearer $token")
         } catch (ex: Throwable) {
-            log.warn("Could not get JWT from cookie '$idToken'", ex)
+            log.warn("Could not get jwt from cookie", ex)
             null
         }
     }
@@ -56,7 +55,7 @@ class AuthFeature(private val config: Config) {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
-    private fun validateJWT(credentials: JWTCredential, requiredAudience: String): Principal {
+    private fun ApplicationCall.validateJWT(credentials: JWTCredential, requiredAudience: String): Principal {
         val tokenAudience = credentials.payload.audience
         runCatching {
             requireNotNull(tokenAudience) {
@@ -69,7 +68,12 @@ class AuthFeature(private val config: Config) {
                 "Token expires soon, redirecting to login"
             }
         }.onFailure { log.error(it.message) }.getOrThrow()
-        return PayloadPrincipal(credentials.payload)
+        return PayloadPrincipal(credentials.payload, getToken(this))
+    }
+
+    private fun getToken(call: ApplicationCall): String {
+        val idToken = config.authTokenResolver
+        return requireNotNull(call.request.cookies[idToken])
     }
 
     private fun Payload.doesNotExpireWithin(withinMillies: Long): Boolean {

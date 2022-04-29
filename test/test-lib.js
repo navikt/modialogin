@@ -127,6 +127,12 @@ function retry({retry, interval}, exec) {
     };
 }
 
+const equals = (expected) => (value) => ({
+    result: expected === value,
+    expected,
+    actual: value
+});
+
 const isDefined = (value) => ({
     result: value !== null && value !== undefined,
     expected: '<any value>',
@@ -160,5 +166,5 @@ const hasLengthGreaterThen = (minLength) => (value) => ({
 
 module.exports = {
     test, assertThat, setup, verify, retry,
-    isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
+    equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
 };

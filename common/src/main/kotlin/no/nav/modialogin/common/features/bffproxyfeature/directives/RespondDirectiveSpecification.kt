@@ -25,7 +25,7 @@ object RespondDirectiveSpecification : BFFProxy.ResponseDirectiveSpecification {
 
     override fun describe(directive: String, sb: StringBuilder) {
         val (code, body) = lex(directive)
-        sb.appendLine("Respond with code ${code} and body: '${body.cutoff(20)}'")
+        sb.appendLine("Respond with code $code and body: '${body.cutoff(20)}'")
     }
 
     private fun lex(directive: String): Lexed {

@@ -2,16 +2,15 @@ package no.nav.modialogin.common.features.bffproxyfeature
 
 import io.ktor.client.request.*
 import io.ktor.server.application.*
-import io.ktor.server.request.*
 import io.ktor.util.pipeline.*
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy.combineResponseDirectives
+import no.nav.modialogin.common.features.bffproxyfeature.directives.AADOnBehalfOfDirevtiveSpecification
 import no.nav.modialogin.common.features.bffproxyfeature.directives.RespondDirectiveSpecification
 import no.nav.modialogin.common.features.bffproxyfeature.directives.SetHeaderDirectiveSpecification
 import java.lang.StringBuilder
 
 typealias ResponseDirectiveHandler = suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
-typealias RequestDirectiveHandler = HttpRequestBuilder.(ApplicationRequest) -> Unit
+typealias RequestDirectiveHandler = HttpRequestBuilder.(ApplicationCall) -> Unit
 object BFFProxy {
     enum class DirectiveSpecificationType {
         RESPONSE, REQUEST
@@ -38,7 +37,11 @@ object BFFProxy {
         val requestHandler: RequestDirectiveHandler?
     )
 
-    private val handlers: List<DirectiveSpecification> = listOf(SetHeaderDirectiveSpecification, RespondDirectiveSpecification)
+    private val handlers: List<DirectiveSpecification> = listOf(
+        SetHeaderDirectiveSpecification,
+        RespondDirectiveSpecification,
+        AADOnBehalfOfDirevtiveSpecification
+    )
 
     fun parseDirectives(directives: List<String>): DirectiveHandlers {
         val parsedDirectives = directives

@@ -27,7 +27,9 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
     implementation("dev.nohus:AutoKonfig:1.0.4")
+    implementation("no.nav.common:token-client:2.2022.04.25_07.57-b8b4682228e7")
 
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.22")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 }
 

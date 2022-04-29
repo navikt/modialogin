@@ -1,12 +1,17 @@
 package no.nav.modialogin.common.features.bffproxyfeature.directives
 
-import io.ktor.server.application.*
 import no.nav.modialogin.common.KotlinUtils.cutoff
 import no.nav.modialogin.common.Templating
 import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.common.features.bffproxyfeature.RequestDirectiveHandler
 
 object SetHeaderDirectiveSpecification : BFFProxy.RequestDirectiveSpecification {
+    /**
+     * Usage: SET_HEADER <header name> '<header value>'
+     * Ex:
+     *  - SET_HEADER Cookie ''
+     *  - SET_HEADER Content-Type 'application/json'
+     */
     private val regexp = Regex("SET_HEADER (.*?) '(.*?)'")
 
     private data class Lexed(val header: String, val value: String)
@@ -16,11 +21,11 @@ object SetHeaderDirectiveSpecification : BFFProxy.RequestDirectiveSpecification 
     }
 
     override fun createHandler(directive: String): RequestDirectiveHandler {
-        return {originalRequest ->
+        return { call ->
             val (header, value) = lex(
                 Templating.replaceVariableReferences(
                     directive,
-                    originalRequest
+                    call.request
                 )
             )
             if (value.isBlank()) {
@@ -33,7 +38,7 @@ object SetHeaderDirectiveSpecification : BFFProxy.RequestDirectiveSpecification 
 
     override fun describe(directive: String, sb: StringBuilder) {
         val (header, value) = lex(directive)
-        sb.appendLine("Set header '${header}' to value '${value.cutoff(20)}'")
+        sb.appendLine("Set header '$header' to value '${value.cutoff(20)}'")
     }
 
     private fun lex(directive: String): Lexed {

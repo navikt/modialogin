@@ -8,13 +8,13 @@ import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.Oidc
 import no.nav.modialogin.common.features.AuthFeature
 import no.nav.modialogin.common.features.AuthFeature.Companion.installAuthFeature
-import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature
-import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
 import no.nav.modialogin.common.features.CSPFeature.applyCSPFeature
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
 import no.nav.modialogin.common.features.HostStaticFilesFeature
 import no.nav.modialogin.common.features.HostStaticFilesFeature.Companion.installHostStaticFilesFeature
 import no.nav.modialogin.common.features.ReferrerPolicyFeature.applyReferrerPolicyFeature
+import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature
+import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
 import no.nav.modialogin.common.features.installNaisFeature
 
 fun main() {

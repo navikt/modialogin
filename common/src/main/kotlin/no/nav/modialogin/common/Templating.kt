@@ -16,7 +16,7 @@ object Templating {
                     if (request == null) {
                         "N/A"
                     } else {
-                        request.cookies[name]?: "Cookie not set"
+                        request.cookies[name] ?: "Cookie not set"
                     }
                 }
                 "header" -> {
@@ -27,7 +27,7 @@ object Templating {
                     }
                 }
                 "env" -> {
-                    System.getProperty(name, System.getenv(name)) ?: "Env not set"
+                    KotlinUtils.getEnvProperty(name)
                 }
                 else -> {
                     throw IllegalStateException("Unknown variable pattern: '$match'")

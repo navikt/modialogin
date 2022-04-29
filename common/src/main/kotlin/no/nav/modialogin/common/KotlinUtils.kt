@@ -8,4 +8,8 @@ object KotlinUtils {
             this.substring(0, n - 3) + "..."
         }
     }
+
+    fun getEnvProperty(name: String): String {
+        return System.getProperty(name, System.getenv(name)) ?: "'$name' not defined"
+    }
 }
