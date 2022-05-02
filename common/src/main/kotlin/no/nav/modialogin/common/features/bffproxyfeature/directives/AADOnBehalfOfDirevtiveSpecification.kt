@@ -6,7 +6,7 @@ import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
 import no.nav.modialogin.common.KotlinUtils.getEnvProperty
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.AuthFeature
+import no.nav.modialogin.common.features.authfeature.AuthFeature
 import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.common.features.bffproxyfeature.RequestDirectiveHandler
 

@@ -6,8 +6,8 @@ import no.nav.modialogin.common.AppState
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.Oidc
-import no.nav.modialogin.common.features.AuthFeature
-import no.nav.modialogin.common.features.AuthFeature.Companion.installAuthFeature
+import no.nav.modialogin.common.features.authfeature.AuthFeature
+import no.nav.modialogin.common.features.authfeature.AuthFeature.Companion.installAuthFeature
 import no.nav.modialogin.common.features.CSPFeature.applyCSPFeature
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
 import no.nav.modialogin.common.features.HostStaticFilesFeature
