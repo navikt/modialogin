@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.common.features.authfeature
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
