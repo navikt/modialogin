@@ -1,4 +1,4 @@
-name: Frontend app
+name: Frontend image
 
 on:
   push:
@@ -13,6 +13,10 @@ on:
       - '.gitignore'
       - 'CODEOWNERS'
       - 'docker-compose.yml'
+
+concurrency:
+  group: frontend-image-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}

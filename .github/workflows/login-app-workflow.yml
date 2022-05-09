@@ -14,6 +14,10 @@ on:
       - 'CODEOWNERS'
       - 'docker-compose.yml'
 
+concurrency:
+  group: login-app-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin:${{ github.sha }}
   CI: true

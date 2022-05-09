@@ -14,6 +14,10 @@ on:
       - 'CODEOWNERS'
       - 'docker-compose.yml'
 
+concurrency:
+  group: frontend-app-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin-frontend:${{ github.sha }}
   BETA_IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin-frontend:${{ github.sha }}-beta
