@@ -4,12 +4,15 @@ on:
   push:
     paths-ignore:
       - '.github/workflows/login-app-workflow.yml'
+      - '.github/workflows/frontend-app-workflow.yml'
       - 'oidc-stub/**'
       - 'login-app/**'
+      - 'frontend-app/**'
       - '**.md'
       - '.editorconfig'
       - '.gitignore'
       - 'CODEOWNERS'
+      - 'docker-compose.yml'
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}
