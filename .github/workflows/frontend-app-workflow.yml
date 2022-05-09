@@ -45,11 +45,12 @@ jobs:
       - name: Setup test-containers
         run: docker-compose up --build -d
       - name: Test
-        run: node test/test.js
-      - name: Teardown test-containers
         run: |
+          sleep 10
           docker-compose logs
-          docker-compose down
+          node test/test.js
+      - name: Teardown test-containers
+        run: docker-compose down
       - name: Publish beta-image
         if: github.ref == 'refs/heads/dev'
         env:

@@ -46,11 +46,12 @@ jobs:
       - name: Setup test-containers
         run: docker-compose up --build -d
       - name: Test
-        run: node test/test.js
-      - name: Teardown test-container
         run: |
+          sleep 10
           docker-compose logs
-          docker-compose down
+          node test/test.js
+      - name: Teardown test-container
+        run: docker-compose down
 
   build-and-push:
     name: Build and push Docker container
