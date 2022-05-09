@@ -22,6 +22,7 @@ fun main() {
     System.setProperty("CSP_DIRECTIVES", "default-src 'self'; script-src 'self';")
     System.setProperty("REFERRER_POLICY", "no-referrer")
     System.setProperty("EXPOSED_PORT", "8083")
+    System.setProperty("OUTSIDE_DOCKER", "true")
 
     System.setProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID, "frontend-app-id")
     System.setProperty(AzureAdEnvironmentVariables.AZURE_APP_JWK, rsaKey)

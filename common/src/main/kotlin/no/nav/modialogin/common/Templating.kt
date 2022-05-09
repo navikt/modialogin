@@ -27,7 +27,7 @@ object Templating {
                     }
                 }
                 "env" -> {
-                    KotlinUtils.getEnvProperty(name)
+                    KotlinUtils.getProperty(name) ?: "$name not found"
                 }
                 else -> {
                     throw IllegalStateException("Unknown variable pattern: '$match'")

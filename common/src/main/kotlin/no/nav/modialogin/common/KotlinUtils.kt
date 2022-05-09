@@ -9,7 +9,8 @@ object KotlinUtils {
         }
     }
 
-    fun getEnvProperty(name: String): String {
-        return System.getProperty(name, System.getenv(name)) ?: "'$name' not defined"
+    fun getProperty(name: String): String? = System.getProperty(name, System.getenv(name))
+    fun requireProperty(name: String): String = requireNotNull(getProperty(name)) {
+        "'$name' was not defined"
     }
 }

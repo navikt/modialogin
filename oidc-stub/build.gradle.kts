@@ -36,13 +36,6 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-    }
-}
-
 val fatJar = task("fatJar", type = Jar::class) {
     archiveBaseName.set("app")
     duplicatesStrategy = DuplicatesStrategy.INCLUDE

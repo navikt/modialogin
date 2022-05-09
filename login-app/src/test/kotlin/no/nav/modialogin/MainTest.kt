@@ -9,5 +9,6 @@ fun main() {
     System.setProperty("AUTH_TOKEN_RESOLVER", "modia_ID_token")
     System.setProperty("REFRESH_TOKEN_RESOLVER", "modia_refresh_token")
     System.setProperty("EXPOSED_PORT", "8082")
+    System.setProperty("OUTSIDE_DOCKER", "true")
     startApplication()
 }

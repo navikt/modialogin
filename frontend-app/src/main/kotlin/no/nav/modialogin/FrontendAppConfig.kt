@@ -1,10 +1,15 @@
 package no.nav.modialogin
 
-import dev.nohus.autokonfig.Value
-import dev.nohus.autokonfig.types.*
+import dev.nohus.autokonfig.types.BooleanSetting
+import dev.nohus.autokonfig.types.IntSetting
+import dev.nohus.autokonfig.types.StringSetting
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.features.bffproxyfeature.BFFProxyFeature.ProxyConfig
+import java.io.File
 
-class FrontendAppConfig {
+class FrontendAppConfig(proxyConfigFile: File) {
     val appName by StringSetting()
     val appVersion by StringSetting()
     val idpDiscoveryUrl by StringSetting()
@@ -15,61 +20,17 @@ class FrontendAppConfig {
     val cspDirectives by StringSetting(default = "default src 'self'")
     val referrerPolicy by StringSetting(default = "origin")
     val exposedPort by IntSetting(default = 8080)
-    val dockerCompose by BooleanSetting(default = false)
-
-    private val domain = if (dockerCompose) "echo-server" else "localhost:8089"
-    val proxyConfig by ListSetting(
-        ProxyConfigType,
-        default = listOf(
-            ProxyConfig(
-                prefix = "api",
-                url = "http://$domain/modiapersonoversikt-api",
-                rewriteDirectives = listOf(
-                    "SET_ON_BEHALF_OF_TOKEN prod-fss personoversikt modiapersonoversikt-api"
-                )
-            ),
-            ProxyConfig(
-                prefix = "proxy/app1",
-                url = "http://$domain/appname1"
-            ),
-            ProxyConfig(
-                prefix = "proxy/app2",
-                url = "http://$domain/appname2"
-            ),
-            ProxyConfig(
-                prefix = "proxy/open-endpoint",
-                url = "http://$domain"
-            ),
-            ProxyConfig(
-                prefix = "proxy/open-endpoint-no-cookie",
-                url = "http://$domain",
-                rewriteDirectives = listOf(
-                    "SET_HEADER Cookie ''"
-                )
-            ),
-            ProxyConfig(
-                prefix = "proxy/protected-endpoint",
-                url = "http://$domain"
-            ),
-            ProxyConfig(
-                prefix = "proxy/protected-endpoint-with-cookie-rewrite",
-                url = "http://$domain",
-                rewriteDirectives = listOf(
-                    "SET_HEADER Cookie 'ID_token=\$cookie{loginapp_ID_token}'",
-                    "SET_HEADER Authorization '\$cookie{loginapp_ID_token}'",
-                )
-            ),
-            ProxyConfig(
-                prefix = "env-data",
-                rewriteDirectives = listOf(
-                    "RESPOND 200 'APP_NAME: \$env{APP_NAME}'"
-                )
-            )
-        )
-    )
-}
-
-val ProxyConfigType: SettingType<ProxyConfig> = SettingType(::mapProxyConfig)
-private fun mapProxyConfig(value: Value): ProxyConfig {
-    TODO("Not yet implemented")
+    val proxyConfig: List<ProxyConfig> by lazy {
+        if (proxyConfigFile.exists()) {
+            val content = proxyConfigFile.readText()
+            Json
+                .runCatching {
+                    decodeFromString<List<ProxyConfig>>(content)
+                }
+                .onFailure { log.warn("Could not decode proxy-config", it) }
+                .getOrDefault(emptyList())
+        } else {
+            emptyList()
+        }
+    }
 }

@@ -4,7 +4,7 @@ import io.ktor.server.auth.*
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
-import no.nav.modialogin.common.KotlinUtils.getEnvProperty
+import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.Templating
 import no.nav.modialogin.common.features.authfeature.AuthFeature
 import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy
@@ -24,9 +24,9 @@ object AADOnBehalfOfDirevtiveSpecification : BFFProxy.RequestDirectiveSpecificat
 
     val aadOboTokenClient: OnBehalfOfTokenClient = AzureAdTokenClientBuilder.builder()
         // Reimplement `withNaisDefaults` to support reading system properties
-        .withClientId(getEnvProperty(AZURE_APP_CLIENT_ID))
-        .withPrivateJwk(getEnvProperty(AZURE_APP_JWK))
-        .withTokenEndpointUrl(getEnvProperty(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
+        .withClientId(requireProperty(AZURE_APP_CLIENT_ID))
+        .withPrivateJwk(requireProperty(AZURE_APP_JWK))
+        .withTokenEndpointUrl(requireProperty(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
         .buildOnBehalfOfTokenClient()
 
     override fun canHandle(directive: String): Boolean {

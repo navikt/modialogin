@@ -3,6 +3,7 @@ package no.nav.modialogin
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import no.nav.modialogin.common.AppState
+import no.nav.modialogin.common.KotlinUtils
 import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.features.DefaultFeatures
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
@@ -15,8 +16,9 @@ fun main() {
 }
 
 fun startApplication() {
+    val outsideDocker = KotlinUtils.getProperty("OUTSIDE_DOCKER") == "true"
     val appConfig = LoginAppConfig()
-    val port = if (appConfig.dockerCompose) 8080 else appConfig.exposedPort
+    val port = if (outsideDocker) appConfig.exposedPort else 8080
     server(port) { naisState ->
         val config = AppState(naisState, appConfig)
         install(StatusPages, DefaultFeatures.statusPageConfig)

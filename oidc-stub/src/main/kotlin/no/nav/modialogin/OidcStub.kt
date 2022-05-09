@@ -40,7 +40,11 @@ val TOKEN_LIFESPAN = 10 * 60 * 1000
 var lastNonce: String? = null
 
 fun main() {
-    val usingDockerCompose = System.getenv("DOCKER_COMPOSE").toBoolean()
+    startApplication()
+}
+
+fun startApplication() {
+    val outsideDocker = System.getProperty("OUTSIDE_DOCKER") == "true"
     val rsaKey: RSAKey = RSAKeyGenerator(2048)
         .keyUse(KeyUse.SIGNATURE) // indicate the intended use of the key
         .keyID(UUID.randomUUID().toString()) // give the key a unique ID
@@ -57,11 +61,11 @@ fun main() {
         routing {
             route(".well-known") {
                 get("openid-configuration") {
-                    if (usingDockerCompose) {
+                    if (outsideDocker) {
                         call.respond(
                             JWKConfig(
-                                url = "http://oidc-stub:8080/.well-known/jwks.json",
-                                tokenEndpoint = "http://oidc-stub:8080/oauth/token",
+                                url = "http://localhost:8080/.well-known/jwks.json",
+                                tokenEndpoint = "http://localhost:8080/oauth/token",
                                 authorizationEndpoint = "http://localhost:8080/authorize",
                                 issuer = "stub"
                             )
@@ -69,8 +73,8 @@ fun main() {
                     } else {
                         call.respond(
                             JWKConfig(
-                                url = "http://localhost:8080/.well-known/jwks.json",
-                                tokenEndpoint = "http://localhost:8080/oauth/token",
+                                url = "http://oidc-stub:8080/.well-known/jwks.json",
+                                tokenEndpoint = "http://oidc-stub:8080/oauth/token",
                                 authorizationEndpoint = "http://localhost:8080/authorize",
                                 issuer = "stub"
                             )
@@ -122,7 +126,11 @@ fun main() {
                 val accessToken = PlainJWT(
                     JWTClaimsSet.Builder().expirationTime(Date(System.currentTimeMillis() + 10_000)).build()
                 ).serialize()
-                call.respondText("{ \"token_type\": \"bearer\", \"access_token\": \"$accessToken\" }", ContentType.Application.Json, HttpStatusCode.OK)
+                call.respondText(
+                    "{ \"token_type\": \"bearer\", \"access_token\": \"$accessToken\" }",
+                    ContentType.Application.Json,
+                    HttpStatusCode.OK
+                )
             }
         }
     }.start(wait = true)
