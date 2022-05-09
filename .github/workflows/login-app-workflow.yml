@@ -3,13 +3,20 @@ name: Login app
 on:
   push:
     paths-ignore:
+      - '.github/workflows/frontend-app-workflow.yml'
       - '.github/workflows/frontend-image-workflow.yml'
       - 'oidc-stub/**'
       - 'frontend-image/**'
+      - 'frontend-app/**'
       - '**.md'
       - '.editorconfig'
       - '.gitignore'
       - 'CODEOWNERS'
+      - 'docker-compose.yml'
+
+concurrency:
+  group: login-app-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/modialogin:${{ github.sha }}

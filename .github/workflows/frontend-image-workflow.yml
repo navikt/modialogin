@@ -1,15 +1,22 @@
-name: Frontend app
+name: Frontend image
 
 on:
   push:
     paths-ignore:
       - '.github/workflows/login-app-workflow.yml'
+      - '.github/workflows/frontend-app-workflow.yml'
       - 'oidc-stub/**'
       - 'login-app/**'
+      - 'frontend-app/**'
       - '**.md'
       - '.editorconfig'
       - '.gitignore'
       - 'CODEOWNERS'
+      - 'docker-compose.yml'
+
+concurrency:
+  group: frontend-image-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}
