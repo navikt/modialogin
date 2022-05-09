@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.common.KtorServer.log
 
-sealed class Oidc {
+class Oidc {
     @Serializable
     class JwksConfig(
         @SerialName("jwks_uri") val jwksUrl: String,
