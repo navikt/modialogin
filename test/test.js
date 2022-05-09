@@ -132,7 +132,6 @@ test('static resources returns 200 ok if logged in', async () => {
         'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
     assertThat(staticResource.statusCode, 200, '/frontend returns 302');
-    assertThat(staticResource.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
@@ -247,4 +246,12 @@ test('csp directive is added to request', async () => {
     const cspPolicy = page.headers['content-security-policy-report-only'];
     assertThat(cspPolicy, isDefined, '/frontend has report-only CSP-policy');
     assertThat(cspPolicy, contains('script-src'), '/frontend has report-only CSP-policy');
+});
+
+test('referrer-policy is added to response', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(page.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
 });
