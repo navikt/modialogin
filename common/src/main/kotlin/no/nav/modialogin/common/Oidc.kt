@@ -18,7 +18,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import no.nav.modialogin.common.KotlinUtils.retry
 import no.nav.modialogin.common.KtorServer.log
+import kotlin.time.Duration.Companion.seconds
 
 class Oidc {
     @Serializable
@@ -56,9 +58,11 @@ class Oidc {
             }
         }
 
-        val jwksConfig: JwksConfig = runBlocking {
-            log.info("Fetching oidc from ${config.discoveryUrl}")
-            client.get(config.discoveryUrl).body()
+        val jwksConfig: JwksConfig = retry(10, 2.seconds) {
+            runBlocking {
+                log.info("Fetching oidc from ${config.discoveryUrl}")
+                client.get(config.discoveryUrl).body()
+            }
         }
     }
 
