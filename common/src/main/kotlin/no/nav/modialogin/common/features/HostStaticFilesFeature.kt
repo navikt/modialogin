@@ -43,7 +43,7 @@ class HostStaticFilesFeature(val config: Config) {
                 status(HttpStatusCode.NotFound) { call, _ ->
                     if (!call.isRequestForFile()) {
                         call.response.status(HttpStatusCode.OK)
-                        call.respondFile(File(rootFolder, "app/index.html"))
+                        call.respondFile(File(tmplFolder, "index.html"))
                     }
                 }
 
