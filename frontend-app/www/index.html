@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Modialogin frontend-image</title>
+    <link rel="stylesheet" href="/frontend/static/css/index.css">
+</head>
+<body>
+<h1>Modialogin frontend-image from root</h1>
+<p>
+    Om denne dukker opp så har du forhåpentligvis startet appen i test-modus.
+    Hvis ikke kan det tyde på at docker-imaget ikke er riktig satt opp.
+</p>
+<p>
+    <b>Eksempel på Dockerfile:</b>
+</p>
+<pre>
+FROM docker.pkg.github.com/navikt/modialogin/frontend:ecd23b296051ce8d436025e242b79521d9244b32
+# Hvor "build" mappen inneholder filene du ønsker skal hostes.
+COPY build /app
+</pre>
+
+<div>
+    Denne teksten er her for å verifisere at innlasting av CSS fra en nøstet mappe fungerer.
+    Status: <span class="verifier">Er denne grønn er alt ok.</span>
+</div>
+<p>
+    Environment variables &#36;env{APP_NAME}: $env{APP_NAME}
+</p>
+<p>
+    Environment variables 	&#36;env{APP_DUMMY_SECRET}: $env{APP_DUMMY_SECRET}
+</p>
+</body>
+</html>

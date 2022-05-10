@@ -6,7 +6,6 @@ val logbackVersion = "1.2.11"
 val logstashVersion = "7.1.1"
 
 plugins {
-    application
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
 }
@@ -21,11 +20,20 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(project(":common"))
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-server-default-headers:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.22")
+
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
+    implementation("dev.nohus:AutoKonfig:1.0.4")
+    implementation("no.nav.common:token-client:2.2022.04.25_07.57-b8b4682228e7")
+
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.22")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 }
 
 java {
@@ -36,13 +44,20 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 val fatJar = task("fatJar", type = Jar::class) {
     archiveBaseName.set("app")
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     manifest {
-        attributes["Implementation-Title"] = "ModiaLoginStub"
+        attributes["Implementation-Title"] = "ModiaLogin"
         attributes["Implementation-Version"] = archiveVersion
-        attributes["Main-Class"] = "no.nav.modialogin.OidcStubKt"
+        attributes["Main-Class"] = "no.nav.modialogin.MainKt"
     }
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     with(tasks.jar.get() as CopySpec)

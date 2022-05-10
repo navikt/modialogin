@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <!-- Use this locally for easier to read logs -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- use this on nais -->
+    <appender name="stdout_json" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                <exclude>java\.util\.concurrent\..*</exclude>
+                <exclude>org\.apache\.tomcat\..*</exclude>
+                <exclude>org\.apache\.coyote\..*</exclude>
+                <exclude>org\.apache\.catalina\..*</exclude>
+                <exclude>org\.springframework\.web\..*</exclude>
+            </throwableConverter>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <!-- EXPOSED_PORT should only used when running locally -->
+        <if condition='isDefined("EXPOSED_PORT")'>
+            <then>
+                <appender-ref ref="stdout" />
+            </then>
+            <else>
+                <appender-ref ref="stdout_json" />
+            </else>
+        </if>
+    </root>
+</configuration>
