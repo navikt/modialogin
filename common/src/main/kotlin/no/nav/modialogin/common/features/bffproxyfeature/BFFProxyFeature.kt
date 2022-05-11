@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.Templating
 import no.nav.modialogin.common.features.maskSensitiveInfo
 
 object BFFProxyFeature {
@@ -48,13 +49,17 @@ object BFFProxyFeature {
     private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
         val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
         val client = HttpClient(CIO)
+        val targetUrl = Templating.replaceVariableReferences(config.url ?: "", null)
         handle {
             if (responseHandler != null) {
                 responseHandler(this)
             } else {
                 val request = call.request
                 val proxyRequestPath = request.uri.removePrefix("/$appName/${config.prefix}/")
-                val proxyRequestURI = "${config.url}/$proxyRequestPath"
+                val proxyRequestURI = Templating.replaceVariableReferences(
+                    "$targetUrl/$proxyRequestPath",
+                    request
+                )
                 val proxyRequestHeaders = request.headers
 
                 log.info("Proxying request to ${proxyRequestURI.maskSensitiveInfo()}")
