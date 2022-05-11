@@ -12,7 +12,7 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
             route("internal") {
                 get("isAlive") {
                     if (config.isAlive) {
-                        call.respondText("Alive: $appname")
+                        call.respondText("Alive")
                     } else {
                         call.respondText("Not alive", status = HttpStatusCode.InternalServerError)
                     }
