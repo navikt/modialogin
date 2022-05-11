@@ -26,7 +26,7 @@ fun main() {
 fun startApplication() {
     val outsideDocker = getProperty("OUTSIDE_DOCKER") == "true"
     val proxyConfigFile = if (outsideDocker) "./frontend-app/proxy-config/proxy-config.json" else "/proxy-config.json"
-    val staticFilesRootFolder = if (outsideDocker) "./frontend-app/www" else "/app"
+    val staticFilesRootFolder = if (outsideDocker) "./frontend-app/www" else "/www"
 
     val appConfig = FrontendAppConfig(File(proxyConfigFile))
     val port = if (outsideDocker) appConfig.exposedPort else 8080
