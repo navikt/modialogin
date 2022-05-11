@@ -5,7 +5,6 @@ on:
     paths-ignore:
       - '.github/workflows/login-app-workflow.yml'
       - '.github/workflows/frontend-image-workflow.yml'
-      - 'oidc-stub/**'
       - 'login-app/**'
       - 'frontend-image/**'
       - '**.md'
