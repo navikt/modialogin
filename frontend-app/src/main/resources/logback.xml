@@ -24,14 +24,8 @@
     </appender>
 
     <root level="INFO">
-        <!-- EXPOSED_PORT should only used when running locally -->
-        <if condition='isDefined("EXPOSED_PORT")'>
-            <then>
-                <appender-ref ref="stdout" />
-            </then>
-            <else>
-                <appender-ref ref="stdout_json" />
-            </else>
-        </if>
+        <appender-ref ref="stdout_json" />
+        <!--        Only use locally  -->
+        <!--        <appender-ref ref="stdout" />-->
     </root>
 </configuration>
