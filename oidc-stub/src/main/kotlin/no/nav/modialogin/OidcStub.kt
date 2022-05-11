@@ -36,7 +36,7 @@ class TokenExchangeResult(
     @SerialName("access_token") val accessToken: String?,
     @SerialName("refresh_token") val refreshToken: String?
 )
-val TOKEN_LIFESPAN = 10 * 60 * 1000
+val TOKEN_LIFESPAN = 10 * 60 * 60 * 1000
 var lastNonce: String? = null
 
 fun main() {
