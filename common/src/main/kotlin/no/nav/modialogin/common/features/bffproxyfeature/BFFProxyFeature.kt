@@ -49,7 +49,6 @@ object BFFProxyFeature {
     private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
         val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
         val client = HttpClient(CIO)
-        val targetUrl = Templating.replaceVariableReferences(config.url ?: "", null)
         handle {
             if (responseHandler != null) {
                 responseHandler(this)
@@ -57,7 +56,7 @@ object BFFProxyFeature {
                 val request = call.request
                 val proxyRequestPath = request.uri.removePrefix("/$appName/${config.prefix}/")
                 val proxyRequestURI = Templating.replaceVariableReferences(
-                    "$targetUrl/$proxyRequestPath",
+                    "${config.url}/$proxyRequestPath",
                     request
                 )
                 val proxyRequestHeaders = request.headers

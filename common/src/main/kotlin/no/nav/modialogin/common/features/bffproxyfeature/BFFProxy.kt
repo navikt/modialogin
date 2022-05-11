@@ -54,7 +54,6 @@ class BFFProxy(initializingDirectives: List<String>) {
 
     fun parseDirectives(directives: List<String>): DirectiveHandlers {
         val parsedDirectives = directives
-            .map { Templating.replaceVariableReferences(it, null) }
             .map(::findHandler)
             .groupBy { it.first.type }
         val responseDirectives = parsedDirectives[DirectiveSpecificationType.RESPONSE]
