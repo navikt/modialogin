@@ -29,12 +29,13 @@ object BFFProxyFeature {
     )
 
     fun Application.installBFFProxy(config: Config) {
+        val bffproxy = BFFProxy(config.proxyConfig.flatMap { it.rewriteDirectives })
         routing {
             route(config.appName) {
                 config.proxyConfig.forEach { proxyConfig ->
                     authenticate {
                         route("${proxyConfig.prefix}/{...}") {
-                            createProxyHandler(config.appName, proxyConfig)
+                            createProxyHandler(config.appName, bffproxy, proxyConfig)
                         }
                     }
                 }
@@ -42,8 +43,8 @@ object BFFProxyFeature {
         }
     }
 
-    private fun Route.createProxyHandler(appName: String, config: ProxyConfig) {
-        val (responseHandler, requestHandler) = BFFProxy.parseDirectives(config.rewriteDirectives)
+    private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
+        val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
         val client = HttpClient(CIO)
         handle {
             if (responseHandler != null) {

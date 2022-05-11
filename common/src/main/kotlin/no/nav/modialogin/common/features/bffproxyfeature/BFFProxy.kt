@@ -11,11 +11,12 @@ import java.lang.StringBuilder
 
 typealias ResponseDirectiveHandler = suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 typealias RequestDirectiveHandler = HttpRequestBuilder.(ApplicationCall) -> Unit
-object BFFProxy {
+class BFFProxy(initializingDirectives: List<String>) {
     enum class DirectiveSpecificationType {
         RESPONSE, REQUEST
     }
     sealed interface DirectiveSpecification {
+        fun initialize() {}
         fun canHandle(directive: String): Boolean
         fun describe(directive: String, sb: StringBuilder)
         val type: DirectiveSpecificationType
@@ -42,6 +43,14 @@ object BFFProxy {
         RespondDirectiveSpecification,
         AADOnBehalfOfDirevtiveSpecification
     )
+
+    init {
+        initializingDirectives
+            .map(::findHandler)
+            .map{ it.first }
+            .distinct()
+            .forEach { it.initialize() }
+    }
 
     fun parseDirectives(directives: List<String>): DirectiveHandlers {
         val parsedDirectives = directives
