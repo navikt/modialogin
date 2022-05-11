@@ -29,6 +29,7 @@ object DefaultFeatures {
         }
         install(CallLogging) {
             level = Level.INFO
+            disableDefaultColors()
             filter { call -> call.request.path().contains("/internal/").not() }
         }
     }
