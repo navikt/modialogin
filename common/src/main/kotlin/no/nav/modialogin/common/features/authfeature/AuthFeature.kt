@@ -78,6 +78,6 @@ class AuthFeature(private val config: Config) {
 
     private fun Payload.doesNotExpireWithin(withinMillies: Long): Boolean {
         val shiftedExpirationTime = this.expiresAt.time - withinMillies
-        return System.currentTimeMillis() > shiftedExpirationTime
+        return System.currentTimeMillis() < shiftedExpirationTime
     }
 }
