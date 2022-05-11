@@ -1,4 +1,4 @@
-package no.nav.modialogin.infra
+package no.nav.modialogin.common
 
 import dev.nohus.autokonfig.AutoKonfig
 import dev.nohus.autokonfig.clear

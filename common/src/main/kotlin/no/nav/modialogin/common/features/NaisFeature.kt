@@ -1,10 +1,10 @@
-package no.nav.modialogin.features
+package no.nav.modialogin.common.features
 
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import no.nav.modialogin.infra.NaisState
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import no.nav.modialogin.common.NaisState
 
 fun Application.installNaisFeature(appname: String, appversion: String, config: NaisState) {
     routing {
@@ -12,7 +12,7 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
             route("internal") {
                 get("isAlive") {
                     if (config.isAlive) {
-                        call.respondText("Alive: $appname")
+                        call.respondText("Alive")
                     } else {
                         call.respondText("Not alive", status = HttpStatusCode.InternalServerError)
                     }

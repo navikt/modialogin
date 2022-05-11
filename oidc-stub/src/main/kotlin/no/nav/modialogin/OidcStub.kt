@@ -8,15 +8,16 @@ import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.PlainJWT
 import com.nimbusds.jwt.SignedJWT
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.serialization.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -35,11 +36,15 @@ class TokenExchangeResult(
     @SerialName("access_token") val accessToken: String?,
     @SerialName("refresh_token") val refreshToken: String?
 )
-val TOKEN_LIFESPAN = 10 * 60 * 1000
+val TOKEN_LIFESPAN = 10 * 60 * 60 * 1000
 var lastNonce: String? = null
 
 fun main() {
-    val usingDockerCompose = System.getenv("DOCKER_COMPOSE").toBoolean()
+    startApplication()
+}
+
+fun startApplication() {
+    val outsideDocker = System.getProperty("OUTSIDE_DOCKER") == "true"
     val rsaKey: RSAKey = RSAKeyGenerator(2048)
         .keyUse(KeyUse.SIGNATURE) // indicate the intended use of the key
         .keyID(UUID.randomUUID().toString()) // give the key a unique ID
@@ -56,11 +61,11 @@ fun main() {
         routing {
             route(".well-known") {
                 get("openid-configuration") {
-                    if (usingDockerCompose) {
+                    if (outsideDocker) {
                         call.respond(
                             JWKConfig(
-                                url = "http://oidc-stub:8080/.well-known/jwks.json",
-                                tokenEndpoint = "http://oidc-stub:8080/oauth/token",
+                                url = "http://localhost:8080/.well-known/jwks.json",
+                                tokenEndpoint = "http://localhost:8080/oauth/token",
                                 authorizationEndpoint = "http://localhost:8080/authorize",
                                 issuer = "stub"
                             )
@@ -68,8 +73,8 @@ fun main() {
                     } else {
                         call.respond(
                             JWKConfig(
-                                url = "http://localhost:8080/.well-known/jwks.json",
-                                tokenEndpoint = "http://localhost:8080/oauth/token",
+                                url = "http://oidc-stub:8080/.well-known/jwks.json",
+                                tokenEndpoint = "http://oidc-stub:8080/oauth/token",
                                 authorizationEndpoint = "http://localhost:8080/authorize",
                                 issuer = "stub"
                             )
@@ -115,6 +120,16 @@ fun main() {
                         accessToken = "random acces",
                         refreshToken = "refresh_token"
                     )
+                )
+            }
+            post("oboflow") {
+                val accessToken = PlainJWT(
+                    JWTClaimsSet.Builder().expirationTime(Date(System.currentTimeMillis() + 10_000)).build()
+                ).serialize()
+                call.respondText(
+                    "{ \"token_type\": \"bearer\", \"access_token\": \"$accessToken\" }",
+                    ContentType.Application.Json,
+                    HttpStatusCode.OK
                 )
             }
         }

@@ -5,13 +5,13 @@ const CYAN = useColor ? '\x1b[36m' : '';
 const RESET = useColor ? '\x1b[0m' : '';
 
 const tests = [];
-const testsWithErrors = [];
+const results = [];
 let __assertions = [];
 let __scheduled = null;
 let __preconditions = [];
 
 function setup(name, exec) {
-    __preconditions.push({ name, exec })
+    __preconditions.push({name, exec})
 }
 
 function test(name, exec) {
@@ -23,7 +23,7 @@ function test(name, exec) {
 function runTests() {
     (async function asynsTestRunner() {
         console.log('');
-        for (const { name, exec } of __preconditions) {
+        for (const {name, exec} of __preconditions) {
             console.log(`${CYAN}[ UP ]${RESET} ${name}`);
             await exec();
             console.log();
@@ -33,6 +33,7 @@ function runTests() {
                 __assertions = [];
                 await exec();
                 const errors = __assertions.filter((assertion) => assertion.state !== 'ok');
+                results.push({name, ok: errors.length === 0, assertions: __assertions});
                 console.log(`${CYAN}[TEST]${RESET} ${name}`);
                 __assertions
                     .forEach((assertion) => {
@@ -40,17 +41,32 @@ function runTests() {
                         console.log(`${prefix} ${assertion.message}`);
                     });
                 console.log('');
-                if (errors.length > 0) {
-                    testsWithErrors.push(name);
-                }
             } catch (e) {
                 console.log(`${RED} [ERROR] ${RESET} "${name}" threw exception, exiting with non-zero exit code.`, e);
-                testsWithErrors.push(name);
+                results.push({
+                    name, ok: false, assertions: [{
+                        state: 'error',
+                        message: `Error: ${e}`,
+                        shortmessage: `Error: ${e}`
+                    }]
+                });
             }
         }
+
+        const testsWithErrors = results.filter(test => !test.ok);
+        const testsWithoutErrors = results.filter(test => test.ok);
         if (testsWithErrors.length > 0) {
             console.log('');
             console.log(`${RED}Not all tests passed, found ${testsWithErrors.length} failing tests.${RESET}`);
+            testsWithErrors.forEach(test => {
+                console.log(`${RED}   - ${test.name}${RESET}`)
+                test.assertions.forEach(assertion => {
+                    const prefix = assertion.state === 'ok' ? `${GREEN} [OK] ${RESET}` : `${RED} [KO] ${RESET}`;
+                    console.log(`       - ${prefix} ${assertion.shortmessage}`);
+                });
+            })
+            console.log('');
+            console.log(`${RED}${testsWithoutErrors.length} tests completed succesfully.${RESET}`);
             console.log('');
             process.exit(1);
         }
@@ -60,7 +76,7 @@ function runTests() {
 function assertThat(actual, expected, message) {
     const verifier = typeof expected === 'function' ? expected : (() => {
         const result = JSON.stringify(actual) === JSON.stringify(expected);
-        return {result, expected: JSON.stringify(expected), actual };
+        return {result, expected: JSON.stringify(expected), actual};
     });
     const verification = verifier(actual);
     if (verification.result) {
@@ -68,7 +84,8 @@ function assertThat(actual, expected, message) {
     } else {
         __assertions.push({
             state: 'error',
-            message: `${message}. Expected: '${verification.expected}', but got: '${verification.actual}'`
+            message: `${message}. Expected: '${verification.expected}', but got: '${verification.actual}'`,
+            shortmessage: message
         });
     }
 }
@@ -76,7 +93,7 @@ function assertThat(actual, expected, message) {
 function verify(actual, expected, message) {
     const verifier = typeof expected === 'function' ? expected : (() => {
         const result = JSON.stringify(actual) === JSON.stringify(expected);
-        return {result, expected: JSON.stringify(expected), actual };
+        return {result, expected: JSON.stringify(expected), actual};
     });
 
     const verification = verifier(actual);
@@ -89,7 +106,8 @@ function verify(actual, expected, message) {
 }
 
 const sleep = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-function retry({ retry, interval }, exec) {
+
+function retry({retry, interval}, exec) {
     let count = 0;
     return async () => {
         do {
@@ -109,6 +127,12 @@ function retry({ retry, interval }, exec) {
     };
 }
 
+const equals = (expected) => (value) => ({
+    result: expected === value,
+    expected,
+    actual: value
+});
+
 const isDefined = (value) => ({
     result: value !== null && value !== undefined,
     expected: '<any value>',
@@ -120,27 +144,27 @@ const isNotDefined = value => ({
     actual: value
 })
 const startsWith = (prefix) => (value) => ({
-    result: value && value.startsWith(prefix),
+    result: isDefined(value).result && value.startsWith(prefix),
     expected: 'value.startsWith(' + prefix + ')',
     actual: value
 });
 const contains = (content) => (value) => ({
-    result: value && value.includes(content),
+    result: isDefined(value).result && value.includes(content),
     expected: 'value.includes(' + content + ')',
     actual: value
 });
 const notContains = (content) => (value) => ({
-    result: value && !value.includes(content),
+    result: isDefined(value).result && !value.includes(content),
     expected: 'not(value.includes(' + content + '))',
     actual: value
 });
 const hasLengthGreaterThen = (minLength) => (value) => ({
-    result: value && value.length > minLength,
+    result: isDefined(value).result && value.length > minLength,
     expected: 'value.length > ' + minLength,
     actual: `value.length == ${value && value.length || undefined} (${value})`
 });
 
 module.exports = {
     test, assertThat, setup, verify, retry,
-    isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
+    equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
 };

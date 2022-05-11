@@ -1,4 +1,4 @@
-const { test, assertThat, verify, setup, retry, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
+const { test, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
 setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
@@ -21,12 +21,14 @@ test('oidc-stub provides jwks', async () => {
     assertThat(jwks.body, isDefined, 'jwks.json returns a json body');
     assertThat(jwks.body.keys.length, 1, 'jwks has one key');
 });
-
-test('attempts to get frontend resource without trailing slash', async () => {
-    const initial = await fetch('http://localhost:8083/frontend');
-    assertThat(initial.statusCode, 301, '/frontend returns 301');
-    assertThat(initial.redirectURI.path, 'frontend/', 'appends trailing slash');
-});
+/**
+ * Redirect not required
+ */
+// test('attempts to get frontend resource without trailing slash', async () => {
+//     const initial = await fetch('http://localhost:8083/frontend');
+//     assertThat(initial.statusCode, 301, '/frontend returns 301');
+//     assertThat(initial.redirectURI.path, 'frontend/', 'appends trailing slash');
+// });
 
 test('attempts to get frontend resource should result in login-flow', async () => {
     const initial = await fetch('http://localhost:8083/frontend/');
@@ -129,9 +131,17 @@ test('static resources returns 200 ok if logged in', async () => {
     const staticResource = await fetch('http://localhost:8083/frontend/static/css/index.css', {
         'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
-    assertThat(staticResource.statusCode, 200, '/frontend returns 302');
-    assertThat(staticResource.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
+    assertThat(staticResource.statusCode, 200, '/frontend returns 200');
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
+});
+
+test('frontend routing should return index.html', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const staticResource = await fetch('http://localhost:8083/frontend/some/spa-route?query=param', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(staticResource.statusCode, 200, '/frontend returns 200');
+    assertThat(staticResource.body, contains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
 test('missing static resource returns 404 instead of fallback to index.html', async () => {
@@ -143,17 +153,21 @@ test('missing static resource returns 404 instead of fallback to index.html', as
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
-test('proxying to open endpoint when not logged in', async () => {
-    const openEndpointWithoutCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data');
-    assertThat(openEndpointWithoutCookie.statusCode, 200, '/frontend proxied to open endpoint');
-    assertThat(openEndpointWithoutCookie.body.path, '/data', '/frontend removed url prefix');
-    assertThat(openEndpointWithoutCookie.body.headers['cookie'], isNotDefined, '/frontend did not send cookie');
-});
+/**
+ * Feature no longer supported.
+ * All request that are proxyied must be by an authenticated user
+ */
+// test('proxying to open endpoint when not logged in', async () => {
+//     const openEndpointWithoutCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data');
+//     assertThat(openEndpointWithoutCookie.statusCode, 200, '/frontend proxied to open endpoint');
+//     assertThat(openEndpointWithoutCookie.body.path, '/data', '/frontend removed url prefix');
+//     assertThat(openEndpointWithoutCookie.body.headers['cookie'], isNotDefined, '/frontend did not send cookie');
+// });
 
 test('proxying to open endpoint when logged in', async () => {
     const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
     const openEndpointWithCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data', {
-        'Cookie': tokens.body['id_token']
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
     assertThat(openEndpointWithCookie.statusCode, 200, '/frontend proxied to open endpoint');
     assertThat(openEndpointWithCookie.body.path, '/data', '/frontend removed url prefix');
@@ -202,8 +216,25 @@ test('proxying to protected endpoint when logged in, and rewriting cookie name',
     assertThat(protectedEndpoint.body.headers['cookie'], notContains('modia_ID_token'), '/frontend did not send modia_ID_token cookie');
 });
 
+test('proxying with obo-flow-directive exchanges the provided token', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const token = tokens.body['id_token']
+    const apiEndpoint = await fetchJson('http://localhost:8083/frontend/api/some/data/endpoint', {
+        'Cookie': `modia_ID_token=${token};`
+    });
+
+    assertThat(apiEndpoint.statusCode, 200, '/api returns 200')
+    assertThat(apiEndpoint.body.path, '/modiapersonoversikt-api/some/data/endpoint', 'correct path is used by proxy')
+    assertThat(apiEndpoint.body.headers['cookie'], equals(''), 'authorization header is set')
+    assertThat(apiEndpoint.body.headers['authorization'], startsWith("Bearer "), 'authorization header is different from token')
+    assertThat(apiEndpoint.body.headers['authorization'], notContains(token), 'authorization header is different from token')
+});
+
 test('environments variables are injected into nginx config', async () => {
-    const page = await fetch('http://localhost:8083/frontend/env-data');
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/env-data', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
     assertThat(page.body, 'APP_NAME: frontend', 'Page contains environmentvariable value')
 });
 
@@ -212,7 +243,7 @@ test('environments variables are injected into html config', async () => {
     const page = await fetch('http://localhost:8083/frontend/', {
         'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
-    assertThat(page.body, contains('&amp;{APP_NAME}: frontend'), 'Page contains environmentvariable value')
+    assertThat(page.body, contains('&#36;env{APP_NAME}: frontend'), 'Page contains environmentvariable value')
 });
 
 test('csp directive is added to request', async () => {
@@ -224,4 +255,12 @@ test('csp directive is added to request', async () => {
     const cspPolicy = page.headers['content-security-policy-report-only'];
     assertThat(cspPolicy, isDefined, '/frontend has report-only CSP-policy');
     assertThat(cspPolicy, contains('script-src'), '/frontend has report-only CSP-policy');
+});
+
+test('referrer-policy is added to response', async () => {
+    const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
+    const page = await fetch('http://localhost:8083/frontend/', {
+        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+    });
+    assertThat(page.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
 });

@@ -1,23 +1,28 @@
-package no.nav.modialogin.oidc
+package no.nav.modialogin.common
 
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
-import io.ktor.client.features.auth.*
-import io.ktor.client.features.auth.providers.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import no.nav.modialogin.common.KotlinUtils.retry
+import no.nav.modialogin.common.KtorServer.log
+import kotlin.time.Duration.Companion.seconds
 
-class OidcClient {
+class Oidc {
     @Serializable
     class JwksConfig(
         @SerialName("jwks_uri") val jwksUrl: String,
@@ -53,8 +58,11 @@ class OidcClient {
             }
         }
 
-        val jwksConfig: JwksConfig = runBlocking {
-            client.get(config.discoveryUrl)
+        val jwksConfig: JwksConfig = retry(10, 2.seconds) {
+            runBlocking {
+                log.info("Fetching oidc from ${config.discoveryUrl}")
+                client.get(config.discoveryUrl).body()
+            }
         }
     }
 
@@ -72,35 +80,40 @@ class OidcClient {
         suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
                 authenticatedClient.post(jwksConfig.tokenEndpoint) {
-                    body = FormDataContent(
-                        Parameters.build {
-                            set("grant_type", "authorization_code")
-                            set("realm", "/")
-                            set("redirect_uri", loginUrl)
-                            set("code", code)
-                        }
+                    setBody(
+                        FormDataContent(
+                            Parameters.build {
+                                set("grant_type", "authorization_code")
+                                set("realm", "/")
+                                set("redirect_uri", loginUrl)
+                                set("code", code)
+                            }
+                        )
                     )
-                }
+                }.body()
             }
 
         suspend fun refreshIdToken(refreshToken: String): String =
             withContext(Dispatchers.IO) {
                 val response: RefreshIdTokenResponse = authenticatedClient.post(jwksConfig.tokenEndpoint) {
-                    body = FormDataContent(
-                        Parameters.build {
-                            set("grant_type", "refresh_token")
-                            set("scope", "openid")
-                            set("realm", "/")
-                            set("refresh_token", refreshToken)
-                        }
+                    setBody(
+                        FormDataContent(
+                            Parameters.build {
+                                set("grant_type", "refresh_token")
+                                set("scope", "openid")
+                                set("realm", "/")
+                                set("refresh_token", refreshToken)
+                            }
+                        )
                     )
-                }
+                }.body()
                 response.idToken
             }
     }
 }
 
 private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.basicAuth(clientId: String, clientSecret: String) {
+    val basicAuthCredentials = BasicAuthCredentials(clientId, clientSecret)
     install(Auth) {
         basic {
             /**
@@ -108,17 +121,16 @@ private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.basicAuth(clientId:
              * and only then sends the authorization header.
              * OIDC responds with 400 Bad request if the header is not present, hence why we need this configuration.
              */
-            sendWithoutRequest = true
-            username = clientId
-            password = clientSecret
+            sendWithoutRequest { true }
+            credentials { basicAuthCredentials }
         }
     }
 }
 
 private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.json() {
-    install(JsonFeature) {
-        serializer = KotlinxSerializer(
-            kotlinx.serialization.json.Json {
+    install(ContentNegotiation) {
+        json(
+            Json {
                 ignoreUnknownKeys = true
                 prettyPrint = true
                 isLenient = true

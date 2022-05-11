@@ -50,7 +50,7 @@ function fetchJson(url, headers, body) {
             if (body) {
                 return {statusCode, statusMessage, redirectURI, body: JSON.parse(body)}
             } else {
-                throw new Error(`${url} did not return json, body: ${body}`);
+                throw new Error(`${url} did not return json, statuscode: ${statusCode} body: ${body}`);
             }
         });
 }

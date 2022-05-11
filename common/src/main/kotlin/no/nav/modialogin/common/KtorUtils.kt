@@ -1,8 +1,8 @@
-package no.nav.modialogin.utils
+package no.nav.modialogin.common
 
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets.UTF_8
