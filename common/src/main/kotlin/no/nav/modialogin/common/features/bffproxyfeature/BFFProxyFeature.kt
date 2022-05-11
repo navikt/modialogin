@@ -14,6 +14,8 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.features.maskSensitiveInfo
 
 object BFFProxyFeature {
     class Config(
@@ -55,6 +57,7 @@ object BFFProxyFeature {
                 val proxyRequestURI = "${config.url}/$proxyRequestPath"
                 val proxyRequestHeaders = request.headers
 
+                log.info("Proxying request to ${proxyRequestURI.maskSensitiveInfo()}")
                 val proxyResponse = withContext(Dispatchers.IO) {
                     client.request(proxyRequestURI) {
                         headers {
