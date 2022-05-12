@@ -9,7 +9,6 @@ import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import no.nav.modialogin.common.logging.maskSensitiveInfo
 import org.slf4j.event.Level
 
 object DefaultFeatures {
@@ -36,10 +35,9 @@ object DefaultFeatures {
     }
 
     private fun logFormat(call: ApplicationCall): String {
-        val string = when (val status = call.response.status()) {
+        return when (val status = call.response.status()) {
             HttpStatusCode.Found -> "$status: ${call.request.httpMethod.value} - ${call.request.path()} -> ${call.response.headers[HttpHeaders.Location]}"
             else -> "$status: ${call.request.httpMethod.value} - ${call.request.path()}"
         }
-        return string.maskSensitiveInfo()
     }
 }
