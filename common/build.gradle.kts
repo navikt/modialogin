@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val ktorVersion = "2.0.0"
 val logbackVersion = "1.2.11"
 val logstashVersion = "7.1.1"
+val prometheusVersion = "1.8.5"
 
 plugins {
     `java-library`
@@ -25,6 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-forwarded-header:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
@@ -35,6 +37,7 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("dev.nohus:AutoKonfig:1.0.4")
     implementation("no.nav.common:token-client:2.2022.04.25_07.57-b8b4682228e7")
+    implementation("io.micrometer:micrometer-registry-prometheus:$prometheusVersion")
 }
 
 java {
