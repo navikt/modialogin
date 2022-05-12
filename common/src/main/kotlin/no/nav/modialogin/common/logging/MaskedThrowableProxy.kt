@@ -8,7 +8,7 @@ class MaskedThrowableProxy private constructor(private val proxy: IThrowableProx
     override fun getSuppressed(): Array<IThrowableProxy?> {
         val suppressed = proxy.suppressed
         val masked = arrayOfNulls<IThrowableProxy>(suppressed.size)
-        for (i in 0..suppressed.size) {
+        for (i in suppressed.indices) {
             masked[i] = mask(suppressed[i])
         }
         return masked
