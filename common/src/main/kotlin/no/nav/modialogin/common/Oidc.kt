@@ -58,8 +58,8 @@ class Oidc {
             }
         }
 
-        val jwksConfig: JwksConfig = retry(10, 2.seconds) {
-            runBlocking {
+        val jwksConfig: JwksConfig = runBlocking {
+            retry(10, 2.seconds) {
                 log.info("Fetching oidc from ${config.discoveryUrl}")
                 client.get(config.discoveryUrl).body()
             }
