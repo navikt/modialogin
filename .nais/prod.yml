@@ -20,6 +20,9 @@ spec:
     path: /modialogin/internal/isReady
     initialDelay: 20
     timeout: 1
+  prometheus:
+    enabled: true
+    path: /modialogin/internal/metrics
   resources:
     requests:
       cpu: 100m
