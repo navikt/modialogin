@@ -7,6 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KtorServer
+import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
@@ -62,7 +64,7 @@ class LoginFlowFeature(private val config: Config) {
             name = stateNounce,
             value = KtorUtils.encode(returnUrl)
         )
-
+        log.info("Starting loginflow: $stateNounce -> $returnUrl")
         val redirectUrl = callbackUrl(
             authorizationEndpoint = oidcClient.jwksConfig.authorizationEndpoint,
             clientId = config.idpClientId,
@@ -82,7 +84,9 @@ class LoginFlowFeature(private val config: Config) {
         val cookie = requireNotNull(call.request.cookies[state]) {
             "State-cookie is missing"
         }
+        val originalUrl = KtorUtils.decode(cookie)
 
+        log.info("Callback from IDP: $state -> $originalUrl")
         val token = oidcClient.openAmExchangeAuthCodeForToken(
             code = code,
             loginUrl = loginUrl(call.request, config.exposedPort, config.appname)
@@ -100,7 +104,6 @@ class LoginFlowFeature(private val config: Config) {
         }
         call.removeCookie(state)
 
-        val originalUrl = KtorUtils.decode(cookie)
         call.respondRedirect(
             permanent = false,
             url = originalUrl
