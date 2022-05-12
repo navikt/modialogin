@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.maskSensitiveInfo
+import no.nav.modialogin.common.logging.maskSensitiveInfo
 
 object BFFProxyFeature {
     class Config(

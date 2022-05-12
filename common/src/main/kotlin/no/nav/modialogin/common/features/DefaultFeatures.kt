@@ -9,6 +9,7 @@ import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import no.nav.modialogin.common.logging.maskSensitiveInfo
 import org.slf4j.event.Level
 
 object DefaultFeatures {
