@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.Templating
+import java.net.URL
 
 object BFFProxyFeature {
     class Config(
@@ -62,7 +63,7 @@ object BFFProxyFeature {
 
                 log.info("Proxying request to $proxyRequestURI")
                 val proxyResponse = withContext(Dispatchers.IO) {
-                    client.request(proxyRequestURI) {
+                    client.request(URL(proxyRequestURI)) {
                         headers {
                             proxyRequestHeaders.forEach { name, value ->
                                 appendAll(name, value)
