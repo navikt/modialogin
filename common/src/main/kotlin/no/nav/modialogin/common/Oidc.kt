@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.common.KotlinUtils.retry
 import no.nav.modialogin.common.KtorServer.log
+import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
 class Oidc {
@@ -58,10 +59,10 @@ class Oidc {
             }
         }
 
-        val jwksConfig: JwksConfig = retry(10, 2.seconds) {
-            runBlocking {
+        val jwksConfig: JwksConfig = runBlocking {
+            retry(10, 2.seconds) {
                 log.info("Fetching oidc from ${config.discoveryUrl}")
-                client.get(config.discoveryUrl).body()
+                client.get(URL(config.discoveryUrl)).body()
             }
         }
     }
@@ -79,7 +80,7 @@ class Oidc {
 
         suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
-                authenticatedClient.post(jwksConfig.tokenEndpoint) {
+                authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -95,7 +96,7 @@ class Oidc {
 
         suspend fun refreshIdToken(refreshToken: String): String =
             withContext(Dispatchers.IO) {
-                val response: RefreshIdTokenResponse = authenticatedClient.post(jwksConfig.tokenEndpoint) {
+                val response: RefreshIdTokenResponse = authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {

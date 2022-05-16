@@ -5,6 +5,7 @@ on:
     paths-ignore:
       - '.github/workflows/login-app-workflow.yml'
       - '.github/workflows/frontend-app-workflow.yml'
+      - '.nais/**'
       - 'login-app/**'
       - 'frontend-app/**'
       - '**.md'

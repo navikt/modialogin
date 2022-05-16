@@ -14,6 +14,9 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.Templating
+import java.net.URL
 
 object BFFProxyFeature {
     class Config(
@@ -29,12 +32,13 @@ object BFFProxyFeature {
     )
 
     fun Application.installBFFProxy(config: Config) {
+        val bffproxy = BFFProxy(config.proxyConfig.flatMap { it.rewriteDirectives })
         routing {
             route(config.appName) {
                 config.proxyConfig.forEach { proxyConfig ->
                     authenticate {
                         route("${proxyConfig.prefix}/{...}") {
-                            createProxyHandler(config.appName, proxyConfig)
+                            createProxyHandler(config.appName, bffproxy, proxyConfig)
                         }
                     }
                 }
@@ -42,8 +46,8 @@ object BFFProxyFeature {
         }
     }
 
-    private fun Route.createProxyHandler(appName: String, config: ProxyConfig) {
-        val (responseHandler, requestHandler) = BFFProxy.parseDirectives(config.rewriteDirectives)
+    private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
+        val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
         val client = HttpClient(CIO)
         handle {
             if (responseHandler != null) {
@@ -51,11 +55,15 @@ object BFFProxyFeature {
             } else {
                 val request = call.request
                 val proxyRequestPath = request.uri.removePrefix("/$appName/${config.prefix}/")
-                val proxyRequestURI = "${config.url}/$proxyRequestPath"
+                val proxyRequestURI = Templating.replaceVariableReferences(
+                    "${config.url}/$proxyRequestPath",
+                    request
+                )
                 val proxyRequestHeaders = request.headers
 
+                log.info("Proxying request to $proxyRequestURI")
                 val proxyResponse = withContext(Dispatchers.IO) {
-                    client.request(proxyRequestURI) {
+                    client.request(URL(proxyRequestURI)) {
                         headers {
                             proxyRequestHeaders.forEach { name, value ->
                                 appendAll(name, value)

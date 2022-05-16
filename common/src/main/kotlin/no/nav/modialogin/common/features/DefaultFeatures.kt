@@ -29,7 +29,15 @@ object DefaultFeatures {
         }
         install(CallLogging) {
             level = Level.INFO
+            format(::logFormat)
             filter { call -> call.request.path().contains("/internal/").not() }
+        }
+    }
+
+    private fun logFormat(call: ApplicationCall): String {
+        return when (val status = call.response.status()) {
+            HttpStatusCode.Found -> "$status: ${call.request.httpMethod.value} - ${call.request.path()} -> ${call.response.headers[HttpHeaders.Location]}"
+            else -> "$status: ${call.request.httpMethod.value} - ${call.request.path()}"
         }
     }
 }

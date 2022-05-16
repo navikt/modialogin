@@ -1,5 +1,6 @@
 package no.nav.modialogin.common
 
+import kotlinx.coroutines.delay
 import kotlin.time.Duration
 
 object KotlinUtils {
@@ -16,7 +17,7 @@ object KotlinUtils {
         "'$name' was not defined"
     }
 
-    fun <T> retry(numberOfTries: Int, interval: Duration, block: () -> T): T {
+    suspend fun <T> retry(numberOfTries: Int, interval: Duration, block: suspend () -> T): T {
         var attempt = 0
         var error: Throwable? = null
         do {
@@ -26,6 +27,7 @@ object KotlinUtils {
                 error = e
             }
             attempt++
+            delay(interval)
         } while (attempt < numberOfTries)
 
         throw error ?: IllegalStateException("Retry failed without error")

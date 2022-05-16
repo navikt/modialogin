@@ -17,18 +17,20 @@ object AADOnBehalfOfDirevtiveSpecification : BFFProxy.RequestDirectiveSpecificat
      *  - SET_ON_BEHALF_OF_TOKEN prod-fss pdl pdl-api
      */
     private val regexp = Regex("SET_ON_BEHALF_OF_TOKEN (.*?) (.*?) (.*?)")
+    private lateinit var aadOboTokenClient: OnBehalfOfTokenClient
 
     private data class Lexed(val cluster: String, val namespace: String, val serviceName: String) {
         val scope: String = "api://$cluster.$namespace.$serviceName/.default"
     }
 
-    val aadOboTokenClient: OnBehalfOfTokenClient = AzureAdTokenClientBuilder.builder()
-        // Reimplement `withNaisDefaults` to support reading system properties
-        .withClientId(requireProperty(AZURE_APP_CLIENT_ID))
-        .withPrivateJwk(requireProperty(AZURE_APP_JWK))
-        .withTokenEndpointUrl(requireProperty(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
-        .buildOnBehalfOfTokenClient()
-
+    override fun initialize() {
+        aadOboTokenClient = AzureAdTokenClientBuilder.builder()
+            // Reimplement `withNaisDefaults` to support reading system properties
+            .withClientId(requireProperty(AZURE_APP_CLIENT_ID))
+            .withPrivateJwk(requireProperty(AZURE_APP_JWK))
+            .withTokenEndpointUrl(requireProperty(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
+            .buildOnBehalfOfTokenClient()
+    }
     override fun canHandle(directive: String): Boolean {
         return regexp.matches(directive)
     }
