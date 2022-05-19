@@ -146,7 +146,7 @@ test('frontend routing should return index.html', async () => {
 
 test('frontend routing should return 302 if not logged in', async () => {
     const staticResource = await fetch('http://localhost:8083/frontend/some/spa-route/');
-    assertThat(staticResource.statusCode, 302, '/frontend returns 200');
+    assertThat(staticResource.statusCode, 302, '/frontend/some/spa-route/ returns 302');
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
