@@ -144,6 +144,12 @@ test('frontend routing should return index.html', async () => {
     assertThat(staticResource.body, contains('<!DOCTYPE html>'), 'css-file is not HTML')
 });
 
+test('frontend routing should return 302 if not logged in', async () => {
+    const staticResource = await fetch('http://localhost:8083/frontend/some/spa-route/');
+    assertThat(staticResource.statusCode, 302, '/frontend/some/spa-route/ returns 302');
+    assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
+});
+
 test('missing static resource returns 404 instead of fallback to index.html', async () => {
     const tokens = await fetchJson('http://localhost:8080/oauth/token', {}, {});
     const staticResource = await fetch('http://localhost:8083/frontend/static/css/missing.css',{

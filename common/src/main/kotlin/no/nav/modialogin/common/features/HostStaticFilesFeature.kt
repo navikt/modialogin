@@ -34,6 +34,7 @@ class HostStaticFilesFeature(val config: Config) {
                 Templating.replaceVariableReferences(it, null)
             }
 
+            install(IgnoreTrailingSlash)
             install(StatusPages) {
                 status(HttpStatusCode.Unauthorized) { call, _ ->
                     val port = if (config.xForwardedPort == 8080) "" else ":${config.xForwardedPort}"
@@ -51,22 +52,15 @@ class HostStaticFilesFeature(val config: Config) {
             }
 
             routing {
-                trailingSlashRoute(config.appname) {
-                    authenticate {
-                        static {
-                            staticRootFolder = File("/tmp")
-                            files("www")
-                            default("www/index.html")
-                        }
+                authenticate {
+                    static(config.appname) {
+                        staticRootFolder = File("/tmp/www")
+                        files(".")
+                        default("index.html")
                     }
                 }
             }
         }
-    }
-
-    private fun Route.trailingSlashRoute(path: String, build: Route.() -> Unit): Route {
-        route(path, build)
-        return route("$path/", build)
     }
 }
 
