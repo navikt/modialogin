@@ -9,12 +9,15 @@ import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import no.nav.modialogin.common.KtorServer.log
 import org.slf4j.event.Level
 
 object DefaultFeatures {
     val statusPageConfig: StatusPagesConfig.() -> Unit = {
         exception<Throwable> { call, cause ->
-            call.respond(HttpStatusCode.InternalServerError, cause.message ?: cause.localizedMessage)
+            val message = cause.message ?: cause.localizedMessage
+            log.error("Unhandled exception:", cause)
+            call.respond(HttpStatusCode.InternalServerError, message)
             throw cause
         }
     }
