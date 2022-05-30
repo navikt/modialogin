@@ -12,8 +12,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 
 class AuthFeature(private val config: Config) {
     val log: Logger = LoggerFactory.getLogger("AuthFeature")
@@ -69,8 +67,12 @@ class AuthFeature(private val config: Config) {
             require(tokenAudience.contains(requiredAudience)) {
                 "Audience $requiredAudience not found in token, found: $tokenAudience"
             }
-            require(credentials.payload.doesNotExpireWithin(2.minutes)) {
-                "Token expires soon, redirecting to login: ${getTimeMillis()} < ${credentials.payload.expiresAt.time} - 2minutes"
+            require(credentials.payload.hasNotExpired()) {
+                """
+                Token expired, redirecting to login
+                Subject: ${credentials.payload.subject}
+                Time: ${getTimeMillis()} < ${credentials.payload.expiresAt.time} 
+                """.trimIndent()
             }
         }.onFailure { log.error(it.message) }.getOrThrow()
         return PayloadPrincipal(credentials.payload, getToken(this))
@@ -81,8 +83,7 @@ class AuthFeature(private val config: Config) {
         return requireNotNull(call.request.cookies[idToken])
     }
 
-    private fun Payload.doesNotExpireWithin(time: Duration): Boolean {
-        val expiry = this.expiresAt.time - time.inWholeMilliseconds
-        return getTimeMillis() < expiry
+    private fun Payload.hasNotExpired(): Boolean {
+        return getTimeMillis() < this.expiresAt.time
     }
 }
