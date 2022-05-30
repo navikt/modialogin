@@ -7,24 +7,29 @@ import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.util.date.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 class AuthFeature(private val config: Config) {
     val log: Logger = LoggerFactory.getLogger("AuthFeature")
-    val TEN_MINUTES: Long = 10 * 60 * 1000
+
     companion object {
         fun Application.installAuthFeature(config: Config) {
             AuthFeature(config).install(this)
         }
     }
+
     data class Config(
         var jwksUrl: String = "",
         val authTokenResolver: String,
         var acceptedAudience: String = ""
     )
+
     class PayloadPrincipal(val payload: Payload, val token: String) : Principal, Payload by payload
 
     fun install(application: Application) {
@@ -64,8 +69,8 @@ class AuthFeature(private val config: Config) {
             require(tokenAudience.contains(requiredAudience)) {
                 "Audience $requiredAudience not found in token, found: $tokenAudience"
             }
-            require(credentials.payload.doesNotExpireWithin(TEN_MINUTES)) {
-                "Token expires soon, redirecting to login"
+            require(credentials.payload.doesNotExpireWithin(2.minutes)) {
+                "Token expires soon, redirecting to login: ${getTimeMillis()} < ${credentials.payload.expiresAt.time} - 2minutes"
             }
         }.onFailure { log.error(it.message) }.getOrThrow()
         return PayloadPrincipal(credentials.payload, getToken(this))
@@ -76,8 +81,8 @@ class AuthFeature(private val config: Config) {
         return requireNotNull(call.request.cookies[idToken])
     }
 
-    private fun Payload.doesNotExpireWithin(withinMillies: Long): Boolean {
-        val shiftedExpirationTime = this.expiresAt.time - withinMillies
-        return System.currentTimeMillis() < shiftedExpirationTime
+    private fun Payload.doesNotExpireWithin(time: Duration): Boolean {
+        val expiry = this.expiresAt.time - time.inWholeMilliseconds
+        return getTimeMillis() < expiry
     }
 }
