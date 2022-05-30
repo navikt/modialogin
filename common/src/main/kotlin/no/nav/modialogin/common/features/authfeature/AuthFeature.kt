@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class AuthFeature(private val config: Config) {
     val log: Logger = LoggerFactory.getLogger("AuthFeature")
@@ -69,8 +69,12 @@ class AuthFeature(private val config: Config) {
             require(tokenAudience.contains(requiredAudience)) {
                 "Audience $requiredAudience not found in token, found: $tokenAudience"
             }
-            require(credentials.payload.doesNotExpireWithin(2.minutes)) {
-                "Token expires soon, redirecting to login: ${getTimeMillis()} < ${credentials.payload.expiresAt.time} - 2minutes"
+            require(credentials.payload.doesNotExpireWithin(30.seconds)) {
+                """
+                Token expires soon, redirecting to login
+                Subject: ${credentials.payload.subject}
+                Time: ${getTimeMillis()} < ${credentials.payload.expiresAt.time} - 30seconds 
+                """.trimIndent()
             }
         }.onFailure { log.error(it.message) }.getOrThrow()
         return PayloadPrincipal(credentials.payload, getToken(this))
