@@ -70,7 +70,7 @@ class AuthFeature(private val config: Config) {
                 "Audience $requiredAudience not found in token, found: $tokenAudience"
             }
             require(credentials.payload.doesNotExpireWithin(2.minutes)) {
-                "Token expires soon, redirecting to login"
+                "Token expires soon, redirecting to login: ${getTimeMillis()} < ${credentials.payload.expiresAt.time} - 2minutes"
             }
         }.onFailure { log.error(it.message) }.getOrThrow()
         return PayloadPrincipal(credentials.payload, getToken(this))
