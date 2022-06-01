@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 
 object KtorServer {
     val log: Logger = LoggerFactory.getLogger("KtorServer")
+    val tjenestekallLogger: Logger = LoggerFactory.getLogger("SecureLog")
 
     fun server(port: Int, module: Application.(NaisState) -> Unit) {
         val naisState = NaisState()

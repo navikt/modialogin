@@ -8,6 +8,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
@@ -20,6 +21,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.common.KotlinUtils.retry
 import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
@@ -70,6 +72,7 @@ class Oidc {
     class TokenExchangeClient(private val config: TokenExchangeConfig) : JwksClient(config) {
         private val authenticatedClient: HttpClient by lazy {
             HttpClient(CIO) {
+                logging()
                 basicAuth(config.clientId, requireNotNull(config.clientSecret))
                 json()
                 defaultRequest {
@@ -80,7 +83,7 @@ class Oidc {
 
         suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
-                authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
+                val response = authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -91,7 +94,8 @@ class Oidc {
                             }
                         )
                     )
-                }.body()
+                }
+                response.body()
             }
 
         suspend fun refreshIdToken(refreshToken: String): String =
@@ -137,5 +141,16 @@ private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.json() {
                 isLenient = true
             }
         )
+    }
+}
+
+private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.logging() {
+    install(Logging) {
+        level = LogLevel.ALL
+        logger = object : Logger {
+            override fun log(message: String) {
+                tjenestekallLogger.info(message)
+            }
+        }
     }
 }
