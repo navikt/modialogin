@@ -7,9 +7,9 @@ import no.nav.modialogin.common.KotlinUtils
 import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.features.DefaultFeatures
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
-import no.nav.modialogin.common.features.LoginFlowFeature
-import no.nav.modialogin.common.features.LoginFlowFeature.Companion.installLoginFlowFeature
 import no.nav.modialogin.common.features.installNaisFeature
+import no.nav.modialogin.features.loginflowfeature.LoginFlowFeature
+import no.nav.modialogin.features.loginflowfeature.LoginFlowFeature.Companion.installLoginFlowFeature
 
 fun main() {
     startApplication()

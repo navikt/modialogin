@@ -1,31 +1,22 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.features.loginflowfeature
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import no.nav.modialogin.common.KotlinUtils.retry
-import no.nav.modialogin.common.KtorServer.log
-import no.nav.modialogin.common.KtorServer.tjenestekallLogger
+import no.nav.modialogin.common.*
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
-class Oidc {
+class OpenAmClient {
     @Serializable
     class JwksConfig(
         @SerialName("jwks_uri") val jwksUrl: String,
@@ -38,12 +29,7 @@ class Oidc {
     class TokenExchangeResult(
         @SerialName("id_token") val idToken: String,
         @SerialName("access_token") val accessToken: String?,
-        @SerialName("refresh_token") val refreshToken: String?
-    )
-
-    @Serializable
-    class RefreshIdTokenResponse(
-        @SerialName("id_token") val idToken: String
+        @SerialName("refresh_token") val refreshToken: String?,
     )
 
     open class JwksClientConfig(val discoveryUrl: String)
@@ -61,10 +47,12 @@ class Oidc {
             }
         }
 
-        val jwksConfig: JwksConfig = runBlocking {
-            retry(10, 2.seconds) {
-                log.info("Fetching oidc from ${config.discoveryUrl}")
-                client.get(URL(config.discoveryUrl)).body()
+        val jwksConfig: JwksConfig by lazy {
+            runBlocking {
+                KotlinUtils.retry(10, 2.seconds) {
+                    KtorServer.log.info("Fetching oidc from ${config.discoveryUrl}")
+                    client.get(URL(config.discoveryUrl)).body()
+                }
             }
         }
     }
@@ -98,9 +86,9 @@ class Oidc {
                 response.body()
             }
 
-        suspend fun refreshIdToken(refreshToken: String): String =
+        suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
-                val response: RefreshIdTokenResponse = authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
+                authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -112,45 +100,6 @@ class Oidc {
                         )
                     )
                 }.body()
-                response.idToken
             }
-    }
-}
-
-private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.basicAuth(clientId: String, clientSecret: String) {
-    val basicAuthCredentials = BasicAuthCredentials(clientId, clientSecret)
-    install(Auth) {
-        basic {
-            /**
-             * By default, ktor wait for the server to respond with 401 Unauthorized,
-             * and only then sends the authorization header.
-             * OIDC responds with 400 Bad request if the header is not present, hence why we need this configuration.
-             */
-            sendWithoutRequest { true }
-            credentials { basicAuthCredentials }
-        }
-    }
-}
-
-private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.json() {
-    install(ContentNegotiation) {
-        json(
-            Json {
-                ignoreUnknownKeys = true
-                prettyPrint = true
-                isLenient = true
-            }
-        )
-    }
-}
-
-private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.logging() {
-    install(Logging) {
-        level = LogLevel.ALL
-        logger = object : Logger {
-            override fun log(message: String) {
-                tjenestekallLogger.info(message)
-            }
-        }
     }
 }

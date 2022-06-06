@@ -15,7 +15,7 @@ services:
     environment:
       APP_NAME: "modialogin"
       APP_VERSION: "localhost"
-      IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/openam/.well-known/openid-configuration"
       IDP_CLIENT_ID: "foo"
       IDP_CLIENT_SECRET: "bar"
       AUTH_TOKEN_RESOLVER: "modia_ID_token"
@@ -33,24 +33,56 @@ services:
     environment:
       APP_NAME: "frontend"
       APP_VERSION: "localhost"
-      IDP_DISCOVERY_URL: "http://oidc-stub:8080/.well-known/openid-configuration"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/openam/.well-known/openid-configuration"
       IDP_CLIENT_ID: "foo"
       DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
+      DELEGATED_REFRESH_URL: "http://localhost:8082/modialogin/api/refresh"
+      AUTH_TOKEN_RESOLVER: "modia_ID_token"
+      # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
+      CSP_REPORT_ONLY: "true"
+      CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
+      REFERRER_POLICY: "no-referrer"
+      EXPOSED_PORT: '8083'
+    volumes:
+      - ./test/nginx-env:/var/run/secrets/nais.io/vault/
+      - ./test/nginx-proxy:/nginx
+      - ./frontend-app/proxy-config/proxy-config-docker-compose.json:/proxy-config.json
+  frontend-with-azure-ad:
+    build:
+      context: frontend-app
+    ports:
+      - 8094:8080
+    depends_on:
+      - oidc-stub
+      - modialogin
+      - echo-server
+    environment:
+      APP_NAME: "frontend"
+      APP_VERSION: "localhost"
+      IDP_DISCOVERY_URL: "http://oidc-stub:8080/openam/.well-known/openid-configuration"
+      IDP_CLIENT_ID: "foo"
+      DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
+      DELEGATED_REFRESH_URL: "http://localhost:8082/modialogin/api/refresh"
       AUTH_TOKEN_RESOLVER: "modia_ID_token"
       # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
       CSP_REPORT_ONLY: "true"
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
 
-      AZURE_APP_CLIENT_ID: "frontend-app-id"
-#     # Dummy JWK randomly generated on a test startup
+      # Dummy JWK randomly generated on a test startup
+      AZURE_APP_CLIENT_ID: "foo"
+      AZURE_APP_CLIENT_SECRET: "secret"
       AZURE_APP_JWK: "{\"p\":\"8NfpcDrsVCOQzQkBs_GEg6Na1A1rEzZzvPBG9-DCCcTaavHPv-G6bglm8eLB5sVNTriO40XbSBatr9ydluIbZzleDC-nJjo_Y2qYt3JBCbUSB3B5VySOQnteacfn5dQWa7JHWlI2G3AuQ-YCuVcbAi4E18Gj1jOqZn97zSo1jDM\",\"kty\":\"RSA\",\"q\":\"kYwgg1ps_N1JPJqE_EfLei1_Fhd2-zk8Dktn1lR4urCx7HhTpYaRnoI04qq9bMg1ZseIKyBJtgxPmRUynqmMV7Bx7iLo9EJ_2OFRl04jcUJjL-XlsSQ8hYkhUHuWSL7j6LZ1tcCrUAXuka7UrPP0kHkCszcgALQpJvYhCQFHNG0\",\"d\":\"dD7b2PjxjgqDT9zDLjL735z1L9QT2i9EidHTUy38kpfxdp9XEJ-DyYIw99VOiLfaxagDdrUh_XqKp3Ysspc4i4cE6IVjVs9eys-9VIPOQNAZBlp-G0RLvH3D28P8iJjOYh6zjDz2xWSHh5m9A5GWecpIwn0naMEx0MifcHcHCGcsaopgYCgrhsdXaYJUneLpbqNc2oJHWB0lk1L_DUzii2ylYRjG8bKb2aY99ARQJpUr9Kxv9-USqIu7OMII5J8Xg1vFEUXd5agc9HPEPGZnZNvswnxKoRgnciUor90MvJhmUS5BUHm-8moxV3S0qxDuELAzHeRLr0P38WmQoNTw-Q\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"d50aaefb-f193-4296-905f-c88f18b14bc0\",\"qi\":\"bfRqbRatszJ5rlC8mu5B2B0-11RJRf0hUAHQXiweaFD3ZaZExNrlfsrgFOU8dicia4cgA1cc_SlJc1e8VMQlPl6lhnPd_mi6gt0oITwdSX_F6sfzGUdMwWrVBMnLvXAY3vKP9HJ-Ft8QbxUdw3_XhbGSfF4H0W7z45JvsBMWTW4\",\"dp\":\"KJbq06xKif-YdsWu0MnCYIEWXKiKRCmoJc6E11-8s_LGMMHiFl-PkN3qyJdDwIW9-qdmBW2PgD26NepDcNtYbPQhIoKhc_LbHgEoDbqmtWEb0b8l5AbYJuItzjwPnA87XBkmp1U1ozgrw-uux9ejSKHC1S3gU8hPTojrr28OqTs\",\"dq\":\"amlj4AU9x8ZV5Dwo3HX1O3eGAfXX5Kcc1GqnGVmbBwtmmjgDF_MCBjy2Q76HTcA24tUhJj6uBa6Mh6Sq5LubQwVa1rupS-ROqpdZ2uCjIwxhjkRsIY4XvZ3bwIcLAlamNJ8qAl9CIPilStfi4Cxgczw2ECdOe5U8vSKYVogbsiU\",\"n\":\"iO4f4st9Ab6DEFk91NwBNVGNPTdf57hAWVSXErEVLqeM42874D6rxQCrXCtDP1jmA7P5WZNLQZ71zI12MimZvsLrnBb4BIpEEAYl3pdGPbH6-j3aKH4uIsPI9Sd1BsGWp2hn0V0xoEzFhfP07Rr8j1w1ApAAGc5-PWtoefs9cB3NNw5Zk8ccL28n7sh2wVUkSOuGoKcdF9P3rvTCliZsr-NtsoHsqwbpv0uHAR5xcSnqnKbgQlei_RmQLJv86Df31TpKsVy8YCoAUmD1b_X-exxFrBQ69IO41uO1HWzuE6OFpS27PA2HgujMLxzL2LCw5Q47cIFeKE1adM4e7mwNtw\"}"
-      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: "http://oidc-stub:8080/oboflow"
-      EXPOSED_PORT: '8083'
+      AZURE_APP_PRE_AUTHORIZED_APPS: "[]"
+      AZURE_APP_WELL_KNOWN_URL: "http://oidc-stub:8080/azuread/.well-known/openid-configuration"
+      AZURE_OPENID_CONFIG_ISSUER: "azuread"
+      AZURE_OPENID_CONFIG_JWKS_URI: "http://oidc-stub:8080/azuread/.well-known/jwks.json"
+      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: "http://oidc-stub:8080/azuread/oauth/token"
+      EXPOSED_PORT: '8094'
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx
-      - ./frontend-app/proxy-config/proxy-config-docker-compose.json:/proxy-config.json
+      - ./frontend-app/proxy-config/proxy-config-docker-compose-azuread.json:/proxy-config.json
   echo-server:
     image: mendhak/http-https-echo
     ports:
