@@ -16,7 +16,12 @@ import no.nav.modialogin.common.*
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
-class OidcClient(val config: OidcConfig) {
+class OidcClient(val config: Config) {
+    class Config(
+        val clientId: String,
+        val clientSecret: String,
+        val wellKnownUrl: String
+    )
     @Serializable
     class TokenExchangeResult(
         @SerialName("id_token") val idToken: String,
@@ -53,7 +58,7 @@ class OidcClient(val config: OidcConfig) {
 
     suspend fun exchangeAuthCodeForToken(code: String, callbackUrl: String): TokenExchangeResult =
         withContext(Dispatchers.IO) {
-            httpClient.post(config.openidConfigTokenEndpoint) {
+            httpClient.post(wellKnown.tokenEndpoint) {
                 setBody(
                     FormDataContent(
                         Parameters.build {
@@ -71,7 +76,7 @@ class OidcClient(val config: OidcConfig) {
 
     suspend fun refreshToken(refreshToken: String): TokenExchangeResult =
         withContext(Dispatchers.IO) {
-            httpClient.post(config.openidConfigTokenEndpoint) {
+            httpClient.post(wellKnown.tokenEndpoint) {
                 setBody(
                     FormDataContent(
                         Parameters.build {

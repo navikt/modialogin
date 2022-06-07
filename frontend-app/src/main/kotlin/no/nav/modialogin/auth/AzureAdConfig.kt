@@ -8,7 +8,7 @@ import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables
 import no.nav.modialogin.common.KotlinUtils
 import no.nav.modialogin.common.KtorServer.log
 
-class OidcConfig(
+class AzureAdConfig(
     val clientId: String,
     val clientSecret: String,
     appJWK: String,
@@ -27,8 +27,14 @@ class OidcConfig(
         val clientId: String
     )
 
+    fun toOidcClientConfig() = OidcClient.Config(
+        clientId = clientId,
+        clientSecret = clientSecret,
+        wellKnownUrl = wellKnownUrl
+    )
+
     companion object {
-        fun load(): OidcConfig? {
+        fun load(): AzureAdConfig? {
             return kotlin.runCatching {
                 val clientId = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID)
                 val clientSecret = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET)
@@ -43,7 +49,7 @@ class OidcConfig(
                 val openidConfigTokenEndpoint =
                     KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)
 
-                OidcConfig(
+                AzureAdConfig(
                     clientId = clientId,
                     clientSecret = clientSecret,
                     appJWK = appJWK,

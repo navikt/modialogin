@@ -5,8 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
-import no.nav.modialogin.auth.OidcConfig
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
@@ -18,9 +18,9 @@ class OidcAuthProvider(
     private val xForwardedPort: Int,
     private val authTokenResolver: String,
     private val refreshTokenResolver: String?,
-    private val config: OidcConfig,
+    private val config: AzureAdConfig,
 ) : BaseAuthProvider() {
-    private val client = OidcClient(config)
+    private val client = OidcClient(config.toOidcClientConfig())
 
     override suspend fun getToken(call: ApplicationCall): String? {
         return call.getCookie(authTokenResolver)

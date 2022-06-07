@@ -3,8 +3,8 @@ package no.nav.modialogin
 import io.ktor.server.application.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.request.*
+import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
-import no.nav.modialogin.auth.OidcConfig
 import no.nav.modialogin.common.AppState
 import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KtorServer.log
@@ -37,7 +37,7 @@ fun startApplication() {
 
     server(port) { naisState ->
         val config = AppState(naisState, appConfig)
-        val oidcConfig = OidcConfig.load()
+        val azureAdConfig = AzureAdConfig.load()
 
         install(AuthFilterFeature) {
             ignorePattern = { call ->
@@ -56,7 +56,7 @@ fun startApplication() {
                     acceptedIssuer = "openam"
                 )
             )
-            oidcConfig?.let { it ->
+            azureAdConfig?.let { it ->
                 log.info("Registering azure ad provider")
                 register(
                     OidcAuthProvider(
@@ -70,11 +70,11 @@ fun startApplication() {
                 )
             }
         }
-        oidcConfig?.let {
+        azureAdConfig?.let {
             installOAuthRoutes(
                 OauthFeature.Config(
                     appname = appConfig.appName,
-                    oidc = OidcClient(it),
+                    oidc = OidcClient(it.toOidcClientConfig()),
                     authTokenResolver = "AAD_modia_access_token",
                     refreshTokenResolver = "AAD_modia_refresh_token",
                     exposedPort = config.config.exposedPort
