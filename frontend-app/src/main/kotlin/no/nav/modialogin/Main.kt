@@ -7,7 +7,6 @@ import no.nav.modialogin.auth.OidcClient
 import no.nav.modialogin.auth.OidcConfig
 import no.nav.modialogin.common.AppState
 import no.nav.modialogin.common.KotlinUtils.getProperty
-import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
@@ -91,8 +90,6 @@ fun startApplication() {
         installHostStaticFilesFeature(
             HostStaticFilesFeature.Config(
                 appname = config.config.appName,
-                xForwardedPort = config.config.exposedPort,
-                startLoginUrl = config.config.delegatedLoginUrl,
                 rootFolder = staticFilesRootFolder
             )
         )

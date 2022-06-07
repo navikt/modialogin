@@ -1,18 +1,48 @@
 package no.nav.modialogin.features.authfeature
 
 import com.auth0.jwt.JWT
+import com.auth0.jwt.interfaces.DecodedJWT
 import com.auth0.jwt.interfaces.Payload
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.util.*
-import no.nav.modialogin.common.KtorServer
+import io.ktor.util.date.*
+import no.nav.modialogin.common.KtorServer.log
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 interface AuthProvider {
     val name: String
     suspend fun authorize(call: ApplicationCall): AuthFilterPrincipal?
     suspend fun onUnauthorized(call: ApplicationCall)
-    enum class TokenType {
-        ID_TOKEN, ACCESS_TOKEN
+}
+
+abstract class BaseAuthProvider : AuthProvider {
+    abstract suspend fun getToken(call: ApplicationCall): String?
+    abstract fun verify(jwt: DecodedJWT)
+    abstract suspend fun getRefreshToken(call: ApplicationCall): String?
+    abstract suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String
+    override suspend fun authorize(call: ApplicationCall): AuthFilterPrincipal? {
+        var token = getToken(call) ?: return null
+        val jwt = JWT.decode(token)
+        try {
+            verify(jwt)
+        } catch (e: Throwable) {
+            log.warn("JWT-verification failed", e)
+            return null
+        }
+
+        val refreshToken = getRefreshToken(call)
+        if (refreshToken != null && jwt.expiresWithin(5.minutes)) {
+            token = refreshTokens(call, refreshToken)
+        }
+
+        return AuthFilterPrincipal(name, token)
+    }
+
+    private fun DecodedJWT.expiresWithin(time: Duration): Boolean {
+        val expiry = this.expiresAt.time - time.inWholeMilliseconds
+        return getTimeMillis() > expiry
     }
 }
 
@@ -45,7 +75,7 @@ val AuthFilterFeature = createApplicationPlugin("AuthFilterFeature", ::AuthFilte
             provider {
                 // Just here to bypass config checker in ktors authentication feature
                 skipWhen { true }
-                authenticate {  }
+                authenticate { }
             }
         }
     }
@@ -59,7 +89,7 @@ val AuthFilterFeature = createApplicationPlugin("AuthFilterFeature", ::AuthFilte
 
         for (i in providers.indices) {
             val provider = providers[i]
-            KtorServer.log.info("Authorizing for ${provider.name}")
+            log.info("Authorizing for ${provider.name}")
             val principal: AuthFilterPrincipal? = provider.authorize(call)
 
             if (principal == null) {

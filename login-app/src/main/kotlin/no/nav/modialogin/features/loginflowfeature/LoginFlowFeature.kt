@@ -58,8 +58,8 @@ class LoginFlowFeature(private val config: Config) {
     }
 
     private suspend fun PipelineContext<Unit, ApplicationCall>.startLoginFlowAgainstIDP() {
-        val returnUrl: String = requireNotNull(call.request.queryParameters["url"]) {
-            "URL parameter 'url' is missing"
+        val returnUrl: String = requireNotNull(call.request.queryParameters["redirect"] ?: call.request.queryParameters["url"]) {
+            "URL parameter 'redirect'/'url' is missing"
         }
         val stateNounce = generateStateNounce()
         call.respondWithCookie(

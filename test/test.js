@@ -1,4 +1,4 @@
-const { test, testonly, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
+const { test, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
 
 setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
@@ -40,7 +40,7 @@ async function issologinflow(port) {
         '/frontend redirects to /modialogin/api/start'
     );
     assertThat(
-        initial.redirectURI.queryParams.url,
+        initial.redirectURI.queryParams.redirect,
         encodeURIComponent(`http://localhost:${port}/frontend/`),
         '/frontend redirect passes original url encoded in queryparameter'
     );

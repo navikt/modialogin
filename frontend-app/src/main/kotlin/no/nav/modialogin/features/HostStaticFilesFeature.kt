@@ -4,13 +4,11 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.modialogin.common.FileUtils
-import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.Templating
 import no.nav.modialogin.common.features.DefaultFeatures
 import java.io.File
@@ -24,8 +22,6 @@ class HostStaticFilesFeature(val config: Config) {
 
     class Config(
         val appname: String,
-        val startLoginUrl: String,
-        val xForwardedPort: Int,
         val rootFolder: String = "/"
     )
 
@@ -39,12 +35,6 @@ class HostStaticFilesFeature(val config: Config) {
 
             install(IgnoreTrailingSlash)
             install(StatusPages) {
-                status(HttpStatusCode.Unauthorized) { call, _ ->
-                    val port = if (config.xForwardedPort == 8080) "" else ":${config.xForwardedPort}"
-                    val originalUri =
-                        KtorUtils.encode("${call.request.origin.scheme}://${call.request.host()}$port${call.request.uri}")
-                    call.respondRedirect("${config.startLoginUrl}?url=$originalUri")
-                }
                 status(HttpStatusCode.NotFound) { call, _ ->
                     if (!call.isRequestForFile()) {
                         call.response.status(HttpStatusCode.OK)
