@@ -3,6 +3,7 @@ package no.nav.modialogin.common
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import no.nav.modialogin.common.KotlinUtils.indicesOf
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets.UTF_8
@@ -19,7 +20,7 @@ object KtorUtils {
             Cookie(
                 name = name,
                 value = value,
-                domain = domain,
+                domain = cookieDomain(domain),
                 path = path,
                 maxAge = maxAgeInSeconds,
                 encoding = CookieEncoding.RAW,
@@ -28,6 +29,7 @@ object KtorUtils {
             )
         )
     }
+
     fun ApplicationCall.removeCookie(
         name: String,
         domain: String = request.host(),
@@ -35,7 +37,7 @@ object KtorUtils {
     ) {
         this.response.cookies.appendExpired(
             name = name,
-            domain = domain,
+            domain = cookieDomain(domain),
             path = path
         )
     }
@@ -46,4 +48,12 @@ object KtorUtils {
 
     fun encode(value: String) = URLEncoder.encode(value, UTF_8)
     fun decode(value: String) = URLDecoder.decode(value, UTF_8)
+
+    fun cookieDomain(host: String): String {
+        val indices = host.indicesOf(".")
+        if (indices.size < 2) {
+            return host
+        }
+        return host.substring(indices.first() + 1)
+    }
 }

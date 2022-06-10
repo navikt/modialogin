@@ -32,4 +32,14 @@ object KotlinUtils {
 
         throw error ?: IllegalStateException("Retry failed without error")
     }
+
+    fun CharSequence.indicesOf(other: String, startIndex: Int = 0, ignoreCase: Boolean = false): List<Int> {
+        val indices = mutableListOf<Int>()
+        var index = this.indexOf(other, startIndex, ignoreCase)
+        while (index != -1) {
+            indices.add(index)
+            index = this.indexOf(other, index + 1, ignoreCase)
+        }
+        return indices
+    }
 }
