@@ -86,7 +86,21 @@ fun startApplication() {
             applyCSPFeature(appConfig.cspReportOnly, appConfig.cspDirectives)
             applyReferrerPolicyFeature(appConfig.referrerPolicy)
         }
-        installNaisFeature(config.config.appName, config.config.appVersion, config.nais)
+        installNaisFeature(
+            config.config.appName, config.config.appVersion, config.nais,
+            buildMap {
+                put("ISSO_AUTH_PROVIDER", true)
+                put("ISSO_CLIENT_ID", config.config.idpClientId)
+                put("ISSO_WELL_KNOWN_URL", config.config.idpDiscoveryUrl)
+
+                put("AZURE_AUTH_PROVIDER", azureAdConfig != null)
+                if (azureAdConfig != null) {
+                    put("AZURE_APP_CLIENT_ID", azureAdConfig.clientId)
+                    put("AZURE_APP_TENANT_ID", azureAdConfig.tenantId)
+                    put("AZURE_APP_WELL_KNOWN_URL", azureAdConfig.wellKnownUrl)
+                }
+            }
+        )
         installHostStaticFilesFeature(
             HostStaticFilesFeature.Config(
                 appname = config.config.appName,

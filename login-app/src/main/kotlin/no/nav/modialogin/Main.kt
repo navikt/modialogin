@@ -23,7 +23,14 @@ fun startApplication() {
         val config = AppState(naisState, appConfig)
         install(StatusPages, DefaultFeatures.statusPageConfig)
         installDefaultFeatures()
-        installNaisFeature(config.config.appName, config.config.appVersion, config.nais)
+        installNaisFeature(
+            config.config.appName, config.config.appVersion, config.nais,
+            buildMap {
+                put("ISSO_AUTH_PROVIDER", true)
+                put("ISSO_CLIENT_ID", config.config.idpClientId)
+                put("ISSO_WELL_KNOWN_URL", config.config.idpDiscoveryUrl)
+            }
+        )
         installLoginFlowFeature(
             LoginFlowFeature.Config(
                 appname = config.config.appName,

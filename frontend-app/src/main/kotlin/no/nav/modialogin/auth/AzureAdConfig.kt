@@ -11,6 +11,7 @@ import no.nav.modialogin.common.KtorServer.log
 class AzureAdConfig(
     val clientId: String,
     val clientSecret: String,
+    val tenantId: String,
     appJWK: String,
     preAuthorizedApps: String,
     val wellKnownUrl: String,
@@ -38,6 +39,7 @@ class AzureAdConfig(
             return kotlin.runCatching {
                 val clientId = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID)
                 val clientSecret = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET)
+                val tenantId = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_TENANT_ID)
                 val appJWK = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_JWK)
                 val preAuthorizedApps =
                     KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_PRE_AUTHORIZED_APPS)
@@ -52,6 +54,7 @@ class AzureAdConfig(
                 AzureAdConfig(
                     clientId = clientId,
                     clientSecret = clientSecret,
+                    tenantId = tenantId,
                     appJWK = appJWK,
                     preAuthorizedApps = preAuthorizedApps,
                     wellKnownUrl = wellKnownUrl,
