@@ -4,8 +4,9 @@ const GREEN = useColor ? '\x1b[32m' : '';
 const CYAN = useColor ? '\x1b[36m' : '';
 const RESET = useColor ? '\x1b[0m' : '';
 
-const tests = [];
-const results = [];
+let tests = [];
+let results = [];
+let __testonly = false;
 let __assertions = [];
 let __scheduled = null;
 let __preconditions = [];
@@ -13,8 +14,14 @@ let __preconditions = [];
 function setup(name, exec) {
     __preconditions.push({name, exec})
 }
-
+function testonly(name, exec) {
+    if (__testonly) return;
+    tests = [];
+    test(name, exec);
+    __testonly = true;
+}
 function test(name, exec) {
+    if (__testonly) return;
     tests.push({name, exec});
     clearTimeout(__scheduled);
     __scheduled = setTimeout(runTests, 0);
@@ -80,7 +87,7 @@ function assertThat(actual, expected, message) {
     });
     const verification = verifier(actual);
     if (verification.result) {
-        __assertions.push({state: 'ok', message});
+        __assertions.push({state: 'ok', message, shortmessage: message});
     } else {
         __assertions.push({
             state: 'error',
@@ -165,6 +172,6 @@ const hasLengthGreaterThen = (minLength) => (value) => ({
 });
 
 module.exports = {
-    test, assertThat, setup, verify, retry,
+    test, testonly, assertThat, setup, verify, retry,
     equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen
 };

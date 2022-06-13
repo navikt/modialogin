@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.features.loginflowfeature
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -7,12 +7,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
-import no.nav.modialogin.common.Oidc
 import java.math.BigInteger
 import kotlin.random.Random
 
@@ -31,10 +29,16 @@ class LoginFlowFeature(private val config: Config) {
         val authTokenResolver: String,
         val refreshTokenResolver: String,
         val exposedPort: Int,
+        val urls: UrlConfig = UrlConfig()
+    )
+    class UrlConfig(
+        val start: String = "api/start",
+        val callback: String = "api/login",
+        val refresh: String = "api/refresh",
     )
 
-    private val oidcClient = Oidc.TokenExchangeClient(
-        Oidc.TokenExchangeConfig(
+    private val openAmClient = OpenAmClient.TokenExchangeClient(
+        OpenAmClient.TokenExchangeConfig(
             discoveryUrl = config.idpDiscoveryUrl,
             clientId = config.idpClientId,
             clientSecret = config.idpClientSecret
@@ -45,19 +49,17 @@ class LoginFlowFeature(private val config: Config) {
         with(app) {
             routing {
                 route(config.appname) {
-                    route("api") {
-                        get("start") { startLoginFlowAgainstIDP() }
-                        get("login") { handleCallbackFromIDP() }
-                        post("refresh") { refreshToken() }
-                    }
+                    get(config.urls.start) { startLoginFlowAgainstIDP() }
+                    get(config.urls.callback) { handleCallbackFromIDP() }
+                    post(config.urls.refresh) { refreshToken() }
                 }
             }
         }
     }
 
     private suspend fun PipelineContext<Unit, ApplicationCall>.startLoginFlowAgainstIDP() {
-        val returnUrl: String = requireNotNull(call.request.queryParameters["url"]) {
-            "URL parameter 'url' is missing"
+        val returnUrl: String = requireNotNull(call.request.queryParameters["redirect"] ?: call.request.queryParameters["url"]) {
+            "URL parameter 'redirect'/'url' is missing"
         }
         val stateNounce = generateStateNounce()
         call.respondWithCookie(
@@ -66,7 +68,7 @@ class LoginFlowFeature(private val config: Config) {
         )
         log.info("Starting loginflow: $stateNounce -> $returnUrl")
         val redirectUrl = callbackUrl(
-            authorizationEndpoint = oidcClient.jwksConfig.authorizationEndpoint,
+            authorizationEndpoint = openAmClient.jwksConfig.authorizationEndpoint,
             clientId = config.idpClientId,
             stateNounce = stateNounce,
             callbackUrl = loginUrl(call.request, config.exposedPort, config.appname)
@@ -87,7 +89,7 @@ class LoginFlowFeature(private val config: Config) {
         val originalUrl = KtorUtils.decode(cookie)
 
         log.info("Callback from IDP: $state -> $originalUrl")
-        val token = oidcClient.openAmExchangeAuthCodeForToken(
+        val token = openAmClient.openAmExchangeAuthCodeForToken(
             code = code,
             loginUrl = loginUrl(call.request, config.exposedPort, config.appname)
         )
@@ -118,7 +120,7 @@ class LoginFlowFeature(private val config: Config) {
 
     private suspend fun PipelineContext<Unit, ApplicationCall>.refreshToken() {
         val body = call.receive<RefreshIdTokenRequest>()
-        val newIdToken = oidcClient.refreshIdToken(body.refreshToken)
+        val newIdToken = openAmClient.refreshIdToken(body.refreshToken).idToken
         call.respond(RefreshIdTokenResponse(newIdToken))
     }
 

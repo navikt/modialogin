@@ -1,12 +1,12 @@
-package no.nav.modialogin.common.features.bffproxyfeature.directives
+package no.nav.modialogin.features.bffproxyfeature.directives
 
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import no.nav.modialogin.common.KotlinUtils.cutoff
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy
-import no.nav.modialogin.common.features.bffproxyfeature.ResponseDirectiveHandler
+import no.nav.modialogin.features.bffproxyfeature.BFFProxy
+import no.nav.modialogin.features.bffproxyfeature.ResponseDirectiveHandler
 
 object RespondDirectiveSpecification : BFFProxy.ResponseDirectiveSpecification {
     private val regexp = Regex("RESPOND (.*?) '(.*?)'")
@@ -19,7 +19,7 @@ object RespondDirectiveSpecification : BFFProxy.ResponseDirectiveSpecification {
         return {
             val (code, body) = lex(Templating.replaceVariableReferences(directive, this.call.request))
             this.call.response.status(code)
-            this.call.respond(body)
+            this.call.respondText(body)
         }
     }
 
