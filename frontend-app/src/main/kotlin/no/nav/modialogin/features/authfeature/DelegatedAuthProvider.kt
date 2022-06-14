@@ -22,6 +22,9 @@ class DelegatedAuthProvider(
     private val refreshClient = DelegatedRefreshClient(refreshUrl)
 
     override suspend fun getToken(call: ApplicationCall): String? {
+        if (authTokenResolver == "header") {
+            return call.request.authorization()
+        }
         return call.getCookie(authTokenResolver)
     }
 
