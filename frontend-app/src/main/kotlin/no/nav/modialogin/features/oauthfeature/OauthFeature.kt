@@ -70,7 +70,7 @@ class OauthFeature(private val config: Config) {
                         )
                         call.respondWithCookie(
                             name = config.authTokenResolver,
-                            value = requireNotNull(token.accessToken)
+                            value = requireNotNull(token.idToken)
                         )
                         if (config.refreshTokenResolver != null) {
                             call.respondWithCookie(
