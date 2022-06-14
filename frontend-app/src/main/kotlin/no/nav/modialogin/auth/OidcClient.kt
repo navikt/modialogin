@@ -29,7 +29,7 @@ class OidcClient(val config: Config) {
         @SerialName("refresh_token") val refreshToken: String,
     )
     @Serializable
-    class JwksConfig(
+    class WellKnownResult(
         @SerialName("jwks_uri") val jwksUrl: String,
         @SerialName("token_endpoint") val tokenEndpoint: String,
         @SerialName("authorization_endpoint") val authorizationEndpoint: String,
@@ -47,7 +47,7 @@ class OidcClient(val config: Config) {
         }
     }
 
-    val wellKnown: JwksConfig by lazy {
+    val wellKnown: WellKnownResult by lazy {
         runBlocking {
             KotlinUtils.retry(10, 2.seconds) {
                 KtorServer.log.info("Fetching oidc from ${config.wellKnownUrl}")

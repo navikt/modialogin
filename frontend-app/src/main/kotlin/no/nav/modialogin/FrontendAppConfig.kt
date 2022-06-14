@@ -14,6 +14,7 @@ class FrontendAppConfig(proxyConfigFile: File) {
     val appVersion by StringSetting()
     val idpDiscoveryUrl by StringSetting()
     val idpClientId by StringSetting()
+    val idpIssuer by StringSetting()
     val delegatedLoginUrl by StringSetting()
     val delegatedRefreshUrl by StringSetting()
     val authTokenResolver by StringSetting(default = "ID_token")
