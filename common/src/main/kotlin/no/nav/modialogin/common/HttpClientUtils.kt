@@ -46,3 +46,8 @@ fun <T : HttpClientEngineConfig> HttpClientConfig<T>.logging() {
         }
     }
 }
+fun <T : HttpClientEngineConfig> HttpClientConfig<T>.useProxy() {
+    engine {
+        System.getenv("HTTP_PROXY")?.let { proxy = ProxyBuilder.http(it) }
+    }
+}

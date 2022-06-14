@@ -38,6 +38,7 @@ class OidcClient(val config: Config) {
 
     private val httpClient: HttpClient by lazy {
         HttpClient(CIO) {
+            useProxy()
             logging()
             basicAuth(config.clientId, requireNotNull(config.clientSecret))
             json()
