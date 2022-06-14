@@ -68,7 +68,7 @@ class LoginFlowFeature(private val config: Config) {
         )
         log.info("Starting loginflow: $stateNounce -> $returnUrl")
         val redirectUrl = callbackUrl(
-            authorizationEndpoint = openAmClient.jwksConfig.authorizationEndpoint,
+            authorizationEndpoint = openAmClient.wellknown.authorizationEndpoint,
             clientId = config.idpClientId,
             stateNounce = stateNounce,
             callbackUrl = loginUrl(call.request, config.exposedPort, config.appname)

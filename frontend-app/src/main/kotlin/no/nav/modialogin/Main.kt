@@ -53,7 +53,7 @@ fun startApplication() {
                     authTokenResolver = config.config.authTokenResolver,
                     refreshTokenResolver = config.config.refreshTokenResolver,
                     acceptedAudience = config.config.idpClientId,
-                    acceptedIssuer = "openam"
+                    acceptedIssuer = config.config.idpIssuer
                 )
             )
             azureAdConfig?.let { it ->
@@ -91,6 +91,7 @@ fun startApplication() {
             buildMap {
                 put("ISSO_AUTH_PROVIDER", true)
                 put("ISSO_CLIENT_ID", config.config.idpClientId)
+                put("ISSO_CLIENT_ID", config.config.idpIssuer)
                 put("ISSO_WELL_KNOWN_URL", config.config.idpDiscoveryUrl)
 
                 put("AZURE_AUTH_PROVIDER", azureAdConfig != null)

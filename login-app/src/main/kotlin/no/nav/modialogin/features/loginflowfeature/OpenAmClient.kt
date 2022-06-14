@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class OpenAmClient {
     @Serializable
-    class JwksConfig(
+    class WellKnownResult(
         @SerialName("jwks_uri") val jwksUrl: String,
         @SerialName("token_endpoint") val tokenEndpoint: String,
         @SerialName("authorization_endpoint") val authorizationEndpoint: String,
@@ -47,7 +47,7 @@ class OpenAmClient {
             }
         }
 
-        val jwksConfig: JwksConfig by lazy {
+        val wellknown: WellKnownResult by lazy {
             runBlocking {
                 KotlinUtils.retry(10, 2.seconds) {
                     KtorServer.log.info("Fetching oidc from ${config.discoveryUrl}")
@@ -71,7 +71,7 @@ class OpenAmClient {
 
         suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
-                val response = authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
+                val response = authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -88,7 +88,7 @@ class OpenAmClient {
 
         suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
-                authenticatedClient.post(URL(jwksConfig.tokenEndpoint)) {
+                authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {

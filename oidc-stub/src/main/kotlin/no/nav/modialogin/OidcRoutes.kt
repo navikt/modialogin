@@ -20,7 +20,7 @@ import java.util.*
 
 val TOKEN_LIFESPAN = 10 * 60 * 60 * 1000
 @Serializable
-class JWKConfig(
+class WellKnownResult(
     @SerialName("jwks_uri") val url: String,
     @SerialName("token_endpoint") val tokenEndpoint: String,
     @SerialName("authorization_endpoint") val authorizationEndpoint: String,
@@ -54,7 +54,7 @@ fun Application.oidc(
             route(".well-known") {
                 get("openid-configuration") {
                     call.respond(
-                        JWKConfig(
+                        WellKnownResult(
                             url = "$baseUrl/$route/.well-known/openid-configuration",
                             tokenEndpoint = "$baseUrl/$route/oauth/token",
                             authorizationEndpoint = "http://localhost:8080/$route/authorize",
