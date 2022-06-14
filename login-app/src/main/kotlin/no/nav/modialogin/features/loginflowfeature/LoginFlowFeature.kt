@@ -9,6 +9,7 @@ import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorUtils
+import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import java.math.BigInteger
@@ -83,7 +84,7 @@ class LoginFlowFeature(private val config: Config) {
         val state: String = requireNotNull(call.request.queryParameters["state"]) {
             "URL parameter 'state' is missing"
         }
-        val cookie = requireNotNull(call.request.cookies[state]) {
+        val cookie = requireNotNull(call.getCookie(state)) {
             "State-cookie is missing"
         }
         val originalUrl = KtorUtils.decode(cookie)

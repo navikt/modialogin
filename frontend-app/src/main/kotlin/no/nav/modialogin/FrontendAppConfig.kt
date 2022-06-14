@@ -23,6 +23,7 @@ class FrontendAppConfig(proxyConfigFile: File) {
     val cspDirectives by StringSetting(default = "default src 'self'")
     val referrerPolicy by StringSetting(default = "origin")
     val exposedPort by IntSetting(default = 8080)
+    val secret by StringSetting()
     val proxyConfig: List<ProxyConfig> by lazy {
         if (proxyConfigFile.exists()) {
             val content = proxyConfigFile.readText()

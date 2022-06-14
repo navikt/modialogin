@@ -21,6 +21,7 @@ fun main() {
     System.setProperty("REFERRER_POLICY", "no-referrer")
     System.setProperty("EXPOSED_PORT", "8084")
     System.setProperty("OUTSIDE_DOCKER", "true")
+    System.setProperty("SECRET", "some secret")
 
     setupAzureAdEnv()
 

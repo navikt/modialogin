@@ -14,16 +14,18 @@ object KtorUtils {
         value: String,
         domain: String = request.host(),
         path: String = "/",
-        maxAgeInSeconds: Int = 3600
+        maxAgeInSeconds: Int = 3600,
+        crypter: Crypter? = null
     ) {
+        val cookieValue = crypter?.encrypt(value) ?: value
         this.response.cookies.append(
             Cookie(
                 name = name,
-                value = value,
+                value = cookieValue,
                 domain = cookieDomain(domain),
                 path = path,
                 maxAge = maxAgeInSeconds,
-                encoding = CookieEncoding.RAW,
+                encoding = CookieEncoding.BASE64_ENCODING,
                 secure = false,
                 httpOnly = true
             )
@@ -42,14 +44,18 @@ object KtorUtils {
         )
     }
 
-    fun ApplicationCall.getCookie(name: String): String? {
-        return this.request.cookies[name, CookieEncoding.RAW]
+    fun ApplicationCall.getCookie(name: String, crypter: Crypter? = null): String? {
+        val raw = this.request.cookies[name, CookieEncoding.BASE64_ENCODING]
+        if (crypter != null && raw != null) {
+            return crypter.decrypt(raw)
+        }
+        return raw
     }
 
-    fun encode(value: String) = URLEncoder.encode(value, UTF_8)
-    fun decode(value: String) = URLDecoder.decode(value, UTF_8)
+    fun encode(value: String): String = URLEncoder.encode(value, UTF_8)
+    fun decode(value: String): String = URLDecoder.decode(value, UTF_8)
 
-    fun cookieDomain(host: String): String {
+    private fun cookieDomain(host: String): String {
         val indices = host.indicesOf(".")
         if (indices.size < 2) {
             return host
