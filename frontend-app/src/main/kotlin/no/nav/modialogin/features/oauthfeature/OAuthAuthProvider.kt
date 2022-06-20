@@ -1,7 +1,6 @@
 package no.nav.modialogin.features.oauthfeature
 
 import com.auth0.jwt.interfaces.DecodedJWT
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -16,7 +15,7 @@ import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.modialogin.features.authfeature.BaseAuthProvider
-import kotlin.time.Duration.Companion.hours
+import org.slf4j.LoggerFactory
 
 class OAuthAuthProvider(
     override val name: String,
@@ -25,6 +24,7 @@ class OAuthAuthProvider(
     private val config: AzureAdConfig,
     secret: String? = null
 ) : BaseAuthProvider() {
+    private val log = LoggerFactory.getLogger("OAuthAuthProvider")
     private val client = OidcClient(config.toOidcClientConfig())
     private val crypter = secret?.let(::Crypter)
 
@@ -71,13 +71,12 @@ class OAuthAuthProvider(
         call.respondRedirect("/$appname/oauth2/login?redirect=$originalUri")
     }
 
-    fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
-        val cookieValue = call.getCookie(OAuth.cookieName(appname))
-        val decryptedValue = if (cookieValue != null && crypter != null) {
-            crypter.decrypt(cookieValue)
-        } else {
-            cookieValue
-        }
-        return decryptedValue?.let { Json.decodeFromString<OAuth.CookieTokens>(it) }
+    private fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
+        val cookieValue = call.getCookie(OAuth.cookieName(appname)) ?: return null
+        return crypter
+            ?.decryptSafe(cookieValue)
+            ?.map { Json.decodeFromString<OAuth.CookieTokens>(it) }
+            ?.onFailure { log.error("Could not decrypt cookie", it) }
+            ?.getOrNull()
     }
 }

@@ -4,11 +4,13 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import no.nav.modialogin.common.KotlinUtils.indicesOf
+import org.slf4j.LoggerFactory
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets.UTF_8
 
 object KtorUtils {
+    private val log = LoggerFactory.getLogger("KtorUtils")
     fun ApplicationCall.respondWithCookie(
         name: String,
         value: String,
@@ -17,7 +19,11 @@ object KtorUtils {
         maxAgeInSeconds: Int = 3600,
         crypter: Crypter? = null
     ) {
-        val cookieValue = crypter?.encrypt(value) ?: value
+        val cookieValue = crypter
+            ?.encryptSafe(value)
+            ?.onFailure { log.error("Could not encrypt cookie value", it) }
+            ?.getOrNull()
+            ?: value
         this.response.cookies.append(
             Cookie(
                 name = name,
@@ -45,11 +51,11 @@ object KtorUtils {
     }
 
     fun ApplicationCall.getCookie(name: String, crypter: Crypter? = null): String? {
-        val raw = this.request.cookies[name, CookieEncoding.BASE64_ENCODING]
-        if (crypter != null && raw != null) {
-            return crypter.decrypt(raw)
-        }
-        return raw
+        val raw = this.request.cookies[name, CookieEncoding.BASE64_ENCODING] ?: return null
+        return crypter
+            ?.decryptSafe(raw)
+            ?.onFailure { log.error("Could not decrypt cookie", it) }
+            ?.getOrNull()
     }
 
     fun encode(value: String): String = URLEncoder.encode(value, UTF_8)
