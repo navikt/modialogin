@@ -1,5 +1,12 @@
 [
   {
+    "prefix": "api",
+    "url": "http://echo-server/modiapersonoversikt-api",
+    "rewriteDirectives": [
+      "SET_ON_BEHALF_OF_TOKEN prod-fss personoversikt modiapersonoversikt-api"
+    ]
+  },
+  {
     "prefix": "proxy/app1",
     "url": "http://echo-server/appname1"
   },

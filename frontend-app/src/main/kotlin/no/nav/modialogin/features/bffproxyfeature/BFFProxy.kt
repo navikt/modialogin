@@ -1,12 +1,12 @@
-package no.nav.modialogin.common.features.bffproxyfeature
+package no.nav.modialogin.features.bffproxyfeature
 
 import io.ktor.client.request.*
 import io.ktor.server.application.*
 import io.ktor.util.pipeline.*
-import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.bffproxyfeature.directives.AADOnBehalfOfDirevtiveSpecification
-import no.nav.modialogin.common.features.bffproxyfeature.directives.RespondDirectiveSpecification
-import no.nav.modialogin.common.features.bffproxyfeature.directives.SetHeaderDirectiveSpecification
+import no.nav.modialogin.common.KtorServer
+import no.nav.modialogin.features.bffproxyfeature.directives.AADOnBehalfOfDirectiveSpecification
+import no.nav.modialogin.features.bffproxyfeature.directives.RespondDirectiveSpecification
+import no.nav.modialogin.features.bffproxyfeature.directives.SetHeaderDirectiveSpecification
 import java.lang.StringBuilder
 
 typealias ResponseDirectiveHandler = suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
@@ -41,13 +41,14 @@ class BFFProxy(initializingDirectives: List<String>) {
     private val handlers: List<DirectiveSpecification> = listOf(
         SetHeaderDirectiveSpecification,
         RespondDirectiveSpecification,
-        AADOnBehalfOfDirevtiveSpecification
+        AADOnBehalfOfDirectiveSpecification
     )
 
     init {
+        KtorServer.log.info("Directives: $initializingDirectives")
         initializingDirectives
             .map(::findHandler)
-            .map{ it.first }
+            .map { it.first }
             .distinct()
             .forEach { it.initialize() }
     }

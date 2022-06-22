@@ -1,9 +1,9 @@
-package no.nav.modialogin.common.features.bffproxyfeature.directives
+package no.nav.modialogin.features.bffproxyfeature.directives
 
 import no.nav.modialogin.common.KotlinUtils.cutoff
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy
-import no.nav.modialogin.common.features.bffproxyfeature.RequestDirectiveHandler
+import no.nav.modialogin.features.bffproxyfeature.BFFProxy
+import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
 
 object SetHeaderDirectiveSpecification : BFFProxy.RequestDirectiveSpecification {
     /**

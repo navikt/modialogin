@@ -19,7 +19,7 @@ object KotlinUtils {
 
     suspend fun <T> retry(numberOfTries: Int, interval: Duration, block: suspend () -> T): T {
         var attempt = 0
-        var error: Throwable? = null
+        var error: Throwable?
         do {
             try {
                 return block()

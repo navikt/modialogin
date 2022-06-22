@@ -42,6 +42,10 @@ object KtorUtils {
         )
     }
 
+    fun ApplicationCall.getCookie(name: String): String? {
+        return this.request.cookies[name, CookieEncoding.RAW]
+    }
+
     fun encode(value: String) = URLEncoder.encode(value, UTF_8)
     fun decode(value: String) = URLDecoder.decode(value, UTF_8)
 

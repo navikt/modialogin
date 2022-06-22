@@ -12,9 +12,17 @@ import no.nav.modialogin.common.NaisState
 object Metrics {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 }
-fun Application.installNaisFeature(appname: String, appversion: String, config: NaisState) {
+fun Application.installNaisFeature(appname: String, appversion: String, config: NaisState, selftestAttributes: Map<String, Any> = emptyMap()) {
     install(MicrometerMetrics) {
         registry = Metrics.registry
+    }
+    val selftestContent: String = buildString {
+        appendLine("Application: $appname")
+        appendLine("Version: $appversion")
+        appendLine()
+        for ((key, value) in selftestAttributes.entries) {
+            appendLine("$key: $value")
+        }
     }
 
     routing {
@@ -35,7 +43,7 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
                     }
                 }
                 get("selftest") {
-                    call.respondText("Application: $appname\nVersion: $appversion")
+                    call.respondText(selftestContent)
                 }
                 get("metrics") {
                     call.respond(Metrics.registry.scrape())

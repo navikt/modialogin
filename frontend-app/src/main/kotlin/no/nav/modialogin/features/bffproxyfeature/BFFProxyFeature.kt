@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features.bffproxyfeature
+package no.nav.modialogin.features.bffproxyfeature
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*

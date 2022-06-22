@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features.bffproxyfeature.directives
+package no.nav.modialogin.features.bffproxyfeature.directives
 
 import io.ktor.server.auth.*
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
@@ -6,11 +6,12 @@ import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
 import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.features.authfeature.AuthFeature
-import no.nav.modialogin.common.features.bffproxyfeature.BFFProxy
-import no.nav.modialogin.common.features.bffproxyfeature.RequestDirectiveHandler
+import no.nav.modialogin.features.authfeature.AuthFilterPrincipals
+import no.nav.modialogin.features.authfeature.AzureAdAuthProvider
+import no.nav.modialogin.features.bffproxyfeature.BFFProxy
+import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
 
-object AADOnBehalfOfDirevtiveSpecification : BFFProxy.RequestDirectiveSpecification {
+object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecification {
     /**
      * Usage: SET_ON_BEHALF_OF_TOKEN <cluster> <namespace> <servicename>
      * Ex:
@@ -38,10 +39,12 @@ object AADOnBehalfOfDirevtiveSpecification : BFFProxy.RequestDirectiveSpecificat
     override fun createHandler(directive: String): RequestDirectiveHandler {
         return { call ->
             val lexed = lex(Templating.replaceVariableReferences(directive, call.request))
-            val principal = requireNotNull(call.principal<AuthFeature.PayloadPrincipal>()) {
-                "Cannot proxy call with OBO-flow without principal"
+            val principal = requireNotNull(call.principal<AuthFilterPrincipals>()) {
+                "Cannot proxy call with OBO-flow without principals"
             }
-            val token = principal.token
+            val token = requireNotNull(principal.principals.find { it.name == AzureAdAuthProvider }?.token) {
+                "Cannot proxy call with OBO-flow without AzureAdAuthProvider"
+            }
             val oboToken = aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, token)
 
             this.headers["Cookie"] = ""

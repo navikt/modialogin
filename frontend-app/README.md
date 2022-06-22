@@ -3,17 +3,20 @@
 Docker-image som sikrer ressursene sine, og bruker en tilhørende `login-app` for innlogging av bruker.
 
 ## Konfigurasjon
-| Navn | Påkrevd | Beskrivelse |
-|------|---------|-------------|
-| APP_NAME | Ja | Navn på applikasjonen. Dette vil bli brukt som context-path i appen. |
-| APP_VERSION | Ja | Version av applikasjonen. Er bare synlig på selftest-siden |
-| IDP_DISCOVERY_URL | Ja | Url til discovery-url for idp (typisk noe som slutter på .well-known/openid-configuration) |
-| IDP_CLIENT_ID | Ja | Systembrukernavn for autentisering mot idp |
-| DELEGATED_LOGIN_URL | Ja | Url til `login-app`, e.g `http://domain.nav.no/loginapp/api/start` |
-| AUTH_TOKEN_RESOLVER | Ja | Hvor appen kan forvente å finne ID_token. F.eks `ID_token` eller `header` |
-| CSP_DIRECTIVES | Nei | CSP-header som skal brukes, er default satt til `default-src: 'self'` | 
-| CSP_REPORT_ONLY | Nei | `true` eller `false`, styrer hvorvidt CSP skal være i `Report-Only` modus |
-| REFERRER_POLICY | Nei | Default `origin`. Forhindrer at url-path blir sendt som http header ved lenke klikk. [Les mer her](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#examples) |
+| Navn                   | Påkrevd | Beskrivelse                                                                                                                                                                            |
+|------------------------|-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| APP_NAME               | Ja    | Navn på applikasjonen. Dette vil bli brukt som context-path i appen.                                                                                                                   |
+| APP_VERSION            | Ja    | Version av applikasjonen. Er bare synlig på selftest-siden                                                                                                                             |
+| IDP_DISCOVERY_URL      | Ja    | Url til discovery-url for idp (typisk noe som slutter på .well-known/openid-configuration)                                                                                             |
+| IDP_CLIENT_ID          | Ja    | Systembrukernavn for autentisering mot idp                                                                                                                                             |
+| IDP_ISSUER             | Ja    | Issuer for token, e.g: `https://your.ipd.no:443/oauth2`                                                                                                                           |
+| DELEGATED_LOGIN_URL    | Ja    | Url til `login-app`, e.g `http://domain.nav.no/loginapp/api/start`                                                                                                                     |
+| DELEGATED_REFRESH_URL  | Ja    | Url til `login-app` for refreshing av token, e.g `http://domain.nav.no/loginapp/api/refresh`                                                                                           |
+| AUTH_TOKEN_RESOLVER    | Nei   | Hvor appen kan forvente å finne ID_token. F.eks `ID_token` eller `header`, default: `ID_token`                                                                                         |
+| REFRESH_TOKEN_RESOLVER | Nei   | Hvor appen kan forvente å finne refreshtoken. F.eks `refresh_token`, default: `refresh_token`                                                                                          |
+| CSP_DIRECTIVES         | Nei   | CSP-header som skal brukes, default: `default-src: 'self'`                                                                                                                             | 
+| CSP_REPORT_ONLY        | Nei   | `true` eller `false`, styrer hvorvidt CSP skal være i `Report-Only` modus, default: `false`                                                                                            |
+| REFERRER_POLICY        | Nei   | Forhindrer at url-path blir sendt som http header ved lenke klikk. [Les mer her](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#examples), Default `origin` |
 
 
 **NB** Om `AUTH_TOKEN_RESOLVER` settes til `header` vil applikasjonen forvente at access_token kommer via
