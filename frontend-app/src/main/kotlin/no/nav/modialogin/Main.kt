@@ -64,8 +64,7 @@ fun startApplication() {
                         name = AzureAdAuthProvider,
                         appname = appConfig.appName,
                         xForwardedPort = config.config.exposedPort,
-                        config = it,
-                        secret = appConfig.secret
+                        config = it
                     )
                 )
             }
@@ -75,7 +74,7 @@ fun startApplication() {
                 OAuthFeature.Config(
                     appname = appConfig.appName,
                     oidc = OidcClient(it.toOidcClientConfig()),
-                    secret = appConfig.secret,
+                    secret = it.encryptionSecret,
                     exposedPort = config.config.exposedPort
                 )
             )

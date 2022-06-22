@@ -13,17 +13,18 @@ fun main() {
     System.setProperty("APP_VERSION", "localhost")
     System.setProperty("IDP_DISCOVERY_URL", "http://localhost:8080/openam/.well-known/openid-configuration")
     System.setProperty("IDP_CLIENT_ID", "foo")
+    System.setProperty("IDP_ISSUER", "openam")
     System.setProperty("DELEGATED_LOGIN_URL", "http://localhost:8082/modialogin/api/start")
     System.setProperty("DELEGATED_REFRESH_URL", "http://localhost:8082/modialogin/api/refresh")
     System.setProperty("AUTH_TOKEN_RESOLVER", "modia_ID_token")
     System.setProperty("CSP_REPORT_ONLY", "true")
     System.setProperty("CSP_DIRECTIVES", "default-src 'self'; script-src 'self';")
     System.setProperty("REFERRER_POLICY", "no-referrer")
-    System.setProperty("EXPOSED_PORT", "8084")
+    System.setProperty("EXPOSED_PORT", "8083")
     System.setProperty("OUTSIDE_DOCKER", "true")
     System.setProperty("SECRET", "some secret")
 
-    setupAzureAdEnv()
+//    setupAzureAdEnv()
 
     startApplication()
 }
@@ -41,6 +42,7 @@ fun setupAzureAdEnv() {
         )
     )
 
+    System.setProperty(AzureAdEnvironmentVariables.AZURE_APP_TENANT_ID, "tenant")
     System.setProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID, "foo")
     System.setProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET, "app-client-secret")
     System.setProperty(AzureAdEnvironmentVariables.AZURE_APP_JWK, jwk)

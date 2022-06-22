@@ -21,12 +21,11 @@ class OAuthAuthProvider(
     override val name: String,
     private val appname: String,
     private val xForwardedPort: Int,
-    private val config: AzureAdConfig,
-    secret: String? = null
+    private val config: AzureAdConfig
 ) : BaseAuthProvider() {
     private val log = LoggerFactory.getLogger("OAuthAuthProvider")
     private val client = OidcClient(config.toOidcClientConfig())
-    private val crypter = secret?.let(::Crypter)
+    private val crypter = Crypter(config.encryptionSecret)
 
     override suspend fun getToken(call: ApplicationCall): String? {
         return getAllTokens(call)?.idToken
@@ -74,9 +73,9 @@ class OAuthAuthProvider(
     private fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
         val cookieValue = call.getCookie(OAuth.cookieName(appname)) ?: return null
         return crypter
-            ?.decryptSafe(cookieValue)
-            ?.map { Json.decodeFromString<OAuth.CookieTokens>(it) }
-            ?.onFailure { log.error("Could not decrypt cookie", it) }
-            ?.getOrNull()
+            .decryptSafe(cookieValue)
+            .map { Json.decodeFromString<OAuth.CookieTokens>(it) }
+            .onFailure { log.error("Could not decrypt cookie", it) }
+            .getOrNull()
     }
 }

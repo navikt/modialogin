@@ -24,6 +24,7 @@ dependencies {
     implementation("io.ktor:ktor-server-forwarded-header:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client:$ktorVersion")

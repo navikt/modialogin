@@ -1,5 +1,6 @@
 const { test, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
+const {testonly} = require("./test-lib.js");
 
 setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
     const oidcConfig = await fetchJson('http://localhost:8080/openam/.well-known/openid-configuration');
@@ -12,7 +13,7 @@ setup('modialogin is running', retry({ retry: 10, interval: 2}, async () => {
 }));
 
 setup('frontendapp is running', retry({ retry: 10, interval: 2}, async () => {
-    const frontendapp = await fetch('http://localhost:8094/frontend/internal/isAlive');
+    const frontendapp = await fetch('http://localhost:8083/frontend/internal/isAlive');
     verify(frontendapp.statusCode, 200, 'frontendapp is running');
 }));
 
@@ -183,22 +184,20 @@ async function azureadloginflow(idtokencookie, port) {
         '/modialogin/login redirects to /frontend'
     );
     const loginCookies = login.headers['set-cookie'];
-    const accesstoken = loginCookies.find(cookie => cookie.startsWith('AAD_modia_access_token'));
-    const refreshtoken = loginCookies.find(cookie => cookie.startsWith('AAD_modia_refresh_token'));
+    const tokens = loginCookies.find(cookie => cookie.startsWith('frontend_tokens'));
+    const tokens_raw = loginCookies.find(cookie => cookie.startsWith('frontend_tokens_raw'));
     const removeStateCookie = loginCookies.find(cookie => cookie.startsWith(state));
 
-    assertThat(accesstoken, startsWith('AAD_modia_access_token'), '/frontend/oauth/callback sets modia_ID_token cookie');
-    assertThat(accesstoken, hasLengthGreaterThen(80), 'AAD_modia_access_token has some content');
-    assertThat(accesstoken, contains("Max-Age=3600;"), 'AAD_modia_access_token is valid for 1 hour');
-
-    assertThat(refreshtoken, startsWith('AAD_modia_refresh_token'), '/frontend/oauth/callback sets modia_refresh_token cookie');
-    assertThat(refreshtoken, hasLengthGreaterThen(80), 'AAD_modia_refresh_token has some content');
-    assertThat(refreshtoken, contains("Max-Age=72000;"), 'AAD_modia_access_token is valid for 24 hours');
+    assertThat(tokens, isDefined, '/frontend/oauth/callback sets frontend_tokens cookie');
+    let base64part = tokens_raw.split("=")[1].split(";")[0];
+    const tokensJson = JSON.parse(atob(base64part));
+    assertThat(tokensJson.access_token, isDefined, 'AAD_modia_access_token has some content');
+    assertThat(tokensJson.refresh_token, isDefined, 'AAD_modia_refresh_token has some content');
 
     assertThat(removeStateCookie, startsWith(state), '/frontend/oauth/callback sets modia_ID_token cookie');
     assertThat(removeStateCookie, contains('01 Jan 1970'), '/frontend/oauth/callback removes state cookie');
 
-    return accesstoken;
+    return tokens;
 }
 
 test('attempts to get frontend resource should result in login-flow', async () => {
@@ -239,7 +238,7 @@ test('static resources returns 302 login redirect, if not logged in', async () =
 test('static resources returns 200 ok if logged in', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const staticResource = await fetch('http://localhost:8083/frontend/static/css/index.css', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(staticResource.statusCode, 200, '/frontend returns 200');
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
@@ -248,7 +247,7 @@ test('static resources returns 200 ok if logged in', async () => {
 test('frontend routing should return index.html', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const staticResource = await fetch('http://localhost:8083/frontend/some/spa-route?query=param', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(staticResource.statusCode, 200, '/frontend returns 200');
     assertThat(staticResource.body, contains('<!DOCTYPE html>'), 'css-file is not HTML')
@@ -263,7 +262,7 @@ test('frontend routing should return 302 if not logged in', async () => {
 test('missing static resource returns 404 instead of fallback to index.html', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const staticResource = await fetch('http://localhost:8083/frontend/static/css/missing.css',{
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(staticResource.statusCode, 404, '/frontend returns 404');
     assertThat(staticResource.body, notContains('<!DOCTYPE html>'), 'css-file is not HTML')
@@ -283,7 +282,7 @@ test('missing static resource returns 404 instead of fallback to index.html', as
 test('proxying to open endpoint when logged in', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const openEndpointWithCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint/data', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(openEndpointWithCookie.statusCode, 200, '/frontend proxied to open endpoint');
     assertThat(openEndpointWithCookie.body.path, '/data', '/frontend removed url prefix');
@@ -293,7 +292,7 @@ test('proxying to open endpoint when logged in', async () => {
 test('proxying to open endpoint that removes cookie when logged in', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const openEndpointWithCookie = await fetchJson('http://localhost:8083/frontend/proxy/open-endpoint-no-cookie/data', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(openEndpointWithCookie.statusCode, 200, '/frontend proxied to open endpoint');
     assertThat(openEndpointWithCookie.body.path, '/data', '/frontend removed url prefix');
@@ -313,7 +312,7 @@ test('proxying to protected endpoint when not logged in', async () => {
 test('proxying to protected endpoint when logged in', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const protectedEndpoint = await fetchJson('http://localhost:8083/frontend/proxy/protected-endpoint/data', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(protectedEndpoint.statusCode, 200, '/frontend returns 200');
     assertThat(protectedEndpoint.body.path, '/data', '/frontend removed url prefix');
@@ -324,7 +323,7 @@ test('proxying to protected endpoint when logged in', async () => {
 test('proxying to protected endpoint when logged in, and rewriting cookie name', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const protectedEndpoint = await fetchJson('http://localhost:8083/frontend/proxy/protected-endpoint-with-cookie-rewrite/data', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(protectedEndpoint.statusCode, 200, '/frontend returns 200');
     assertThat(protectedEndpoint.body.path, '/data', '/frontend removed url prefix');
@@ -334,11 +333,13 @@ test('proxying to protected endpoint when logged in, and rewriting cookie name',
 
 test('proxying with obo-flow-directive exchanges the provided token', async () => {
     const openamTokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
-    const azureTokens = await fetchJson('http://localhost:8080/azuread/oauth/token', {}, {});
+    const idtokencookie = `modia_ID_token=${btoa(openamTokens.body['id_token'])}`;
+    const accesstokencookie = await azureadloginflow(idtokencookie, "8094", {
+        'Cookie': idtokencookie
+    });
     const openToken = openamTokens.body['id_token']
-    const azureToken = azureTokens.body['access_token']
     const apiEndpoint = await fetchJson('http://localhost:8094/frontend/api/some/data/endpoint', {
-        'Cookie': `modia_ID_token=${openToken};AAD_modia_access_token=${azureToken};`
+        'Cookie': idtokencookie+';'+accesstokencookie,
     });
 
     assertThat(apiEndpoint.statusCode, 200, '/api returns 200')
@@ -351,7 +352,7 @@ test('proxying with obo-flow-directive exchanges the provided token', async () =
 test('environments variables are injected into nginx config', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const page = await fetch('http://localhost:8083/frontend/env-data', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(page.body, 'APP_NAME: frontend', 'Page contains environmentvariable value')
 });
@@ -359,7 +360,7 @@ test('environments variables are injected into nginx config', async () => {
 test('environments variables are injected into html config', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const page = await fetch('http://localhost:8083/frontend/', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(page.body, contains('&#36;env{APP_NAME}: frontend'), 'Page contains environmentvariable value')
 });
@@ -367,7 +368,7 @@ test('environments variables are injected into html config', async () => {
 test('csp directive is added to request', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const page = await fetch('http://localhost:8083/frontend/', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
 
     const cspPolicy = page.headers['content-security-policy-report-only'];
@@ -378,7 +379,7 @@ test('csp directive is added to request', async () => {
 test('referrer-policy is added to response', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const page = await fetch('http://localhost:8083/frontend/', {
-        'Cookie': `modia_ID_token=${tokens.body['id_token']};`
+        'Cookie': `modia_ID_token=${btoa(tokens.body['id_token'])};`
     });
     assertThat(page.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
 });

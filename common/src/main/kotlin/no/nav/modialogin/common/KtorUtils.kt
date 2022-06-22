@@ -56,6 +56,7 @@ object KtorUtils {
             ?.decryptSafe(raw)
             ?.onFailure { log.error("Could not decrypt cookie", it) }
             ?.getOrNull()
+            ?: raw
     }
 
     fun encode(value: String): String = URLEncoder.encode(value, UTF_8)
