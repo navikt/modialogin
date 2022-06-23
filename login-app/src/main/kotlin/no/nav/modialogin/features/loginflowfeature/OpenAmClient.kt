@@ -28,8 +28,8 @@ class OpenAmClient {
     @Serializable
     class TokenExchangeResult(
         @SerialName("id_token") val idToken: String,
-        @SerialName("access_token") val accessToken: String?,
-        @SerialName("refresh_token") val refreshToken: String?,
+        @SerialName("access_token") val accessToken: String? = null,
+        @SerialName("refresh_token") val refreshToken: String? = null,
     )
 
     open class JwksClientConfig(val discoveryUrl: String)
