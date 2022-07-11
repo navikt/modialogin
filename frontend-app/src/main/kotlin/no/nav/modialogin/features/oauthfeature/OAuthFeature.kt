@@ -5,12 +5,9 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.auth.OidcClient
-import no.nav.modialogin.common.Crypter
 import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
@@ -18,6 +15,7 @@ import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.modialogin.features.oauthfeature.OAuth.CookieTokens
 import no.nav.modialogin.features.oauthfeature.OAuth.cookieName
+import no.nav.personoversikt.crypto.Crypter
 import java.math.BigInteger
 import kotlin.random.Random
 

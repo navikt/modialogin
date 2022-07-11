@@ -18,9 +18,9 @@ import no.nav.modialogin.features.ReferrerPolicyFeature.applyReferrerPolicyFeatu
 import no.nav.modialogin.features.authfeature.*
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
+import no.nav.modialogin.features.oauthfeature.OAuthAuthProvider
 import no.nav.modialogin.features.oauthfeature.OAuthFeature
 import no.nav.modialogin.features.oauthfeature.OAuthFeature.Companion.installOAuthRoutes
-import no.nav.modialogin.features.oauthfeature.OAuthAuthProvider
 import java.io.File
 
 fun main() {

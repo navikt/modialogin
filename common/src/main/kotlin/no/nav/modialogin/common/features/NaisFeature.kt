@@ -52,7 +52,6 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
                 }
                 get("metrics") {
                     call.respond(Metrics.registry.scrape())
-                    call.principal<Principal>()
                 }
 
                 get("whoami") {

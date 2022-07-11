@@ -10,11 +10,11 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
-import no.nav.modialogin.common.Crypter
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.modialogin.features.authfeature.BaseAuthProvider
+import no.nav.personoversikt.crypto.Crypter
 import org.slf4j.LoggerFactory
 
 class OAuthAuthProvider(
@@ -73,7 +73,7 @@ class OAuthAuthProvider(
     private fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
         val cookieValue = call.getCookie(OAuth.cookieName(appname)) ?: return null
         return crypter
-            .decryptSafe(cookieValue)
+            .decrypt(cookieValue)
             .map { Json.decodeFromString<OAuth.CookieTokens>(it) }
             .onFailure { log.error("Could not decrypt cookie", it) }
             .getOrNull()

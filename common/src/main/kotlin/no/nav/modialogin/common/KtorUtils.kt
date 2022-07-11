@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import no.nav.modialogin.common.KotlinUtils.indicesOf
+import no.nav.personoversikt.crypto.Crypter
 import org.slf4j.LoggerFactory
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -20,7 +21,7 @@ object KtorUtils {
         crypter: Crypter? = null
     ) {
         val cookieValue = crypter
-            ?.encryptSafe(value)
+            ?.encrypt(value)
             ?.onFailure { log.error("Could not encrypt cookie value", it) }
             ?.getOrNull()
             ?: value
@@ -53,7 +54,7 @@ object KtorUtils {
     fun ApplicationCall.getCookie(name: String, crypter: Crypter? = null): String? {
         val raw = this.request.cookies[name, CookieEncoding.BASE64_ENCODING] ?: return null
         return crypter
-            ?.decryptSafe(raw)
+            ?.decrypt(raw)
             ?.onFailure { log.error("Could not decrypt cookie", it) }
             ?.getOrNull()
             ?: raw
