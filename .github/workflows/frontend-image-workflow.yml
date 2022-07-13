@@ -19,8 +19,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}
-  BETA_IMAGE: docker.pkg.github.com/${{ github.repository }}/frontend:${{ github.sha }}-beta
+  IMAGE: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
+  BETA_IMAGE: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}-beta
   CI: true
   TZ: Europe/Oslo
 jobs:
@@ -58,7 +58,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
           docker build --tag ${BETA_IMAGE} frontend-image
           docker push ${BETA_IMAGE}
       - name: Publish image
@@ -66,6 +66,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} --password-stdin
+          echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
           docker build --tag ${IMAGE} frontend-image
           docker push ${IMAGE}
