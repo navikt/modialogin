@@ -25,6 +25,8 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("dev.nohus:AutoKonfig:$autokonfig_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }
