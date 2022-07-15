@@ -70,6 +70,7 @@ services:
       CSP_REPORT_ONLY: "true"
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
+      SECRET: "some secret"
 
       # Dummy JWK randomly generated on a test startup
       AZURE_APP_CLIENT_ID: "foo"

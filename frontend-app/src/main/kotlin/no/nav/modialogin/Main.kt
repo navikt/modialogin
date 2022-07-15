@@ -18,8 +18,9 @@ import no.nav.modialogin.features.ReferrerPolicyFeature.applyReferrerPolicyFeatu
 import no.nav.modialogin.features.authfeature.*
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
-import no.nav.modialogin.features.oauthfeature.OauthFeature
-import no.nav.modialogin.features.oauthfeature.OauthFeature.Companion.installOAuthRoutes
+import no.nav.modialogin.features.oauthfeature.OAuthAuthProvider
+import no.nav.modialogin.features.oauthfeature.OAuthFeature
+import no.nav.modialogin.features.oauthfeature.OAuthFeature.Companion.installOAuthRoutes
 import java.io.File
 
 fun main() {
@@ -59,12 +60,10 @@ fun startApplication() {
             azureAdConfig?.let { it ->
                 log.info("Registering azure ad provider")
                 register(
-                    OidcAuthProvider(
+                    OAuthAuthProvider(
                         name = AzureAdAuthProvider,
                         appname = appConfig.appName,
                         xForwardedPort = config.config.exposedPort,
-                        authTokenResolver = "AAD_modia_access_token",
-                        refreshTokenResolver = "AAD_modia_refresh_token",
                         config = it
                     )
                 )
@@ -72,11 +71,10 @@ fun startApplication() {
         }
         azureAdConfig?.let {
             installOAuthRoutes(
-                OauthFeature.Config(
+                OAuthFeature.Config(
                     appname = appConfig.appName,
                     oidc = OidcClient(it.toOidcClientConfig()),
-                    authTokenResolver = "AAD_modia_access_token",
-                    refreshTokenResolver = "AAD_modia_refresh_token",
+                    secret = it.encryptionSecret,
                     exposedPort = config.config.exposedPort
                 )
             )

@@ -1,39 +1,42 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "2.0.2"
-val logbackVersion = "1.2.11"
-val logstashVersion = "7.1.1"
-val prometheusVersion = "1.8.5"
+val ktor_version: String by project
+val logback_version: String by project
+val logstash_version: String by project
+val prometheus_version: String by project
+val modia_common_version: String by project
+val autokonfig_version: String by project
+val junit_version: String by project
 
 plugins {
     `java-library`
+    id("setup.repository")
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
 }
 
-repositories {
-    mavenCentral()
-    jcenter()
-}
-
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-server-forwarded-header:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("io.ktor:ktor-client:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-client-auth:$ktorVersion")
-    implementation("io.ktor:ktor-client-logging:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("dev.nohus:AutoKonfig:1.0.4")
-    implementation("io.micrometer:micrometer-registry-prometheus:$prometheusVersion")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-server-forwarded-header:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktor_version")
+    implementation("io.ktor:ktor-server-auth:$ktor_version")
+    implementation("io.ktor:ktor-serialization:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-client:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-auth:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("dev.nohus:AutoKonfig:$autokonfig_version")
+    implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
+    implementation("no.nav.personoversikt:crypto:$modia_common_version")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }
 
 java {

@@ -4,26 +4,35 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import no.nav.modialogin.common.KotlinUtils.indicesOf
+import no.nav.personoversikt.crypto.Crypter
+import org.slf4j.LoggerFactory
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets.UTF_8
 
 object KtorUtils {
+    private val log = LoggerFactory.getLogger("KtorUtils")
     fun ApplicationCall.respondWithCookie(
         name: String,
         value: String,
         domain: String = request.host(),
         path: String = "/",
-        maxAgeInSeconds: Int = 3600
+        maxAgeInSeconds: Int = 3600,
+        crypter: Crypter? = null
     ) {
+        val cookieValue = crypter
+            ?.encrypt(value)
+            ?.onFailure { log.error("Could not encrypt cookie value", it) }
+            ?.getOrNull()
+            ?: value
         this.response.cookies.append(
             Cookie(
                 name = name,
-                value = value,
+                value = cookieValue,
                 domain = cookieDomain(domain),
                 path = path,
                 maxAge = maxAgeInSeconds,
-                encoding = CookieEncoding.RAW,
+                encoding = CookieEncoding.BASE64_ENCODING,
                 secure = false,
                 httpOnly = true
             )
@@ -42,14 +51,19 @@ object KtorUtils {
         )
     }
 
-    fun ApplicationCall.getCookie(name: String): String? {
-        return this.request.cookies[name, CookieEncoding.RAW]
+    fun ApplicationCall.getCookie(name: String, crypter: Crypter? = null): String? {
+        val raw = this.request.cookies[name, CookieEncoding.BASE64_ENCODING] ?: return null
+        return crypter
+            ?.decrypt(raw)
+            ?.onFailure { log.error("Could not decrypt cookie", it) }
+            ?.getOrNull()
+            ?: raw
     }
 
-    fun encode(value: String) = URLEncoder.encode(value, UTF_8)
-    fun decode(value: String) = URLDecoder.decode(value, UTF_8)
+    fun encode(value: String): String = URLEncoder.encode(value, UTF_8)
+    fun decode(value: String): String = URLDecoder.decode(value, UTF_8)
 
-    fun cookieDomain(host: String): String {
+    private fun cookieDomain(host: String): String {
         val indices = host.indicesOf(".")
         if (indices.size < 2) {
             return host
