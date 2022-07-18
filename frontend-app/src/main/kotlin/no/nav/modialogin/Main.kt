@@ -74,7 +74,7 @@ fun startApplication() {
                 OAuthFeature.Config(
                     appname = appConfig.appName,
                     oidc = OidcClient(it.toOidcClientConfig()),
-                    secret = it.encryptionSecret,
+                    cookieEncryptionKey = it.cookieEncryptionKey,
                     exposedPort = config.config.exposedPort
                 )
             )

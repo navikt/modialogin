@@ -18,7 +18,7 @@ class AzureAdConfig(
     val openidConfigIssuer: String,
     val openidConfigJWKSUri: String,
     val openidConfigTokenEndpoint: String,
-    val encryptionSecret: String,
+    val cookieEncryptionKey: String?,
 ) {
     val appJWK: JWK = JWK.parse(appJWK)
     val preAuthorizedApps = Json.Default.decodeFromString<List<PreauthorizedApp>>(preAuthorizedApps)
@@ -51,7 +51,7 @@ class AzureAdConfig(
                     KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_JWKS_URI)
                 val openidConfigTokenEndpoint =
                     KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)
-                val encryptionSecret = KotlinUtils.requireProperty("SECRET")
+                val encryptionSecret = KotlinUtils.getProperty("COOKIE_ENCRYPTION_KEY")
 
                 AzureAdConfig(
                     clientId = clientId,
@@ -63,7 +63,7 @@ class AzureAdConfig(
                     openidConfigIssuer = openidConfigIssuer,
                     openidConfigJWKSUri = openidConfigJWKSUri,
                     openidConfigTokenEndpoint = openidConfigTokenEndpoint,
-                    encryptionSecret = encryptionSecret
+                    cookieEncryptionKey = encryptionSecret
                 )
             }.getOrElse {
                 log.info("Could not load azureAd config", it)

@@ -25,7 +25,7 @@ class OAuthAuthProvider(
 ) : BaseAuthProvider() {
     private val log = LoggerFactory.getLogger("OAuthAuthProvider")
     private val client = OidcClient(config.toOidcClientConfig())
-    private val crypter = Crypter(config.encryptionSecret)
+    private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
     override suspend fun getToken(call: ApplicationCall): String? {
         return getAllTokens(call)?.idToken
@@ -56,6 +56,7 @@ class OAuthAuthProvider(
             value = Json.encodeToString(cookieValue),
             crypter = crypter,
         )
+        // TODO only include non-encrypted cookies in dev
         call.respondWithCookie(
             name = "${OAuth.cookieName(appname)}_raw",
             value = Json.encodeToString(cookieValue),
@@ -72,8 +73,7 @@ class OAuthAuthProvider(
 
     private fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
         val cookieValue = call.getCookie(OAuth.cookieName(appname)) ?: return null
-        return crypter
-            .decrypt(cookieValue)
+        return (crypter?.decrypt(cookieValue) ?: Result.success(cookieValue))
             .map { Json.decodeFromString<OAuth.CookieTokens>(it) }
             .onFailure { log.error("Could not decrypt cookie", it) }
             .getOrNull()

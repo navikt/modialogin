@@ -29,11 +29,11 @@ class OAuthFeature(private val config: Config) {
     class Config(
         val appname: String,
         val oidc: OidcClient,
-        val secret: String?,
+        val cookieEncryptionKey: String?,
         val exposedPort: Int,
     )
 
-    private val crypter = config.secret?.let(::Crypter)
+    private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
     fun install(app: Application) = with(app) {
         routing {
@@ -88,6 +88,7 @@ class OAuthFeature(private val config: Config) {
                             value = Json.encodeToString(cookieValue),
                             crypter = crypter,
                         )
+                        // TODO only include non-encrypted cookies in dev
                         call.respondWithCookie(
                             name = "${cookieName(config.appname)}_raw",
                             value = Json.encodeToString(cookieValue),
