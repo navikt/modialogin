@@ -1,6 +1,7 @@
 package no.nav.modialogin.features.authfeature
 
 import com.auth0.jwt.interfaces.DecodedJWT
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -45,7 +46,8 @@ class DelegatedAuthProvider(
         val newToken = refreshClient.refreshToken(refreshToken)
         call.respondWithCookie(
             name = authTokenResolver,
-            value = newToken
+            value = newToken,
+            encoding = CookieEncoding.RAW,
         )
         return newToken
     }

@@ -18,7 +18,8 @@ object KtorUtils {
         domain: String = request.host(),
         path: String = "/",
         maxAgeInSeconds: Int = 3600,
-        crypter: Crypter? = null
+        crypter: Crypter? = null,
+        encoding: CookieEncoding = CookieEncoding.BASE64_ENCODING
     ) {
         val cookieValue = crypter
             ?.encrypt(value)
@@ -32,7 +33,7 @@ object KtorUtils {
                 domain = cookieDomain(domain),
                 path = path,
                 maxAge = maxAgeInSeconds,
-                encoding = CookieEncoding.BASE64_ENCODING,
+                encoding = encoding,
                 secure = false,
                 httpOnly = true
             )
