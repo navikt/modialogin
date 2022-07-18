@@ -13,7 +13,6 @@ import no.nav.modialogin.features.authfeature.BaseAuthProvider
 import no.nav.modialogin.features.oauthfeature.OAuth.getOAuthTokens
 import no.nav.modialogin.features.oauthfeature.OAuth.respondWithOAuthTokens
 import no.nav.personoversikt.crypto.Crypter
-import org.slf4j.LoggerFactory
 
 class OAuthAuthProvider(
     override val name: String,
@@ -21,7 +20,6 @@ class OAuthAuthProvider(
     private val xForwardedPort: Int,
     private val config: AzureAdConfig
 ) : BaseAuthProvider() {
-    private val log = LoggerFactory.getLogger("OAuthAuthProvider")
     private val client = OidcClient(config.toOidcClientConfig())
     private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
@@ -45,7 +43,6 @@ class OAuthAuthProvider(
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
         val newTokens = client.refreshToken(clientId = config.clientId, refreshToken = refreshToken)
         val cookieTokens = OAuth.CookieTokens(
-            idToken = newTokens.idToken,
             accessToken = newTokens.accessToken,
             refreshToken = newTokens.refreshToken,
         )

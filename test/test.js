@@ -1,6 +1,5 @@
 const { test, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
 const { fetch, fetchJson } = require('./http-fetch');
-const {testonly} = require("./test-lib.js");
 
 setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
     const oidcConfig = await fetchJson('http://localhost:8080/openam/.well-known/openid-configuration');
@@ -184,10 +183,8 @@ async function azureadloginflow(idtokencookie, port) {
         '/modialogin/login redirects to /frontend'
     );
     const loginCookies = login.headers['set-cookie'];
-    const idToken = loginCookies.find(cookie => cookie.startsWith('frontend_ID_TOKEN'));
     const accessToken = loginCookies.find(cookie => cookie.startsWith('frontend_ACCESS_TOKEN'));
     const refreshToken = loginCookies.find(cookie => cookie.startsWith('frontend_REFRESH_TOKEN'));
-    assertThat(idToken, isDefined, '/frontend/oauth/callback sets id-token cookie');
     assertThat(accessToken, isDefined, '/frontend/oauth/callback sets access-token cookie');
     assertThat(refreshToken, isDefined, '/frontend/oauth/callback sets refresh-token cookie');
 
@@ -196,7 +193,7 @@ async function azureadloginflow(idtokencookie, port) {
     assertThat(removeStateCookie, startsWith(state), '/frontend/oauth/callback sets modia_ID_token cookie');
     assertThat(removeStateCookie, contains('01 Jan 1970'), '/frontend/oauth/callback removes state cookie');
 
-    return [idToken, accessToken, refreshToken].join(";");
+    return [accessToken, refreshToken].join(";");
 }
 
 test('attempts to get frontend resource should result in login-flow', async () => {

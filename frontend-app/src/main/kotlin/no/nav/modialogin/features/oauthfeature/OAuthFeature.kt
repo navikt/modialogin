@@ -79,7 +79,6 @@ class OAuthFeature(private val config: Config) {
                         )
 
                         val cookieTokens = CookieTokens(
-                            idToken = tokens.idToken,
                             accessToken = tokens.accessToken,
                             refreshToken = tokens.refreshToken,
                         )
