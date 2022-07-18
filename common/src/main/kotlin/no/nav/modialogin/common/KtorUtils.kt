@@ -52,7 +52,7 @@ object KtorUtils {
     }
 
     fun ApplicationCall.getCookie(name: String, crypter: Crypter? = null): String? {
-        val raw = this.request.cookies[name, CookieEncoding.BASE64_ENCODING] ?: return null
+        val raw = this.getCookieValue(name) ?: return null
         return crypter
             ?.decrypt(raw)
             ?.onFailure { log.error("Could not decrypt cookie", it) }
@@ -62,6 +62,14 @@ object KtorUtils {
 
     fun encode(value: String): String = URLEncoder.encode(value, UTF_8)
     fun decode(value: String): String = URLDecoder.decode(value, UTF_8)
+
+    private fun ApplicationCall.getCookieValue(name: String): String? {
+        val value = this.request.cookies[name, CookieEncoding.RAW] ?: return null
+        if (Base64CommonCodec.isBase64(value)) {
+            return this.request.cookies[name, CookieEncoding.BASE64_ENCODING]
+        }
+        return value
+    }
 
     private fun cookieDomain(host: String): String {
         val indices = host.indicesOf(".")
