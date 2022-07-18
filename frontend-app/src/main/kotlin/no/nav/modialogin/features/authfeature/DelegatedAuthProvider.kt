@@ -22,15 +22,11 @@ class DelegatedAuthProvider(
 ) : BaseAuthProvider() {
     private val refreshClient = DelegatedRefreshClient(refreshUrl)
 
-    override suspend fun getIdToken(call: ApplicationCall): String? {
+    override suspend fun getToken(call: ApplicationCall): String? {
         if (authTokenResolver == "header") {
             return call.request.authorization()
         }
         return call.getCookie(authTokenResolver)
-    }
-
-    override suspend fun getAccessToken(call: ApplicationCall): String? {
-        return null
     }
 
     override suspend fun getRefreshToken(call: ApplicationCall): String? {

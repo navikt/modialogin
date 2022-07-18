@@ -25,11 +25,7 @@ class OAuthAuthProvider(
     private val client = OidcClient(config.toOidcClientConfig())
     private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
-    override suspend fun getIdToken(call: ApplicationCall): String? {
-        return getAllTokens(call)?.idToken
-    }
-
-    override suspend fun getAccessToken(call: ApplicationCall): String? {
+    override suspend fun getToken(call: ApplicationCall): String? {
         return getAllTokens(call)?.accessToken
     }
 

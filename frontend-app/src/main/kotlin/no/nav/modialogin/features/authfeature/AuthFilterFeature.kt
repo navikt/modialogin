@@ -18,13 +18,12 @@ interface AuthProvider {
 }
 
 abstract class BaseAuthProvider : AuthProvider {
-    abstract suspend fun getIdToken(call: ApplicationCall): String?
-    abstract suspend fun getAccessToken(call: ApplicationCall): String?
+    abstract suspend fun getToken(call: ApplicationCall): String?
+    abstract suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String
     abstract fun verify(jwt: DecodedJWT)
     abstract suspend fun getRefreshToken(call: ApplicationCall): String?
-    abstract suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String
     override suspend fun authorize(call: ApplicationCall): AuthFilterPrincipal? {
-        var token = getIdToken(call) ?: return null
+        var token = getToken(call) ?: return null
         val jwt = JWT.decode(token)
         try {
             verify(jwt)
@@ -38,7 +37,7 @@ abstract class BaseAuthProvider : AuthProvider {
             token = refreshTokens(call, refreshToken)
         }
 
-        return AuthFilterPrincipal(name, token, getAccessToken(call))
+        return AuthFilterPrincipal(name, token)
     }
 
     private fun DecodedJWT.expiresWithin(time: Duration): Boolean {
@@ -57,7 +56,7 @@ class AuthFilterConfig(
     }
 }
 
-class AuthFilterPrincipal(val name: String, val idToken: String, val accessToken: String?) : Payload by JWT.decode(idToken), WhoAmIPrincipal {
+class AuthFilterPrincipal(val name: String, val token: String) : Payload by JWT.decode(token), WhoAmIPrincipal {
     override val description: String = subject
 }
 class AuthFilterPrincipals(val principals: Array<AuthFilterPrincipal>) : WhoAmIPrincipal {
