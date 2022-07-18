@@ -184,20 +184,25 @@ async function azureadloginflow(idtokencookie, port) {
         '/modialogin/login redirects to /frontend'
     );
     const loginCookies = login.headers['set-cookie'];
-    const tokens = loginCookies.find(cookie => cookie.startsWith('frontend_tokens'));
-    const tokens_raw = loginCookies.find(cookie => cookie.startsWith('frontend_tokens_raw'));
-    const removeStateCookie = loginCookies.find(cookie => cookie.startsWith(state));
+    const idToken = loginCookies.find(cookie => cookie.startsWith('frontend_ID_TOKEN'));
+    const accessToken = loginCookies.find(cookie => cookie.startsWith('frontend_ACCESS_TOKEN'));
+    const refreshToken = loginCookies.find(cookie => cookie.startsWith('frontend_REFRESH_TOKEN'));
+    const idTokenRaw = loginCookies.find(cookie => cookie.startsWith('frontend_ID_TOKEN_RAW'));
+    const accessTokenRaw = loginCookies.find(cookie => cookie.startsWith('frontend_ACCESS_TOKEN_RAW'));
+    const refreshTokenRaw = loginCookies.find(cookie => cookie.startsWith('frontend_REFRESH_TOKEN_RAW'));
+    assertThat(idToken, isDefined, '/frontend/oauth/callback sets id-token cookie');
+    assertThat(accessToken, isDefined, '/frontend/oauth/callback sets access-token cookie');
+    assertThat(refreshToken, isDefined, '/frontend/oauth/callback sets refresh-token cookie');
+    assertThat(idTokenRaw, isDefined, '/frontend/oauth/callback sets id-token raw-cookie');
+    assertThat(accessTokenRaw, isDefined, '/frontend/oauth/callback sets access-token raw-cookie');
+    assertThat(refreshTokenRaw, isDefined, '/frontend/oauth/callback sets refresh-token raw-cookie');
 
-    assertThat(tokens, isDefined, '/frontend/oauth/callback sets frontend_tokens cookie');
-    let base64part = tokens_raw.split("=")[1].split(";")[0];
-    const tokensJson = JSON.parse(atob(base64part));
-    assertThat(tokensJson.access_token, isDefined, 'AAD_modia_access_token has some content');
-    assertThat(tokensJson.refresh_token, isDefined, 'AAD_modia_refresh_token has some content');
+    const removeStateCookie = loginCookies.find(cookie => cookie.startsWith(state));
 
     assertThat(removeStateCookie, startsWith(state), '/frontend/oauth/callback sets modia_ID_token cookie');
     assertThat(removeStateCookie, contains('01 Jan 1970'), '/frontend/oauth/callback removes state cookie');
 
-    return tokens;
+    return [idToken, accessToken, refreshToken].join(";");
 }
 
 test('attempts to get frontend resource should result in login-flow', async () => {

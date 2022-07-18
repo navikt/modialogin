@@ -3,16 +3,12 @@ package no.nav.modialogin.features.oauthfeature
 import io.ktor.server.application.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.personoversikt.crypto.Crypter
 
 object OAuth {
-    fun cookieName(appname: String): String = "${appname}_tokens"
+    private fun cookieName(appname: String, tokenType: TokenType): String = "${appname}_${tokenType.name}"
 
     @Serializable
     class CookieTokens(
@@ -22,23 +18,50 @@ object OAuth {
     )
 
     fun ApplicationCall.respondWithOAuthTokens(appname: String, crypter: Crypter?, tokens: CookieTokens) {
-        this.respondWithCookie(
-            name = cookieName(appname),
-            value = Json.encodeToString(tokens),
+        this.respondWithRawCookies(
+            name = cookieName(appname, TokenType.ID_TOKEN),
+            value = tokens.idToken,
             crypter = crypter,
         )
-        // TODO only include non-encrypted cookies in dev
-        this.respondWithCookie(
-            name = "${cookieName(appname)}_raw",
-            value = Json.encodeToString(tokens),
+        this.respondWithRawCookies(
+            name = cookieName(appname, TokenType.ACCESS_TOKEN),
+            value = tokens.accessToken,
+            crypter = crypter,
+        )
+        this.respondWithRawCookies(
+            name = cookieName(appname, TokenType.REFRESH_TOKEN),
+            value = tokens.refreshToken,
+            crypter = crypter,
         )
     }
 
     fun ApplicationCall.getOAuthTokens(appname: String, crypter: Crypter?): CookieTokens? {
-        val cookieValue = this.getCookie(cookieName(appname)) ?: return null
-        return (crypter?.decrypt(cookieValue) ?: Result.success(cookieValue))
-            .map { Json.decodeFromString<CookieTokens>(it) }
-            .onFailure { log.error("Could not decrypt cookie", it) }
-            .getOrNull()
+        val idToken = this.getCookie(cookieName(appname, TokenType.ID_TOKEN), crypter) ?: return null
+        val accessToken = this.getCookie(cookieName(appname, TokenType.ACCESS_TOKEN), crypter) ?: return null
+        val refreshToken = this.getCookie(cookieName(appname, TokenType.REFRESH_TOKEN), crypter) ?: return null
+
+        return CookieTokens(
+            idToken = idToken,
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+        )
+    }
+
+    private fun ApplicationCall.respondWithRawCookies(name: String, value: String, crypter: Crypter?) {
+        this.respondWithCookie(
+            name = name,
+            value = value,
+            crypter = crypter
+        )
+
+        // TODO only include non-encrypted cookies in dev
+        this.respondWithCookie(
+            name = "${name}_RAW",
+            value = value
+        )
+    }
+
+    private enum class TokenType {
+        ID_TOKEN, ACCESS_TOKEN, REFRESH_TOKEN
     }
 }
