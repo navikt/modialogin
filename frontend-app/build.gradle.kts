@@ -1,43 +1,44 @@
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "2.0.2"
-val logbackVersion = "1.2.11"
-val logstashVersion = "7.1.1"
+val ktor_version: String by project
+val logback_version: String by project
+val logstash_version: String by project
+val java_common_version: String by project
+val modia_common_version: String by project
+val autokonfig_version: String by project
+val junit_version: String by project
 
 plugins {
+    id("setup.repository")
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
-}
-
-group = "no.nav"
-version = ""
-
-repositories {
-    mavenCentral()
-    jcenter()
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(project(":common"))
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-server-default-headers:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-client:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion")
-    implementation("dev.nohus:AutoKonfig:1.0.4")
-    implementation("no.nav.common:token-client:2.2022.04.25_07.57-b8b4682228e7")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-server-default-headers:$ktor_version")
+    implementation("io.ktor:ktor-server-auth:$ktor_version")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    implementation("io.ktor:ktor-client:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
+    implementation("dev.nohus:AutoKonfig:$autokonfig_version")
+    implementation("no.nav.common:token-client:$java_common_version")
+    implementation("no.nav.personoversikt:crypto:$modia_common_version")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }
+
+group = "no.nav"
+version = ""
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11

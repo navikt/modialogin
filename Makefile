@@ -1,6 +1,6 @@
 .PHONY: all clean build start test stop
 
-all: clean build start test stop
+all: clean build start-silent test stop
 
 clean:
 	./gradlew clean
@@ -9,6 +9,9 @@ build:
 	./gradlew build
 
 start:
+	docker-compose up --build
+
+start-silent:
 	docker-compose up --build -d
 
 stop:

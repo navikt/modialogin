@@ -5,9 +5,9 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import com.auth0.jwt.interfaces.Payload
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.util.*
 import io.ktor.util.date.*
 import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.features.WhoAmIPrincipal
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -19,9 +19,9 @@ interface AuthProvider {
 
 abstract class BaseAuthProvider : AuthProvider {
     abstract suspend fun getToken(call: ApplicationCall): String?
+    abstract suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String
     abstract fun verify(jwt: DecodedJWT)
     abstract suspend fun getRefreshToken(call: ApplicationCall): String?
-    abstract suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String
     override suspend fun authorize(call: ApplicationCall): AuthFilterPrincipal? {
         var token = getToken(call) ?: return null
         val jwt = JWT.decode(token)
@@ -56,14 +56,11 @@ class AuthFilterConfig(
     }
 }
 
-class AuthFilterPrincipal(val name: String, val token: String) : Principal, Payload by JWT.decode(token)
-class AuthFilterPrincipals(val principals: Array<AuthFilterPrincipal>) : Principal
-
-private val AuthenticationContextKey = AttributeKey<AuthenticationContext>("AuthContext")
-private fun ApplicationCall.getAuthenticationContext(): AuthenticationContext {
-    return this.attributes.computeIfAbsent(AuthenticationContextKey) {
-        AuthenticationContext(this)
-    }
+class AuthFilterPrincipal(val name: String, val token: String) : Payload by JWT.decode(token), WhoAmIPrincipal {
+    override val description: String = subject
+}
+class AuthFilterPrincipals(val principals: Array<AuthFilterPrincipal>) : WhoAmIPrincipal {
+    override val description: String = principals.joinToString(", ") { "${it.name}: ${it.description}" }
 }
 
 const val AzureAdAuthProvider = "AzureAd"
@@ -99,8 +96,6 @@ val AuthFilterFeature = createApplicationPlugin("AuthFilterFeature", ::AuthFilte
             principals[i] = principal
         }
 
-        call
-            .getAuthenticationContext()
-            .principal(AuthFilterPrincipals(principals.requireNoNulls()))
+        call.authentication.principal(AuthFilterPrincipals(principals.requireNoNulls()))
     }
 }

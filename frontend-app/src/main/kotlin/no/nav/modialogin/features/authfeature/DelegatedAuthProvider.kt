@@ -1,6 +1,7 @@
 package no.nav.modialogin.features.authfeature
 
 import com.auth0.jwt.interfaces.DecodedJWT
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -28,6 +29,10 @@ class DelegatedAuthProvider(
         return call.getCookie(authTokenResolver)
     }
 
+    override suspend fun getRefreshToken(call: ApplicationCall): String? {
+        return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver) }
+    }
+
     override fun verify(jwt: DecodedJWT) {
         check(jwt.audience.contains(acceptedAudience)) {
             "Audience mismatch, expected $acceptedAudience but got ${jwt.audience}"
@@ -37,15 +42,12 @@ class DelegatedAuthProvider(
         }
     }
 
-    override suspend fun getRefreshToken(call: ApplicationCall): String? {
-        return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver) }
-    }
-
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
         val newToken = refreshClient.refreshToken(refreshToken)
         call.respondWithCookie(
             name = authTokenResolver,
-            value = newToken
+            value = newToken,
+            encoding = CookieEncoding.RAW,
         )
         return newToken
     }

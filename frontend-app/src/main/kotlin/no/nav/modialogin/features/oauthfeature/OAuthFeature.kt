@@ -6,26 +6,33 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.modialogin.auth.OidcClient
+import no.nav.modialogin.auth.OidcClient.Companion.clientScope
 import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorUtils
+import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
+import no.nav.modialogin.features.oauthfeature.OAuth.CookieTokens
+import no.nav.modialogin.features.oauthfeature.OAuth.respondWithOAuthTokens
+import no.nav.personoversikt.crypto.Crypter
 import java.math.BigInteger
 import kotlin.random.Random
 
-class OauthFeature(private val config: Config) {
+class OAuthFeature(private val config: Config) {
     companion object {
         fun Application.installOAuthRoutes(config: Config) {
-            OauthFeature(config).install(this)
+            OAuthFeature(config).install(this)
         }
     }
+
     class Config(
         val appname: String,
         val oidc: OidcClient,
-        val authTokenResolver: String,
-        val refreshTokenResolver: String?,
-        val exposedPort: Int
+        val cookieEncryptionKey: String?,
+        val exposedPort: Int,
     )
+
+    private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
     fun install(app: Application) = with(app) {
         routing {
@@ -58,27 +65,24 @@ class OauthFeature(private val config: Config) {
                         val state: String = requireNotNull(call.request.queryParameters["state"]) {
                             "URL parameter 'state' is missing"
                         }
-                        val cookie = requireNotNull(call.request.cookies[state]) {
+
+                        val cookie = requireNotNull(call.getCookie(state)) {
                             "State-cookie is missing"
                         }
                         val originalUrl = KtorUtils.decode(cookie)
 
                         KtorServer.log.info("Callback from IDP: $state -> $originalUrl")
-                        val token = config.oidc.exchangeAuthCodeForToken(
+                        val tokens = config.oidc.exchangeAuthCodeForToken(
                             code = code,
-                            loginUrl(call.request, config.exposedPort, config.appname)
+                            clientId = config.oidc.config.clientId,
+                            callbackUrl = loginUrl(call.request, config.exposedPort, config.appname)
                         )
-                        call.respondWithCookie(
-                            name = config.authTokenResolver,
-                            value = requireNotNull(token.idToken)
+
+                        val cookieTokens = CookieTokens(
+                            accessToken = tokens.accessToken,
+                            refreshToken = tokens.refreshToken,
                         )
-                        if (config.refreshTokenResolver != null) {
-                            call.respondWithCookie(
-                                name = config.refreshTokenResolver,
-                                value = token.refreshToken,
-                                maxAgeInSeconds = 20 * 3600
-                            )
-                        }
+                        call.respondWithOAuthTokens(config.appname, crypter, cookieTokens)
                         call.removeCookie(state)
 
                         call.respondRedirect(
@@ -99,12 +103,17 @@ class OauthFeature(private val config: Config) {
         return "$scheme://${request.host()}$port/$appname/oauth2/callback"
     }
 
-    private fun callbackUrl(authorizationEndpoint: String, clientId: String, stateNounce: String, callbackUrl: String): String {
+    private fun callbackUrl(
+        authorizationEndpoint: String,
+        clientId: String,
+        stateNounce: String,
+        callbackUrl: String
+    ): String {
         val requestParameters = Parameters.build {
             set("client_id", clientId)
             set("response_type", "code")
             set("response_mode", "query")
-            set("scope", "openid offline_access")
+            set("scope", "openid offline_access ${clientScope(clientId)}")
             set("state", stateNounce)
             set("redirect_uri", callbackUrl)
         }
