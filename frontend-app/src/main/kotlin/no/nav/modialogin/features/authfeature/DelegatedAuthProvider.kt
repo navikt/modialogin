@@ -22,11 +22,19 @@ class DelegatedAuthProvider(
 ) : BaseAuthProvider() {
     private val refreshClient = DelegatedRefreshClient(refreshUrl)
 
-    override suspend fun getToken(call: ApplicationCall): String? {
+    override suspend fun getIdToken(call: ApplicationCall): String? {
         if (authTokenResolver == "header") {
             return call.request.authorization()
         }
         return call.getCookie(authTokenResolver)
+    }
+
+    override suspend fun getAccessToken(call: ApplicationCall): String? {
+        return null
+    }
+
+    override suspend fun getRefreshToken(call: ApplicationCall): String? {
+        return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver) }
     }
 
     override fun verify(jwt: DecodedJWT) {
@@ -36,10 +44,6 @@ class DelegatedAuthProvider(
         check(jwt.issuer == acceptedIssuer) {
             "Issuer mismatch, expected $acceptedIssuer but got ${jwt.issuer}"
         }
-    }
-
-    override suspend fun getRefreshToken(call: ApplicationCall): String? {
-        return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver) }
     }
 
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {

@@ -152,7 +152,7 @@ async function azureadloginflow(idtokencookie, port) {
             client_id: 'foo',
             response_type: 'code',
             response_mode: 'query',
-            scope: 'openid+offline_access',
+            scope: 'openid+offline_access+api%3A%2F%2Ffoo%2F.default',
             state,
             redirect_uri: encodeURIComponent('http://localhost:8094/frontend/oauth2/callback'),
         },

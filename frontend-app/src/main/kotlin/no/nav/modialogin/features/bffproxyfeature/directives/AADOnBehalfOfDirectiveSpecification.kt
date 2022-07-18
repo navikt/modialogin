@@ -42,7 +42,7 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
             val principal = requireNotNull(call.principal<AuthFilterPrincipals>()) {
                 "Cannot proxy call with OBO-flow without principals"
             }
-            val token = requireNotNull(principal.principals.find { it.name == AzureAdAuthProvider }?.token) {
+            val token = requireNotNull(principal.principals.find { it.name == AzureAdAuthProvider }?.accessToken) {
                 "Cannot proxy call with OBO-flow without AzureAdAuthProvider"
             }
             val oboToken = aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, token)

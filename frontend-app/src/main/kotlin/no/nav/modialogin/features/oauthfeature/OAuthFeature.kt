@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.modialogin.auth.OidcClient
+import no.nav.modialogin.auth.OidcClient.Companion.clientScope
 import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
@@ -73,7 +74,8 @@ class OAuthFeature(private val config: Config) {
                         KtorServer.log.info("Callback from IDP: $state -> $originalUrl")
                         val tokens = config.oidc.exchangeAuthCodeForToken(
                             code = code,
-                            loginUrl(call.request, config.exposedPort, config.appname)
+                            clientId = config.oidc.config.clientId,
+                            callbackUrl = loginUrl(call.request, config.exposedPort, config.appname)
                         )
 
                         val cookieTokens = CookieTokens(
@@ -112,7 +114,7 @@ class OAuthFeature(private val config: Config) {
             set("client_id", clientId)
             set("response_type", "code")
             set("response_mode", "query")
-            set("scope", "openid offline_access")
+            set("scope", "openid offline_access ${clientScope(clientId)}")
             set("state", stateNounce)
             set("redirect_uri", callbackUrl)
         }

@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import io.ktor.util.*
 import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
 import no.nav.modialogin.common.KtorUtils
@@ -24,8 +25,16 @@ class OAuthAuthProvider(
     private val client = OidcClient(config.toOidcClientConfig())
     private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
-    override suspend fun getToken(call: ApplicationCall): String? {
+    override suspend fun getIdToken(call: ApplicationCall): String? {
         return getAllTokens(call)?.idToken
+    }
+
+    override suspend fun getAccessToken(call: ApplicationCall): String? {
+        return getAllTokens(call)?.accessToken
+    }
+
+    override suspend fun getRefreshToken(call: ApplicationCall): String? {
+        return getAllTokens(call)?.refreshToken
     }
 
     override fun verify(jwt: DecodedJWT) {
@@ -37,12 +46,8 @@ class OAuthAuthProvider(
         }
     }
 
-    override suspend fun getRefreshToken(call: ApplicationCall): String? {
-        return getAllTokens(call)?.refreshToken
-    }
-
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
-        val newTokens = client.refreshToken(refreshToken)
+        val newTokens = client.refreshToken(clientId = config.clientId, refreshToken = refreshToken)
         val cookieTokens = OAuth.CookieTokens(
             idToken = newTokens.idToken,
             accessToken = newTokens.accessToken,
@@ -59,7 +64,15 @@ class OAuthAuthProvider(
         call.respondRedirect("/$appname/oauth2/login?redirect=$originalUri")
     }
 
+    private val authCookies = AttributeKey<OAuth.CookieTokens>("OAuthAuthCookieTokens")
     private fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
-        return call.getOAuthTokens(appname, crypter)
+        var cookies = call.attributes.getOrNull(authCookies)
+        if (cookies == null) {
+            cookies = call.getOAuthTokens(appname, crypter)
+            if (cookies != null) {
+                call.attributes.put(authCookies, cookies)
+            }
+        }
+        return cookies
     }
 }
