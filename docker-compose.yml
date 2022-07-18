@@ -44,6 +44,7 @@ services:
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
       EXPOSED_PORT: '8083'
+      NAIS_CLUSTER_NAME: 'dev-local'
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx
@@ -71,6 +72,7 @@ services:
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
       COOKIE_ENCRYPTION_KEY: "some secret"
+      NAIS_CLUSTER_NAME: 'dev-local'
 
       # Dummy JWK randomly generated on a test startup
       AZURE_APP_CLIENT_ID: "foo"

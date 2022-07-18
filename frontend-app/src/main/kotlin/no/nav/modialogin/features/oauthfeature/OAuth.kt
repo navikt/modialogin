@@ -3,11 +3,13 @@ package no.nav.modialogin.features.oauthfeature
 import io.ktor.server.application.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KotlinUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.personoversikt.crypto.Crypter
 
 object OAuth {
+    private val isDev = (KotlinUtils.getProperty("NAIS_CLUSTER_NAME") ?: "prod-fss").startsWith("dev-")
     private fun cookieName(appname: String, tokenType: TokenType): String = "${appname}_${tokenType.name}"
 
     @Serializable
@@ -54,11 +56,13 @@ object OAuth {
             crypter = crypter
         )
 
-        // TODO only include non-encrypted cookies in dev
-        this.respondWithCookie(
-            name = "${name}_RAW",
-            value = value
-        )
+        if (isDev) {
+            // only include non-encrypted cookies in dev
+            this.respondWithCookie(
+                name = "${name}_RAW",
+                value = value
+            )
+        }
     }
 
     private enum class TokenType {
