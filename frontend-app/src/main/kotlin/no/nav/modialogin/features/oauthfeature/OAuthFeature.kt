@@ -5,8 +5,6 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import no.nav.modialogin.auth.OidcClient
 import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorUtils
@@ -14,7 +12,7 @@ import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.modialogin.features.oauthfeature.OAuth.CookieTokens
-import no.nav.modialogin.features.oauthfeature.OAuth.cookieName
+import no.nav.modialogin.features.oauthfeature.OAuth.respondWithOAuthTokens
 import no.nav.personoversikt.crypto.Crypter
 import java.math.BigInteger
 import kotlin.random.Random
@@ -78,21 +76,12 @@ class OAuthFeature(private val config: Config) {
                             loginUrl(call.request, config.exposedPort, config.appname)
                         )
 
-                        val cookieValue = CookieTokens(
+                        val cookieTokens = CookieTokens(
                             idToken = tokens.idToken,
                             accessToken = tokens.accessToken,
                             refreshToken = tokens.refreshToken,
                         )
-                        call.respondWithCookie(
-                            name = cookieName(config.appname),
-                            value = Json.encodeToString(cookieValue),
-                            crypter = crypter,
-                        )
-                        // TODO only include non-encrypted cookies in dev
-                        call.respondWithCookie(
-                            name = "${cookieName(config.appname)}_raw",
-                            value = Json.encodeToString(cookieValue),
-                        )
+                        call.respondWithOAuthTokens(config.appname, crypter, cookieTokens)
                         call.removeCookie(state)
 
                         call.respondRedirect(

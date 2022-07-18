@@ -5,15 +5,12 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
 import no.nav.modialogin.common.KtorUtils
-import no.nav.modialogin.common.KtorUtils.getCookie
-import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.modialogin.features.authfeature.BaseAuthProvider
+import no.nav.modialogin.features.oauthfeature.OAuth.getOAuthTokens
+import no.nav.modialogin.features.oauthfeature.OAuth.respondWithOAuthTokens
 import no.nav.personoversikt.crypto.Crypter
 import org.slf4j.LoggerFactory
 
@@ -46,21 +43,12 @@ class OAuthAuthProvider(
 
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
         val newTokens = client.refreshToken(refreshToken)
-        val cookieValue = OAuth.CookieTokens(
+        val cookieTokens = OAuth.CookieTokens(
             idToken = newTokens.idToken,
             accessToken = newTokens.accessToken,
             refreshToken = newTokens.refreshToken,
         )
-        call.respondWithCookie(
-            name = OAuth.cookieName(appname),
-            value = Json.encodeToString(cookieValue),
-            crypter = crypter,
-        )
-        // TODO only include non-encrypted cookies in dev
-        call.respondWithCookie(
-            name = "${OAuth.cookieName(appname)}_raw",
-            value = Json.encodeToString(cookieValue),
-        )
+        call.respondWithOAuthTokens(appname, crypter, cookieTokens)
         return newTokens.idToken
     }
 
@@ -72,10 +60,6 @@ class OAuthAuthProvider(
     }
 
     private fun getAllTokens(call: ApplicationCall): OAuth.CookieTokens? {
-        val cookieValue = call.getCookie(OAuth.cookieName(appname)) ?: return null
-        return (crypter?.decrypt(cookieValue) ?: Result.success(cookieValue))
-            .map { Json.decodeFromString<OAuth.CookieTokens>(it) }
-            .onFailure { log.error("Could not decrypt cookie", it) }
-            .getOrNull()
+        return call.getOAuthTokens(appname, crypter)
     }
 }
