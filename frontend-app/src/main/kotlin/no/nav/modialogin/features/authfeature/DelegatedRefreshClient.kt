@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -31,6 +32,7 @@ class DelegatedRefreshClient(url: String) {
 
     suspend fun refreshToken(refreshToken: String): String {
         val response = client.post(url) {
+            contentType(ContentType.Application.Json)
             setBody(
                 RefreshIdTokenRequest(refreshToken)
             )
