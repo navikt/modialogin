@@ -9,7 +9,6 @@ import no.nav.modialogin.common.KtorUtils.respondWithCookie
 import no.nav.personoversikt.crypto.Crypter
 
 object OAuth {
-    private val isDev = (KotlinUtils.getProperty("NAIS_CLUSTER_NAME") ?: "prod-fss").startsWith("dev-")
     private fun cookieName(appname: String, tokenType: TokenType): String = "${appname}_${tokenType.name}"
 
     @Serializable
@@ -20,17 +19,17 @@ object OAuth {
     )
 
     fun ApplicationCall.respondWithOAuthTokens(appname: String, crypter: Crypter?, tokens: CookieTokens) {
-        this.respondWithRawCookies(
+        this.respondWithCookie(
             name = cookieName(appname, TokenType.ID_TOKEN),
             value = tokens.idToken,
             crypter = crypter,
         )
-        this.respondWithRawCookies(
+        this.respondWithCookie(
             name = cookieName(appname, TokenType.ACCESS_TOKEN),
             value = tokens.accessToken,
             crypter = crypter,
         )
-        this.respondWithRawCookies(
+        this.respondWithCookie(
             name = cookieName(appname, TokenType.REFRESH_TOKEN),
             value = tokens.refreshToken,
             crypter = crypter,
@@ -47,22 +46,6 @@ object OAuth {
             accessToken = accessToken,
             refreshToken = refreshToken,
         )
-    }
-
-    private fun ApplicationCall.respondWithRawCookies(name: String, value: String, crypter: Crypter?) {
-        this.respondWithCookie(
-            name = name,
-            value = value,
-            crypter = crypter
-        )
-
-        if (isDev) {
-            // only include non-encrypted cookies in dev
-            this.respondWithCookie(
-                name = "${name}_RAW",
-                value = value
-            )
-        }
     }
 
     private enum class TokenType {

@@ -14,19 +14,7 @@ object KtorServer {
 
     fun server(port: Int, module: Application.(NaisState) -> Unit) {
         val naisState = NaisState()
-        val server = embeddedServer(Netty, port, configure = {
-            this.httpServerCodec = {
-                /**
-                 * Netty har som default 8kb maks på headere, med mange og store cookies kan man overskride dette.
-                 * Vi dobler derfor til 16kb
-                 */
-                HttpServerCodec(
-                    HttpObjectDecoder.DEFAULT_MAX_INITIAL_LINE_LENGTH,
-                    HttpObjectDecoder.DEFAULT_MAX_HEADER_SIZE * 2,
-                    HttpObjectDecoder.DEFAULT_MAX_CHUNK_SIZE,
-                )
-            }
-        }) {
+        val server = embeddedServer(Netty, port) {
             module(naisState)
             naisState.isReady = true
         }
