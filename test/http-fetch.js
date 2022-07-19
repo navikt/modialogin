@@ -1,7 +1,8 @@
 const http = require('http');
 
 function fetch(url, headers = {}, body) {
-    const options = {headers, method: 'GET'};
+    // Adding X-Forwarded-Protocol to allow setting secure cookie in ktor when using http
+    const options = {headers: { ...headers, 'X-Forwarded-Protocol': 'https' }, method: 'GET' };
     if (body) {
         options.method = 'POST';
     }

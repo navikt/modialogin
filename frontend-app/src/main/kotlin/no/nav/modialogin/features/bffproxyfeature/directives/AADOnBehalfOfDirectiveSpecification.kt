@@ -1,6 +1,7 @@
 package no.nav.modialogin.features.bffproxyfeature.directives
 
 import io.ktor.server.auth.*
+import io.prometheus.client.Histogram
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
@@ -10,6 +11,7 @@ import no.nav.modialogin.features.authfeature.AuthFilterPrincipals
 import no.nav.modialogin.features.authfeature.AzureAdAuthProvider
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
+import java.util.concurrent.Callable
 
 object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecification {
     /**
@@ -19,6 +21,10 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
      */
     private val regexp = Regex("SET_ON_BEHALF_OF_TOKEN (.*?) (.*?) (.*?)")
     private lateinit var aadOboTokenClient: OnBehalfOfTokenClient
+    private val oboExchangeTimer = Histogram.build(
+        "azure_ad_obo_exchange_latency_histogram",
+        "Distribution of response times when exchanging tokens with Azure AD"
+    ).register()
 
     private data class Lexed(val cluster: String, val namespace: String, val serviceName: String) {
         val scope: String = "api://$cluster.$namespace.$serviceName/.default"
@@ -45,7 +51,10 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
             val token = requireNotNull(principal.principals.find { it.name == AzureAdAuthProvider }?.token) {
                 "Cannot proxy call with OBO-flow without AzureAdAuthProvider"
             }
-            val oboToken = aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, token)
+
+            val oboToken: String = oboExchangeTimer.time(Callable {
+                aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, token)
+            })
 
             this.headers["Cookie"] = ""
             this.headers["Authorization"] = "Bearer $oboToken"

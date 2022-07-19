@@ -3,6 +3,7 @@ package no.nav.modialogin.common
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KotlinUtils.indicesOf
 import no.nav.personoversikt.crypto.Crypter
 import org.slf4j.LoggerFactory
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 
 object KtorUtils {
     private val log = LoggerFactory.getLogger("KtorUtils")
+    private val isLocalhostDevelopment = getProperty("IS_LOCALHOST_DEV")?.toBoolean() ?: false
     fun ApplicationCall.respondWithCookie(
         name: String,
         value: String,
@@ -34,7 +36,7 @@ object KtorUtils {
                 path = path,
                 maxAge = maxAgeInSeconds,
                 encoding = encoding,
-                secure = false,
+                secure = !isLocalhostDevelopment,
                 httpOnly = true
             )
         )

@@ -6,12 +6,14 @@ import io.ktor.server.auth.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.prometheus.client.CollectorRegistry
 import no.nav.modialogin.common.NaisState
 
 object Metrics {
-    val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM)
 }
 interface WhoAmIPrincipal : Principal {
     val description: String
