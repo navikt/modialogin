@@ -11,6 +11,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -59,29 +61,66 @@ object BFFProxyFeature {
                     "${config.url}/$proxyRequestPath",
                     request
                 )
-                val proxyRequestHeaders = request.headers
 
-                log.info("Proxying request to $proxyRequestURI")
-                val proxyResponse = withContext(Dispatchers.IO) {
-                    client.request(URL(proxyRequestURI)) {
-                        headers {
-                            proxyRequestHeaders.forEach { name, value ->
-                                appendAll(name, value)
-                            }
-                        }
-
-                        requestHandler?.invoke(this, call)
-                    }
-                }
-
-                call.respond(
-                    ByteArrayContent(
-                        contentType = proxyResponse.contentType(),
-                        status = proxyResponse.status,
-                        bytes = proxyResponse.readBytes()
+                withContext(Dispatchers.IO) {
+                    call.respondWith(
+                        client.proxyRequest(proxyRequestURI, call, requestHandler)
                     )
-                )
+                }
             }
         }
+    }
+
+    private suspend inline fun HttpClient.proxyRequest(url: String, call: ApplicationCall, noinline requestHandler: RequestDirectiveHandler?): HttpResponse {
+        log.info("Proxying request to $url")
+        val request = call.request
+        val proxyRequestHeaders = request.headers
+
+        val channel: ByteReadChannel = request.receiveChannel()
+        val bodyBytes = ByteArray(channel.availableForRead).also {
+            channel.readFully(it)
+        }
+
+        return this.request(URL(url)) {
+            method = request.httpMethod
+            headers {
+                proxyRequestHeaders
+                    .filter { key, _ ->
+                        !key.equals(HttpHeaders.ContentLength, ignoreCase = true) &&
+                                !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
+                                !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true) &&
+                                !key.equals(HttpHeaders.Upgrade, ignoreCase = true)
+                    }
+                    .forEach { key, value ->
+                        appendAll(key, value)
+                    }
+            }
+            contentType(request.contentType())
+            setBody(bodyBytes)
+
+            requestHandler?.invoke(this, call)
+        }
+    }
+
+    @OptIn(InternalAPI::class)
+    private suspend inline fun ApplicationCall.respondWith(response: HttpResponse) {
+        val proxiedHeaders = response.headers
+        val contentType = proxiedHeaders[HttpHeaders.ContentType]
+        val contentLength = proxiedHeaders[HttpHeaders.ContentLength]
+
+        this.respond(object : OutgoingContent.WriteChannelContent() {
+            override val contentLength: Long? = contentLength?.toLong()
+            override val contentType: ContentType? = contentType?.let { ContentType.parse(it) }
+            override val headers: Headers = Headers.build {
+                appendAll(proxiedHeaders.filter { key, _ ->
+                    !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
+                            !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                })
+            }
+            override val status: HttpStatusCode = response.status
+            override suspend fun writeTo(channel: ByteWriteChannel) {
+                response.content.copyAndClose(channel)
+            }
+        })
     }
 }

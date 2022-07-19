@@ -9,6 +9,8 @@ import no.nav.modialogin.auth.AzureAdConfig
 import java.util.*
 
 fun main() {
+    System.setProperty("IS_LOCALHOST_DEV", "true")
+
     System.setProperty("APP_NAME", "frontend")
     System.setProperty("APP_VERSION", "localhost")
     System.setProperty("IDP_DISCOVERY_URL", "http://localhost:8080/openam/.well-known/openid-configuration")
@@ -24,7 +26,7 @@ fun main() {
     System.setProperty("OUTSIDE_DOCKER", "true")
     System.setProperty("SECRET", "some secret")
 
-//    setupAzureAdEnv()
+    setupAzureAdEnv()
 
     startApplication()
 }
