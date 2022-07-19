@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
@@ -123,7 +124,10 @@ class LoginFlowFeature(private val config: Config) {
 
     private suspend fun PipelineContext<Unit, ApplicationCall>.refreshToken() {
         val body = call.receive<RefreshIdTokenRequest>()
-        val newIdToken = openAmClient.refreshIdToken(body.refreshToken).idToken
+        val newIdToken = openAmClient
+            .runCatching  { refreshIdToken(body.refreshToken).idToken }
+            .onFailure { KtorServer.tjenestekallLogger.error("Failed to refresh token: ${body.refreshToken}") }
+            .getOrThrow()
         call.respond(RefreshIdTokenResponse(newIdToken))
     }
 
