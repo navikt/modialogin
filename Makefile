@@ -14,6 +14,9 @@ start:
 start-silent:
 	docker-compose up --build -d
 
+start-idea:
+	docker-compose up -d echo-server
+
 stop:
 	docker-compose down --remove-orphans
 
