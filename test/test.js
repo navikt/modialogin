@@ -41,7 +41,7 @@ async function issologinflow(port) {
     );
     assertThat(
         initial.redirectURI.queryParams.redirect,
-        encodeURIComponent(`http://localhost:${port}/frontend/`),
+        encodeURIComponent(`https://localhost:${port}/frontend/`),
         '/frontend redirect passes original url encoded in queryparameter'
     );
 
@@ -94,7 +94,7 @@ async function issologinflow(port) {
     assertThat(login.statusCode, 302, '/modialogin/api/login returns 302');
     assertThat(
         login.redirectURI.path,
-        `http://localhost:${port}/frontend/`,
+        `https://localhost:${port}/frontend/`,
         '/modialogin/login redirects to /frontend'
     );
     const loginCookies = login.headers['set-cookie'];
@@ -128,7 +128,7 @@ async function azureadloginflow(idtokencookie, port) {
     );
     assertThat(
         initial.redirectURI.queryParams.redirect,
-        encodeURIComponent(`http://localhost:${port}/frontend/`),
+        encodeURIComponent(`https://localhost:${port}/frontend/`),
         '/frontend redirect passes original url encoded in queryparameter'
     );
 
@@ -179,7 +179,7 @@ async function azureadloginflow(idtokencookie, port) {
     assertThat(login.statusCode, 302, '/modialogin/api/login returns 302');
     assertThat(
         login.redirectURI.path,
-        `http://localhost:${port}/frontend/`,
+        `https://localhost:${port}/frontend/`,
         '/modialogin/login redirects to /frontend'
     );
     const loginCookies = login.headers['set-cookie'];

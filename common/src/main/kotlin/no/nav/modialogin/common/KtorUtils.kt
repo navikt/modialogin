@@ -34,7 +34,7 @@ object KtorUtils {
                 path = path,
                 maxAge = maxAgeInSeconds,
                 encoding = encoding,
-                secure = false,
+                secure = true,
                 httpOnly = true
             )
         )
