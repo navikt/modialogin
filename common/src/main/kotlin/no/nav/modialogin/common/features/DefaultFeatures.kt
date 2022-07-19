@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import no.nav.modialogin.common.KtorServer.log
 import org.slf4j.event.Level
+import java.util.*
 
 object DefaultFeatures {
     val statusPageConfig: StatusPagesConfig.() -> Unit = {
@@ -34,6 +35,7 @@ object DefaultFeatures {
             level = Level.INFO
             format(::logFormat)
             filter { call -> call.request.path().contains("/internal/").not() }
+            mdc("callId") { UUID.randomUUID().toString() }
         }
     }
 
