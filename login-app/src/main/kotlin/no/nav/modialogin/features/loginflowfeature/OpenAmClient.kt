@@ -6,15 +6,12 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import no.nav.modialogin.common.*
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
@@ -91,7 +88,7 @@ class OpenAmClient {
 
         suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult =
             withContext(Dispatchers.IO) {
-                val response = authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
+                authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -102,14 +99,7 @@ class OpenAmClient {
                             }
                         )
                     )
-                }
-                val body = response.bodyAsText()
-                try {
-                    Json.decodeFromString(body)
-                } catch (e: Throwable) {
-                    KtorServer.tjenestekallLogger.error("Error deserializing: $body", e)
-                    throw e
-                }
+                }.body()
             }
     }
 }
