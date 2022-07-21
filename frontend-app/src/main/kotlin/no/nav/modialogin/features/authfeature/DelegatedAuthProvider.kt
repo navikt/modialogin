@@ -26,11 +26,11 @@ class DelegatedAuthProvider(
         if (authTokenResolver == "header") {
             return call.request.authorization()
         }
-        return call.getCookie(authTokenResolver)
+        return call.getCookie(authTokenResolver, CookieEncoding.RAW)
     }
 
     override suspend fun getRefreshToken(call: ApplicationCall): String? {
-        return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver) }
+        return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver, CookieEncoding.RAW) }
     }
 
     override fun verify(jwt: DecodedJWT) {
