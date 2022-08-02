@@ -2,6 +2,7 @@ package no.nav.modialogin.features.oauthfeature
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.KtorUtils.getCookie
@@ -19,11 +20,15 @@ object OAuth {
 
     fun ApplicationCall.respondWithOAuthTokens(appname: String, crypter: Crypter?, tokens: CookieTokens) {
         this.respondWithCookie(
+            domain = request.host(),
+            path = "/$appname",
             name = cookieName(appname, TokenType.ACCESS_TOKEN),
             value = tokens.accessToken,
             crypter = crypter,
         )
         this.respondWithCookie(
+            domain = request.host(),
+            path = "/$appname",
             name = cookieName(appname, TokenType.REFRESH_TOKEN),
             value = tokens.refreshToken,
             crypter = crypter,

@@ -186,7 +186,9 @@ async function azureadloginflow(idtokencookie, port) {
     const accessToken = loginCookies.find(cookie => cookie.startsWith('frontend_ACCESS_TOKEN'));
     const refreshToken = loginCookies.find(cookie => cookie.startsWith('frontend_REFRESH_TOKEN'));
     assertThat(accessToken, isDefined, '/frontend/oauth/callback sets access-token cookie');
+    assertThat(accessToken, contains('Path=/frontend'), '/frontend/oauth/callback has path');
     assertThat(refreshToken, isDefined, '/frontend/oauth/callback sets refresh-token cookie');
+    assertThat(refreshToken, contains('Path=/frontend'), '/frontend/oauth/callback has path');
 
     const removeStateCookie = loginCookies.find(cookie => cookie.startsWith(state));
 
