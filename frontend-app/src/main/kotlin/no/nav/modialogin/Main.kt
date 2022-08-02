@@ -43,7 +43,10 @@ fun startApplication() {
         install(AuthFilterFeature) {
             ignorePattern = { call ->
                 val url = call.request.uri
-                url.contains("/internal/") || url.contains("/${appConfig.appName}/oauth2/")
+                val isInternal = url.contains("/internal/")
+                val isWhoamiI = url.endsWith("/whoami")
+                val isOauthRoutes = url.contains("/${appConfig.appName}/oauth2/")
+                isOauthRoutes || (isInternal && !isWhoamiI)
             }
             register(
                 DelegatedAuthProvider(
