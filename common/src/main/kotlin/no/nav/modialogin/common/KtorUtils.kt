@@ -17,7 +17,7 @@ object KtorUtils {
     fun ApplicationCall.respondWithCookie(
         name: String,
         value: String,
-        domain: String = request.host(),
+        domain: String = cookieDomain(request.host()),
         path: String = "/",
         maxAgeInSeconds: Int = 3600,
         crypter: Crypter? = null,
@@ -32,7 +32,7 @@ object KtorUtils {
             Cookie(
                 name = name,
                 value = cookieValue,
-                domain = cookieDomain(domain),
+                domain = domain,
                 path = path,
                 maxAge = maxAgeInSeconds,
                 encoding = encoding,
@@ -44,12 +44,12 @@ object KtorUtils {
 
     fun ApplicationCall.removeCookie(
         name: String,
-        domain: String = request.host(),
+        domain: String = cookieDomain(request.host()),
         path: String = "/"
     ) {
         this.response.cookies.appendExpired(
             name = name,
-            domain = cookieDomain(domain),
+            domain = domain,
             path = path
         )
     }
