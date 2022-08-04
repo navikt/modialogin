@@ -56,8 +56,10 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
                     call.respond(Metrics.registry.scrape())
                 }
 
-                get("whoami") {
-                    call.respondText(call.principal<WhoAmIPrincipal>()?.description ?: "Unknown")
+                authenticate {
+                    get("whoami") {
+                        call.respondText(call.principal<WhoAmIPrincipal>()?.description ?: "Unknown")
+                    }
                 }
             }
         }
