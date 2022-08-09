@@ -86,10 +86,10 @@ object BFFProxyFeature {
             headers {
                 proxyRequestHeaders
                     .filter { key, _ ->
+                        !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
                         !key.equals(HttpHeaders.ContentLength, ignoreCase = true) &&
-                                !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
-                                !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true) &&
-                                !key.equals(HttpHeaders.Upgrade, ignoreCase = true)
+                        !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true) &&
+                        !key.equals(HttpHeaders.Upgrade, ignoreCase = true)
                     }
                     .forEach { key, value ->
                         appendAll(key, value)
@@ -114,7 +114,9 @@ object BFFProxyFeature {
             override val headers: Headers = Headers.build {
                 appendAll(proxiedHeaders.filter { key, _ ->
                     !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
-                            !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                    !key.equals(HttpHeaders.ContentLength, ignoreCase = true) &&
+                    !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true) &&
+                    !key.equals(HttpHeaders.Upgrade, ignoreCase = true)
                 })
             }
             override val status: HttpStatusCode = response.status
