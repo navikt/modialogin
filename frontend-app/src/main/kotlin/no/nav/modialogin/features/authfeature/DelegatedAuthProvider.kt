@@ -43,7 +43,10 @@ class DelegatedAuthProvider(
     }
 
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
-        val newToken = refreshClient.refreshToken(refreshToken)
+        val newToken = checkNotNull(refreshClient.refreshToken(refreshToken)) {
+            "New Token cannot be null"
+        }
+
         call.respondWithCookie(
             name = authTokenResolver,
             value = newToken,

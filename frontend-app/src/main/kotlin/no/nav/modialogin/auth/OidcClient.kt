@@ -2,7 +2,7 @@ package no.nav.modialogin.auth
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -37,7 +37,7 @@ class OidcClient(val config: Config) {
     )
 
     private val httpClient: HttpClient by lazy {
-        HttpClient(CIO) {
+        HttpClient(Apache) {
             useProxy()
             logging()
             basicAuth(config.clientId, requireNotNull(config.clientSecret))
