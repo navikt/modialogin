@@ -6,6 +6,7 @@ import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -88,7 +89,7 @@ class OpenAmClient {
                 if (response.status.isSuccess()) {
                     response.body()
                 } else {
-                    tjenestekallLogger.error("Could not get token for $code: {}", response.body<String>())
+                    tjenestekallLogger.error("Could not get token for $code: {}", response.bodyAsText())
                     null
                 }
             }
@@ -110,7 +111,7 @@ class OpenAmClient {
                 if (response.status.isSuccess()) {
                     response.body()
                 } else {
-                    tjenestekallLogger.error("Could not get token for $refreshToken: {}", response.body<String>())
+                    tjenestekallLogger.error("Could not get token for $refreshToken: {}", response.bodyAsText())
                     null
                 }
             }
