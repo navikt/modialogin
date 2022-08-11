@@ -13,6 +13,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.*
+import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
@@ -50,7 +52,7 @@ class OpenAmClient {
         val wellknown: WellKnownResult by lazy {
             runBlocking {
                 KotlinUtils.retry(10, 2.seconds) {
-                    KtorServer.log.info("Fetching oidc from ${config.discoveryUrl}")
+                    log.info("Fetching oidc from ${config.discoveryUrl}")
                     client.get(URL(config.discoveryUrl)).body()
                 }
             }
@@ -69,7 +71,7 @@ class OpenAmClient {
             }
         }
 
-        suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult =
+        suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult? =
             withContext(Dispatchers.IO) {
                 val response = authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
@@ -83,12 +85,17 @@ class OpenAmClient {
                         )
                     )
                 }
-                response.body()
+                if (response.status.isSuccess()) {
+                    response.body()
+                } else {
+                    tjenestekallLogger.error("Could not get token for $code: {}", response.body<String>())
+                    null
+                }
             }
 
-        suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult =
+        suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult? =
             withContext(Dispatchers.IO) {
-                authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
+                val response = authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -99,7 +106,13 @@ class OpenAmClient {
                             }
                         )
                     )
-                }.body()
+                }
+                if (response.status.isSuccess()) {
+                    response.body()
+                } else {
+                    tjenestekallLogger.error("Could not get token for $refreshToken: {}", response.body<String>())
+                    null
+                }
             }
     }
 }

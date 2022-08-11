@@ -9,6 +9,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import java.net.URL
 
 class DelegatedRefreshClient(url: String) {
@@ -30,14 +31,17 @@ class DelegatedRefreshClient(url: String) {
         }
     }
 
-    suspend fun refreshToken(refreshToken: String): String {
+    suspend fun refreshToken(refreshToken: String): String? {
         val response = client.post(url) {
             contentType(ContentType.Application.Json)
             setBody(
                 RefreshIdTokenRequest(refreshToken)
             )
-        }.body<RefreshIdTokenResponse>()
-
-        return response.idToken
+        }
+        if (!response.status.isSuccess()) {
+            tjenestekallLogger.error("Could not refresh token for $refreshToken")
+            return null
+        }
+        return response.body<RefreshIdTokenResponse>().idToken
     }
 }

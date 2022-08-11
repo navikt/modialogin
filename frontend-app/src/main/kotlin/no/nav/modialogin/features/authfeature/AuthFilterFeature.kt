@@ -32,9 +32,13 @@ abstract class BaseAuthProvider : AuthProvider {
             return null
         }
 
-        val refreshToken = getRefreshToken(call)
-        if (refreshToken != null && jwt.expiresWithin(5.minutes)) {
-            token = refreshTokens(call, refreshToken)
+        try {
+            val refreshToken = getRefreshToken(call)
+            if (refreshToken != null && jwt.expiresWithin(5.minutes)) {
+                token = refreshTokens(call, refreshToken)
+            }
+        } catch (e: Throwable) {
+            log.error("Could not refresh token", e)
         }
 
         return AuthFilterPrincipal(name, token)

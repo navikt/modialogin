@@ -7,8 +7,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.common.KtorServer
 import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.removeCookie
@@ -95,18 +95,23 @@ class LoginFlowFeature(private val config: Config) {
             code = code,
             loginUrl = loginUrl(call.request, config.exposedPort, config.appname)
         )
-        call.respondWithCookie(
-            name = config.authTokenResolver,
-            value = token.idToken,
-            encoding = CookieEncoding.RAW,
-        )
-        if (token.refreshToken != null) {
+        if (token == null) {
+            log.info("Token exchange failed: $state -> $originalUrl")
+        } else {
             call.respondWithCookie(
-                name = config.refreshTokenResolver,
-                value = token.refreshToken,
-                maxAgeInSeconds = 20 * 3600,
+                name = config.authTokenResolver,
+                value = token.idToken,
                 encoding = CookieEncoding.RAW,
             )
+            if (token.refreshToken != null) {
+                tjenestekallLogger.info("Got refresh token ($state -> $originalUrl): ${token.refreshToken}")
+                call.respondWithCookie(
+                    name = config.refreshTokenResolver,
+                    value = token.refreshToken,
+                    maxAgeInSeconds = 20 * 3600,
+                    encoding = CookieEncoding.RAW,
+                )
+            }
         }
         call.removeCookie(state)
 
@@ -124,11 +129,13 @@ class LoginFlowFeature(private val config: Config) {
 
     private suspend fun PipelineContext<Unit, ApplicationCall>.refreshToken() {
         val body = call.receive<RefreshIdTokenRequest>()
-        val newIdToken = openAmClient
-            .runCatching  { refreshIdToken(body.refreshToken).idToken }
-            .onFailure { KtorServer.tjenestekallLogger.error("Failed to refresh token: ${body.refreshToken}") }
-            .getOrThrow()
-        call.respond(RefreshIdTokenResponse(newIdToken))
+        val newIdToken = openAmClient.refreshIdToken(body.refreshToken)?.idToken
+        if (newIdToken == null) {
+            tjenestekallLogger.error("Failed to refresh token: ${body.refreshToken}")
+            call.respond(HttpStatusCode.InternalServerError, "Failed to refresh token")
+        } else {
+            call.respond(RefreshIdTokenResponse(newIdToken))
+        }
     }
 
     private fun generateStateNounce(): String {
