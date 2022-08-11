@@ -2,7 +2,7 @@ package no.nav.modialogin.features.loginflowfeature
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -13,6 +13,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.*
+import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
@@ -40,7 +42,7 @@ class OpenAmClient {
     ) : JwksClientConfig(discoveryUrl)
 
     open class JwksClient(config: JwksClientConfig) {
-        private val client = HttpClient(CIO) {
+        private val client = HttpClient(Apache) {
             json()
             defaultRequest {
                 header(HttpHeaders.CacheControl, "no-cache")
@@ -50,7 +52,7 @@ class OpenAmClient {
         val wellknown: WellKnownResult by lazy {
             runBlocking {
                 KotlinUtils.retry(10, 2.seconds) {
-                    KtorServer.log.info("Fetching oidc from ${config.discoveryUrl}")
+                    log.info("Fetching oidc from ${config.discoveryUrl}")
                     client.get(URL(config.discoveryUrl)).body()
                 }
             }
@@ -59,7 +61,7 @@ class OpenAmClient {
 
     class TokenExchangeClient(private val config: TokenExchangeConfig) : JwksClient(config) {
         private val authenticatedClient: HttpClient by lazy {
-            HttpClient(CIO) {
+            HttpClient(Apache) {
                 logging()
                 basicAuth(config.clientId, requireNotNull(config.clientSecret))
                 json()
@@ -69,7 +71,7 @@ class OpenAmClient {
             }
         }
 
-        suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult =
+        suspend fun openAmExchangeAuthCodeForToken(code: String, loginUrl: String): TokenExchangeResult? =
             withContext(Dispatchers.IO) {
                 val response = authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
@@ -83,12 +85,17 @@ class OpenAmClient {
                         )
                     )
                 }
-                response.body()
+                if (response.status.isSuccess()) {
+                    response.body()
+                } else {
+                    tjenestekallLogger.error("Could not get token for $code: {}", response.body<String>())
+                    null
+                }
             }
 
-        suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult =
+        suspend fun refreshIdToken(refreshToken: String): TokenExchangeResult? =
             withContext(Dispatchers.IO) {
-                authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
+                val response = authenticatedClient.post(URL(wellknown.tokenEndpoint)) {
                     setBody(
                         FormDataContent(
                             Parameters.build {
@@ -99,7 +106,13 @@ class OpenAmClient {
                             }
                         )
                     )
-                }.body()
+                }
+                if (response.status.isSuccess()) {
+                    response.body()
+                } else {
+                    tjenestekallLogger.error("Could not get token for $refreshToken: {}", response.body<String>())
+                    null
+                }
             }
     }
 }
