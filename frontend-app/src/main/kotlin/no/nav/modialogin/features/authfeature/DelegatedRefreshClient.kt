@@ -2,7 +2,7 @@ package no.nav.modialogin.features.authfeature
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -19,7 +19,7 @@ class DelegatedRefreshClient(url: String) {
     @Serializable
     private class RefreshIdTokenRequest(val refreshToken: String)
 
-    private val client = HttpClient(CIO) {
+    private val client = HttpClient(Apache) {
         install(ContentNegotiation) {
             json(
                 Json {

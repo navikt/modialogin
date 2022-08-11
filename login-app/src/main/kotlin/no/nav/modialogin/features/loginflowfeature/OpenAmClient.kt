@@ -2,7 +2,7 @@ package no.nav.modialogin.features.loginflowfeature
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -40,7 +40,7 @@ class OpenAmClient {
     ) : JwksClientConfig(discoveryUrl)
 
     open class JwksClient(config: JwksClientConfig) {
-        private val client = HttpClient(CIO) {
+        private val client = HttpClient(Apache) {
             json()
             defaultRequest {
                 header(HttpHeaders.CacheControl, "no-cache")
@@ -59,7 +59,7 @@ class OpenAmClient {
 
     class TokenExchangeClient(private val config: TokenExchangeConfig) : JwksClient(config) {
         private val authenticatedClient: HttpClient by lazy {
-            HttpClient(CIO) {
+            HttpClient(Apache) {
                 logging()
                 basicAuth(config.clientId, requireNotNull(config.clientSecret))
                 json()

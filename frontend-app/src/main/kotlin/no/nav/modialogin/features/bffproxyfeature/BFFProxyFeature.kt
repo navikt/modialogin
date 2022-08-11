@@ -1,7 +1,7 @@
 package no.nav.modialogin.features.bffproxyfeature
 
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -50,7 +50,7 @@ object BFFProxyFeature {
 
     private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
         val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
-        val client = HttpClient(CIO)
+        val client = HttpClient(Apache)
         handle {
             if (responseHandler != null) {
                 responseHandler(this)
@@ -76,10 +76,14 @@ object BFFProxyFeature {
         val request = call.request
         val proxyRequestHeaders = request.headers
 
-        val channel: ByteReadChannel = request.receiveChannel()
-        val bodyBytes = ByteArray(channel.availableForRead).also {
-            channel.readFully(it)
-        }
+        val bodyBytes = request.headers[HttpHeaders.ContentLength]
+            ?.toInt()
+            ?.let {size ->
+                val channel: ByteReadChannel = request.receiveChannel()
+                val array = ByteArray(size)
+                channel.readFully(array)
+                array
+            }
 
         return this.request(URL(url)) {
             method = request.httpMethod
@@ -95,8 +99,10 @@ object BFFProxyFeature {
                         appendAll(key, value)
                     }
             }
-            contentType(request.contentType())
-            setBody(bodyBytes)
+            bodyBytes?.let {
+                contentType(request.contentType())
+                setBody(it)
+            }
 
             requestHandler?.invoke(this, call)
         }
