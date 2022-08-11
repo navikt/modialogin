@@ -50,7 +50,10 @@ object BFFProxyFeature {
 
     private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
         val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
-        val client = HttpClient(Apache)
+        val client = HttpClient(Apache) {
+            followRedirects = false
+        }
+
         handle {
             if (responseHandler != null) {
                 responseHandler(this)
