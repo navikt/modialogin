@@ -14,6 +14,6 @@ Frontend-image er ett tilhørende docker-image som brukes login-app for innloggi
 Om man ønsker å overstyre noen av mock-verdiene, kan dette gjøres vha `System.setProperty`.
 
 ## Henvendelser
-For spørsmål og tilbakemeldinger bruk github-issues.
+Spørsmål knyttet til koden eller prosjektet kan rettes mot:
 
-Interne henvendelser kan sendes via Slack i kanalen #team-personoversikt.
+[Team Personoversikt](https://github.com/navikt/info-team-personoversikt)
