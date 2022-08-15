@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.modialogin.common.*
+import no.nav.modialogin.common.KotlinUtils.callId
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
@@ -44,6 +45,7 @@ class OidcClient(val config: Config) {
             json()
             defaultRequest {
                 header(HttpHeaders.CacheControl, "no-cache")
+                header(HttpHeaders.XCorrelationId, callId())
             }
         }
     }
