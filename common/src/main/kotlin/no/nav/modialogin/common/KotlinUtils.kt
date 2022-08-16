@@ -1,6 +1,8 @@
 package no.nav.modialogin.common
 
 import kotlinx.coroutines.delay
+import org.slf4j.MDC
+import java.util.*
 import kotlin.time.Duration
 
 object KotlinUtils {
@@ -41,5 +43,10 @@ object KotlinUtils {
             index = this.indexOf(other, index + 1, ignoreCase)
         }
         return indices
+    }
+
+    const val callIdProperty = "callId"
+    fun callId(): String {
+        return MDC.get(callIdProperty) ?: UUID.randomUUID().toString()
     }
 }

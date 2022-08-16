@@ -2,6 +2,7 @@ package no.nav.modialogin.features.bffproxyfeature
 
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -16,6 +17,7 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import no.nav.modialogin.common.KotlinUtils
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.Templating
 import java.net.URL
@@ -52,6 +54,11 @@ object BFFProxyFeature {
         val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
         val client = HttpClient(Apache) {
             followRedirects = false
+            defaultRequest {
+                headers {
+                    append(HttpHeaders.XCorrelationId, KotlinUtils.callId())
+                }
+            }
         }
 
         handle {

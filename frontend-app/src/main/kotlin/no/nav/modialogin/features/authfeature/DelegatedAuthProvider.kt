@@ -6,8 +6,10 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
+import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
 
 class DelegatedAuthProvider(
@@ -43,7 +45,14 @@ class DelegatedAuthProvider(
     }
 
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
-        val newToken = checkNotNull(refreshClient.refreshToken(refreshToken)) {
+        val token = refreshClient.refreshToken(refreshToken)
+
+        if (token == null && refreshTokenResolver != null) {
+            tjenestekallLogger.warn("Refreshing of token failed, removing refresh token '$refreshToken' from cookie '$refreshTokenResolver'")
+            call.removeCookie(name = refreshTokenResolver)
+        }
+
+        val newToken = checkNotNull(token) {
             "New Token cannot be null"
         }
 
