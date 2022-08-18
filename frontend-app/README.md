@@ -9,7 +9,7 @@ Docker-image som sikrer ressursene sine, og bruker en tilhørende `login-app` fo
 | APP_VERSION            | Ja    | Version av applikasjonen. Er bare synlig på selftest-siden                                                                                                                             |
 | IDP_DISCOVERY_URL      | Ja    | Url til discovery-url for idp (typisk noe som slutter på .well-known/openid-configuration)                                                                                             |
 | IDP_CLIENT_ID          | Ja    | Systembrukernavn for autentisering mot idp                                                                                                                                             |
-| IDP_ISSUER             | Ja    | Issuer for token, e.g: `https://your.ipd.no:443/oauth2`                                                                                                                           |
+| IDP_ISSUER             | Ja    | Issuer for token, e.g: `https://your.ipd.no:443/oauth2`                                                                                                                                |
 | DELEGATED_LOGIN_URL    | Ja    | Url til `login-app`, e.g `http://domain.nav.no/loginapp/api/start`                                                                                                                     |
 | DELEGATED_REFRESH_URL  | Ja    | Url til `login-app` for refreshing av token, e.g `http://domain.nav.no/loginapp/api/refresh`                                                                                           |
 | AUTH_TOKEN_RESOLVER    | Nei   | Hvor appen kan forvente å finne ID_token. F.eks `ID_token` eller `header`, default: `ID_token`                                                                                         |
@@ -17,6 +17,7 @@ Docker-image som sikrer ressursene sine, og bruker en tilhørende `login-app` fo
 | CSP_DIRECTIVES         | Nei   | CSP-header som skal brukes, default: `default-src: 'self'`                                                                                                                             | 
 | CSP_REPORT_ONLY        | Nei   | `true` eller `false`, styrer hvorvidt CSP skal være i `Report-Only` modus, default: `false`                                                                                            |
 | REFERRER_POLICY        | Nei   | Forhindrer at url-path blir sendt som http header ved lenke klikk. [Les mer her](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#examples), Default `origin` |
+| DISABLE_AZURE_AD       | Nei   | Forhindrer at AzureAd konfigurasjon blir tatt i bruk. Kan brukes når man ønsker å registere en applikasjon i AzureAd uten at tilgangskontrollen slår inn. Default: `false`             |
 
 
 **NB** Om `AUTH_TOKEN_RESOLVER` settes til `header` vil applikasjonen forvente at access_token kommer via
