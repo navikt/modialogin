@@ -9,7 +9,7 @@ import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.ProxyConfig
 import java.io.File
 
-class FrontendAppConfig(proxyConfigFile: File) {
+class FrontendAppConfig {
     val appName by StringSetting()
     val appVersion by StringSetting()
     val idpDiscoveryUrl by StringSetting()
@@ -23,9 +23,12 @@ class FrontendAppConfig(proxyConfigFile: File) {
     val cspDirectives by StringSetting(default = "default src 'self'")
     val referrerPolicy by StringSetting(default = "origin")
     val exposedPort by IntSetting(default = 8080)
+    val proxyConfigFile by StringSetting(default = "/proxy-config.json")
     val proxyConfig: List<ProxyConfig> by lazy {
-        if (proxyConfigFile.exists()) {
-            val content = proxyConfigFile.readText()
+        val file = File(proxyConfigFile)
+        if (file.exists()) {
+            log.info("Loading proxy-config from $proxyConfigFile")
+            val content = file.readText()
             Json
                 .runCatching {
                     decodeFromString<List<ProxyConfig>>(content)
