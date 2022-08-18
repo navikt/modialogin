@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables
-import no.nav.modialogin.common.KotlinUtils
+import no.nav.modialogin.common.KotlinUtils.getProperty
+import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.KtorServer.log
 
 class AzureAdConfig(
@@ -37,21 +38,22 @@ class AzureAdConfig(
 
     companion object {
         fun load(): AzureAdConfig? {
+            val disableAzureAd = getProperty("DISABLE_AZURE_AD")?.toBooleanStrictOrNull() ?: false
+            if (disableAzureAd) {
+                return null
+            }
+
             return kotlin.runCatching {
-                val clientId = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID)
-                val clientSecret = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET)
-                val tenantId = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_TENANT_ID)
-                val appJWK = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_JWK)
-                val preAuthorizedApps =
-                    KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_PRE_AUTHORIZED_APPS)
-                val wellKnownUrl = KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_APP_WELL_KNOWN_URL)
-                val openidConfigIssuer =
-                    KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_ISSUER)
-                val openidConfigJWKSUri =
-                    KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_JWKS_URI)
-                val openidConfigTokenEndpoint =
-                    KotlinUtils.requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)
-                val encryptionSecret = KotlinUtils.getProperty("COOKIE_ENCRYPTION_KEY")
+                val clientId = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID)
+                val clientSecret = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET)
+                val tenantId = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_TENANT_ID)
+                val appJWK = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_JWK)
+                val preAuthorizedApps = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_PRE_AUTHORIZED_APPS)
+                val wellKnownUrl = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_WELL_KNOWN_URL)
+                val openidConfigIssuer = requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_ISSUER)
+                val openidConfigJWKSUri = requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_JWKS_URI)
+                val openidConfigTokenEndpoint = requireProperty(AzureAdEnvironmentVariables.AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)
+                val encryptionSecret = getProperty("COOKIE_ENCRYPTION_KEY")
 
                 AzureAdConfig(
                     clientId = clientId,
