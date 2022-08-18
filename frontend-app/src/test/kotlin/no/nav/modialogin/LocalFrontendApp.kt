@@ -24,6 +24,7 @@ fun main() {
     System.setProperty("REFERRER_POLICY", "no-referrer")
     System.setProperty("EXPOSED_PORT", "8083")
     System.setProperty("OUTSIDE_DOCKER", "true")
+    System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
     System.setProperty("SECRET", "some secret")
 
     setupAzureAdEnv()
