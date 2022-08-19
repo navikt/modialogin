@@ -17,6 +17,7 @@ Docker-image som sikrer ressursene sine, og bruker en tilhørende `login-app` fo
 | CSP_DIRECTIVES         | Nei   | CSP-header som skal brukes, default: `default-src: 'self'`                                                                                                                             | 
 | CSP_REPORT_ONLY        | Nei   | `true` eller `false`, styrer hvorvidt CSP skal være i `Report-Only` modus, default: `false`                                                                                            |
 | REFERRER_POLICY        | Nei   | Forhindrer at url-path blir sendt som http header ved lenke klikk. [Les mer her](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#examples), Default `origin` |
+| PROXY_CONFIG_FILE      | Nei   | Plassering av konfigurasjons-filen for proxy-oppsett. Default `/proxy-config.json`                                                                                                                 |
 | DISABLE_AZURE_AD       | Nei   | Forhindrer at AzureAd konfigurasjon blir tatt i bruk. Kan brukes når man ønsker å registere en applikasjon i AzureAd uten at tilgangskontrollen slår inn. Default: `false`             |
 
 

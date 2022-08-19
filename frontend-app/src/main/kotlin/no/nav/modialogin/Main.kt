@@ -21,7 +21,6 @@ import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.installBFFProx
 import no.nav.modialogin.features.oauthfeature.OAuthAuthProvider
 import no.nav.modialogin.features.oauthfeature.OAuthFeature
 import no.nav.modialogin.features.oauthfeature.OAuthFeature.Companion.installOAuthRoutes
-import java.io.File
 
 fun main() {
     startApplication()
@@ -29,10 +28,9 @@ fun main() {
 
 fun startApplication() {
     val outsideDocker = getProperty("OUTSIDE_DOCKER") == "true"
-    val proxyConfigFile = if (outsideDocker) "./frontend-app/proxy-config/proxy-config.json" else "/proxy-config.json"
     val staticFilesRootFolder = if (outsideDocker) "./frontend-app/www" else "/www"
 
-    val appConfig = FrontendAppConfig(File(proxyConfigFile))
+    val appConfig = FrontendAppConfig()
     val port = if (outsideDocker) appConfig.exposedPort else 8080
     log.info("Starting app: $port")
 
