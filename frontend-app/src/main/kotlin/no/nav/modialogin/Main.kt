@@ -3,9 +3,7 @@ package no.nav.modialogin
 import io.ktor.server.application.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.request.*
-import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
-import no.nav.modialogin.common.AppState
 import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorServer.server
@@ -30,87 +28,89 @@ fun startApplication() {
     val outsideDocker = getProperty("OUTSIDE_DOCKER") == "true"
     val staticFilesRootFolder = if (outsideDocker) "./frontend-app/www" else "/www"
 
-    val appConfig = FrontendAppConfig()
-    val port = if (outsideDocker) appConfig.exposedPort else 8080
+    val config = FrontendAppConfig()
+    val port = if (outsideDocker) config.exposedPort else 8080
     log.info("Starting app: $port")
 
     server(port) { naisState ->
-        val config = AppState(naisState, appConfig)
-        val azureAdConfig = AzureAdConfig.load()
-
         install(AuthFilterFeature) {
             ignorePattern = { call ->
                 val url = call.request.uri
                 val isInternal = url.contains("/internal/")
                 val isWhoamiI = url.endsWith("/whoami")
-                val isOauthRoutes = url.contains("/${appConfig.appName}/oauth2/")
+                val isOauthRoutes = url.contains("/${config.appName}/oauth2/")
                 isOauthRoutes || (isInternal && !isWhoamiI)
             }
-            register(
-                DelegatedAuthProvider(
-                    name = OpenAmAuthProvider,
-                    xForwardedPort = config.config.exposedPort,
-                    startLoginUrl = config.config.delegatedLoginUrl,
-                    refreshUrl = config.config.delegatedRefreshUrl,
-                    authTokenResolver = config.config.authTokenResolver,
-                    refreshTokenResolver = config.config.refreshTokenResolver,
-                    acceptedAudience = config.config.idpClientId,
-                    acceptedIssuer = config.config.idpIssuer
+            config.openAm?.let {
+                log.info("Registering openAm provider")
+                register(
+                    DelegatedAuthProvider(
+                        name = OpenAmAuthProvider,
+                        xForwardedPort = config.exposedPort,
+                        startLoginUrl = config.openAm.loginUrl,
+                        refreshUrl = config.openAm.refreshUrl,
+                        authTokenResolver = config.openAm.idTokenCookieName,
+                        refreshTokenResolver = config.openAm.refreshTokenCookieName,
+                        acceptedAudience = config.openAm.acceptedAudience,
+                        acceptedIssuer = config.openAm.acceptedIssuer
+                    )
                 )
-            )
-            azureAdConfig?.let { it ->
+            }
+            config.azureAd?.let {
                 log.info("Registering azure ad provider")
                 register(
                     OAuthAuthProvider(
                         name = AzureAdAuthProvider,
-                        appname = appConfig.appName,
-                        xForwardedPort = config.config.exposedPort,
+                        appname = config.appName,
+                        xForwardedPort = config.exposedPort,
                         config = it
                     )
                 )
             }
         }
-        azureAdConfig?.let {
+        config.azureAd?.let {
             installOAuthRoutes(
                 OAuthFeature.Config(
-                    appname = appConfig.appName,
+                    appname = config.appName,
                     oidc = OidcClient(it.toOidcClientConfig()),
                     cookieEncryptionKey = it.cookieEncryptionKey,
-                    exposedPort = config.config.exposedPort
+                    exposedPort = config.exposedPort
                 )
             )
         }
         installDefaultFeatures()
         install(DefaultHeaders) {
-            applyCSPFeature(appConfig.cspReportOnly, appConfig.cspDirectives)
-            applyReferrerPolicyFeature(appConfig.referrerPolicy)
+            applyCSPFeature(config.cspReportOnly, config.cspDirectives)
+            applyReferrerPolicyFeature(config.referrerPolicy)
         }
         installNaisFeature(
-            config.config.appName, config.config.appVersion, config.nais,
+            config.appName, config.appVersion, naisState,
             buildMap {
-                put("ISSO_AUTH_PROVIDER", true)
-                put("ISSO_CLIENT_ID", config.config.idpClientId)
-                put("ISSO_CLIENT_ID", config.config.idpIssuer)
-                put("ISSO_WELL_KNOWN_URL", config.config.idpDiscoveryUrl)
+                put("ISSO_AUTH_PROVIDER", config.openAm != null)
+                if (config.openAm != null) {
+                    put("ISSO_CLIENT_ID", config.openAm.acceptedAudience)
+                    put("ISSO_ISSUER", config.openAm.acceptedIssuer)
+                    put("ISSO_WELL_KNOWN_URL", config.openAm.wellKnownUrl)
+                }
 
-                put("AZURE_AUTH_PROVIDER", azureAdConfig != null)
-                if (azureAdConfig != null) {
-                    put("AZURE_APP_CLIENT_ID", azureAdConfig.clientId)
-                    put("AZURE_APP_TENANT_ID", azureAdConfig.tenantId)
-                    put("AZURE_APP_WELL_KNOWN_URL", azureAdConfig.wellKnownUrl)
+                put("AZURE_AUTH_PROVIDER", config.azureAd != null)
+                if (config.azureAd != null) {
+                    put("AZURE_APP_CLIENT_ID", config.azureAd.clientId)
+                    put("AZURE_APP_TENANT_ID", config.azureAd.tenantId)
+                    put("AZURE_APP_WELL_KNOWN_URL", config.azureAd.wellKnownUrl)
                 }
             }
         )
         installHostStaticFilesFeature(
             HostStaticFilesFeature.Config(
-                appname = config.config.appName,
+                appname = config.appName,
                 rootFolder = staticFilesRootFolder
             )
         )
         installBFFProxy(
             BFFProxyFeature.Config(
-                appName = appConfig.appName,
-                proxyConfig = appConfig.proxyConfig
+                appName = config.appName,
+                proxyConfig = config.proxyConfig
             )
         )
     }

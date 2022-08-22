@@ -5,7 +5,6 @@ val logback_version: String by project
 val logstash_version: String by project
 val prometheus_version: String by project
 val modia_common_version: String by project
-val autokonfig_version: String by project
 val junit_version: String by project
 
 plugins {
@@ -33,7 +32,6 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-    implementation("dev.nohus:AutoKonfig:$autokonfig_version")
     implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
 
