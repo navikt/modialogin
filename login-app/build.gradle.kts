@@ -5,7 +5,6 @@ val ktor_version: String by project
 val logback_version: String by project
 val logstash_version: String by project
 val modia_common_version: String by project
-val autokonfig_version: String by project
 val junit_version: String by project
 
 plugins {
@@ -23,7 +22,6 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktor_version")
     implementation("io.ktor:ktor-serialization:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-    implementation("dev.nohus:AutoKonfig:$autokonfig_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")

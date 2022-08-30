@@ -7,7 +7,6 @@ val logstash_version: String by project
 val java_common_version: String by project
 val prometheus_version: String by project
 val modia_common_version: String by project
-val autokonfig_version: String by project
 val junit_version: String by project
 
 plugins {
@@ -31,7 +30,6 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
-    implementation("dev.nohus:AutoKonfig:$autokonfig_version")
     implementation("no.nav.common:token-client:$java_common_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
     implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
