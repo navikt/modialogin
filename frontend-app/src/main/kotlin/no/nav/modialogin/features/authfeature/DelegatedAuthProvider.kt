@@ -1,5 +1,6 @@
 package no.nav.modialogin.features.authfeature
 
+import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -11,17 +12,19 @@ import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
 import no.nav.modialogin.common.KtorUtils.removeCookie
 import no.nav.modialogin.common.KtorUtils.respondWithCookie
+import kotlin.time.Duration.Companion.seconds
 
 class DelegatedAuthProvider(
     override val name: String,
     private val xForwardedPort: Int,
     private val startLoginUrl: String,
     refreshUrl: String,
+    wellKnownUrl: String,
     private val authTokenResolver: String,
     private val refreshTokenResolver: String?,
     private val acceptedAudience: String,
     private val acceptedIssuer: String,
-) : BaseAuthProvider() {
+) : BaseAuthProvider(wellKnownUrl) {
     private val refreshClient = DelegatedRefreshClient(refreshUrl)
 
     override suspend fun getToken(call: ApplicationCall): String? {
@@ -35,13 +38,16 @@ class DelegatedAuthProvider(
         return refreshTokenResolver?.let { call.getCookie(refreshTokenResolver, CookieEncoding.RAW) }
     }
 
-    override fun verify(jwt: DecodedJWT) {
-        check(jwt.audience.contains(acceptedAudience)) {
-            "Audience mismatch, expected $acceptedAudience but got ${jwt.audience}"
-        }
-        check(jwt.issuer == acceptedIssuer) {
-            "Issuer mismatch, expected $acceptedIssuer but got ${jwt.issuer}"
-        }
+    override fun verify(token: String): DecodedJWT{
+        val jwt = JWT.decode(token)
+        val jwk = jwkProvider.get(jwt.keyId)
+        return JWT
+            .require(jwk.makeAlgorithm())
+            .withAudience(acceptedAudience)
+            .withIssuer(acceptedIssuer)
+            .acceptLeeway(60.seconds.inWholeSeconds)
+            .build()
+            .verify(jwt)
     }
 
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {

@@ -55,7 +55,7 @@ fun Application.oidc(
                 get("openid-configuration") {
                     call.respond(
                         WellKnownResult(
-                            url = "$baseUrl/$route/.well-known/openid-configuration",
+                            url = "$baseUrl/$route/.well-known/jwks.json",
                             tokenEndpoint = "$baseUrl/$route/oauth/token",
                             authorizationEndpoint = "http://localhost:8080/$route/authorize",
                             issuer = issuer
