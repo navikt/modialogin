@@ -1,15 +1,29 @@
 package no.nav.modialogin.features.authfeature
 
+import com.auth0.jwk.JwkProvider
+import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.auth0.jwt.interfaces.Payload
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.util.date.*
+import kotlinx.coroutines.runBlocking
+import no.nav.modialogin.auth.OidcClient
+import no.nav.modialogin.common.*
 import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.features.WhoAmIPrincipal
+import java.net.URL
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 interface AuthProvider {
     val name: String
@@ -17,16 +31,39 @@ interface AuthProvider {
     suspend fun onUnauthorized(call: ApplicationCall)
 }
 
-abstract class BaseAuthProvider : AuthProvider {
+abstract class BaseAuthProvider(private val wellKnownUrl: String) : AuthProvider {
+    private val httpClient = HttpClient(Apache) {
+        useProxy()
+        logging()
+        json()
+        defaultRequest {
+            header(HttpHeaders.CacheControl, "no-cache")
+            header(HttpHeaders.XCorrelationId, KotlinUtils.callId())
+        }
+    }
+    private val wellKnown: OidcClient.WellKnownResult by lazy {
+        runBlocking {
+            KotlinUtils.retry(10, 2.seconds) {
+                log.info("Fetching oidc from $wellKnownUrl")
+                httpClient.get(URL(wellKnownUrl)).body()
+            }
+        }
+    }
+    protected val jwkProvider: JwkProvider by lazy {
+        JwkProviderBuilder(URL(wellKnown.jwksUrl))
+            .cached(10, 24, TimeUnit.HOURS)
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build()
+    }
+
     abstract suspend fun getToken(call: ApplicationCall): String?
     abstract suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String
-    abstract fun verify(jwt: DecodedJWT)
+    abstract fun verify(token: String): DecodedJWT
     abstract suspend fun getRefreshToken(call: ApplicationCall): String?
     override suspend fun authorize(call: ApplicationCall): AuthFilterPrincipal? {
         var token = getToken(call) ?: return null
-        val jwt = JWT.decode(token)
-        try {
-            verify(jwt)
+        val jwt = try {
+            verify(token)
         } catch (e: Throwable) {
             log.warn("JWT-verification failed", e)
             return null

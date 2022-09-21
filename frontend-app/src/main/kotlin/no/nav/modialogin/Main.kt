@@ -49,6 +49,7 @@ fun startApplication() {
                         xForwardedPort = config.exposedPort,
                         startLoginUrl = config.openAm.loginUrl,
                         refreshUrl = config.openAm.refreshUrl,
+                        wellKnownUrl = config.openAm.wellKnownUrl,
                         authTokenResolver = config.openAm.idTokenCookieName,
                         refreshTokenResolver = config.openAm.refreshTokenCookieName,
                         acceptedAudience = config.openAm.acceptedAudience,
