@@ -1,5 +1,6 @@
 package no.nav.modialogin.features.oauthfeature
 
+import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -10,16 +11,18 @@ import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.features.authfeature.BaseAuthProvider
+import no.nav.modialogin.features.authfeature.makeAlgorithm
 import no.nav.modialogin.features.oauthfeature.OAuth.getOAuthTokens
 import no.nav.modialogin.features.oauthfeature.OAuth.respondWithOAuthTokens
 import no.nav.personoversikt.crypto.Crypter
+import kotlin.time.Duration.Companion.seconds
 
 class OAuthAuthProvider(
     override val name: String,
     private val appname: String,
     private val xForwardedPort: Int,
     private val config: AzureAdConfig
-) : BaseAuthProvider() {
+) : BaseAuthProvider(config.wellKnownUrl) {
     private val client = OidcClient(config.toOidcClientConfig())
     private val crypter = config.cookieEncryptionKey?.let(::Crypter)
 
@@ -31,13 +34,16 @@ class OAuthAuthProvider(
         return getAllTokens(call)?.refreshToken
     }
 
-    override fun verify(jwt: DecodedJWT) {
-        check(jwt.audience.contains(config.clientId)) {
-            "Audience mismatch, expected ${config.clientId} but got ${jwt.audience}"
-        }
-        check(jwt.issuer == config.openidConfigIssuer) {
-            "Issuer mismatch, expected ${config.openidConfigIssuer} but got ${jwt.issuer}"
-        }
+    override fun verify(token: String): DecodedJWT {
+        val jwt = JWT.decode(token)
+        val jwk = jwkProvider.get(jwt.keyId)
+        return JWT
+            .require(jwk.makeAlgorithm())
+            .withAudience(config.clientId)
+            .withIssuer(config.openidConfigIssuer)
+            .acceptLeeway(60.seconds.inWholeSeconds)
+            .build()
+            .verify(jwt)
     }
 
     override suspend fun refreshTokens(call: ApplicationCall, refreshToken: String): String {
