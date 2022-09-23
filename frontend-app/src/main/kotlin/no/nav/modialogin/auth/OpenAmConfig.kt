@@ -4,7 +4,7 @@ import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KotlinUtils.requireProperty
 
 class OpenAmConfig(
-    val wellKnownUrl: String,
+    val wellKnownUrl: OidcClient.Url,
     val acceptedAudience: String,
     val acceptedIssuer: String,
     val loginUrl: String,
@@ -29,7 +29,7 @@ class OpenAmConfig(
                 val refreshTokenCookieName = getProperty("REFRESH_TOKEN_RESOLVER") ?: "refresh_token"
 
                 OpenAmConfig(
-                    wellKnownUrl = wellKnownUrl,
+                    wellKnownUrl = OidcClient.Url.Internal(wellKnownUrl),
                     acceptedAudience = acceptedAudience,
                     acceptedIssuer = acceptedIssuer,
                     loginUrl = loginUrl,

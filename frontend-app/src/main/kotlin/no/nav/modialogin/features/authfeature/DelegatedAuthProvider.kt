@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import no.nav.modialogin.auth.OidcClient
 import no.nav.modialogin.common.KtorServer.tjenestekallLogger
 import no.nav.modialogin.common.KtorUtils
 import no.nav.modialogin.common.KtorUtils.getCookie
@@ -19,7 +20,7 @@ class DelegatedAuthProvider(
     private val xForwardedPort: Int,
     private val startLoginUrl: String,
     refreshUrl: String,
-    wellKnownUrl: String,
+    wellKnownUrl: OidcClient.Url,
     private val authTokenResolver: String,
     private val refreshTokenResolver: String?,
     private val acceptedAudience: String,

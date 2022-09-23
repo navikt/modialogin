@@ -31,9 +31,11 @@ interface AuthProvider {
     suspend fun onUnauthorized(call: ApplicationCall)
 }
 
-abstract class BaseAuthProvider(private val wellKnownUrl: String) : AuthProvider {
+abstract class BaseAuthProvider(private val wellKnownUrl: OidcClient.Url) : AuthProvider {
     private val httpClient = HttpClient(Apache) {
-        useProxy()
+        if (wellKnownUrl is OidcClient.Url.External) {
+            useProxy()
+        }
         logging()
         json()
         defaultRequest {
@@ -45,10 +47,11 @@ abstract class BaseAuthProvider(private val wellKnownUrl: String) : AuthProvider
         runBlocking {
             KotlinUtils.retry(10, 2.seconds) {
                 log.info("Fetching oidc from $wellKnownUrl")
-                httpClient.get(URL(wellKnownUrl)).body()
+                httpClient.get(URL(wellKnownUrl.url)).body()
             }
         }
     }
+
     protected val jwkProvider: JwkProvider by lazy {
         JwkProviderBuilder(URL(wellKnown.jwksUrl))
             .cached(10, 24, TimeUnit.HOURS)

@@ -18,10 +18,14 @@ import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
 class OidcClient(val config: Config) {
+    sealed class Url(val url: String) {
+        class External(url: String) : Url(url)
+        class Internal(url: String) : Url(url)
+    }
     class Config(
         val clientId: String,
         val clientSecret: String,
-        val wellKnownUrl: String
+        val wellKnownUrl: Url
     )
     @Serializable
     class TokenExchangeResult(
@@ -39,7 +43,9 @@ class OidcClient(val config: Config) {
 
     private val httpClient: HttpClient by lazy {
         HttpClient(Apache) {
-            useProxy()
+            if (config.wellKnownUrl is Url.External) {
+                useProxy()
+            }
             logging()
             basicAuth(config.clientId, requireNotNull(config.clientSecret))
             json()
@@ -54,7 +60,7 @@ class OidcClient(val config: Config) {
         runBlocking {
             KotlinUtils.retry(10, 2.seconds) {
                 KtorServer.log.info("Fetching oidc from ${config.wellKnownUrl}")
-                httpClient.get(URL(config.wellKnownUrl)).body()
+                httpClient.get(URL(config.wellKnownUrl.url)).body()
             }
         }
     }
