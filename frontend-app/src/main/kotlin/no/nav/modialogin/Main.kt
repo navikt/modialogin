@@ -36,8 +36,8 @@ fun startApplication() {
         install(AuthFilterFeature) {
             ignorePattern = { call ->
                 val url = call.request.uri
-                val isInternal = url.contains("/internal/")
-                val isWhoamiI = url.endsWith("/whoami")
+                val isInternal = url.contains("/${config.appName}/internal/")
+                val isWhoamiI = url.endsWith("/${config.appName}/internal/whoami")
                 val isOauthRoutes = url.contains("/${config.appName}/oauth2/")
                 isOauthRoutes || (isInternal && !isWhoamiI)
             }
