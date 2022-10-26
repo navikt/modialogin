@@ -21,6 +21,7 @@ interface WhoAmIPrincipal : Principal {
 
 fun Application.installNaisFeature(appname: String, appversion: String, config: NaisState, selftestAttributes: Map<String, Any> = emptyMap()) {
     install(MicrometerMetrics) {
+        distinctNotRegisteredRoutes = false
         registry = Metrics.registry
     }
     val selftestContent: String = buildString {
