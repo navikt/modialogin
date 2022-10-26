@@ -54,7 +54,7 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
                     call.respondText(selftestContent)
                 }
                 get("metrics") {
-                    call.respond(Metrics.registry.scrape())
+                    call.respondText(Metrics.registry.scrape())
                 }
 
                 authenticate {
