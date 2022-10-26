@@ -1,5 +1,5 @@
-const { test, testonly, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
-const { fetch, fetchJson } = require('./http-fetch');
+const { test, assertThat, verify, setup, retry, equals, isDefined, isNotDefined, startsWith, contains, notContains, hasLengthGreaterThen } = require('./test-lib');
+const { fetch, fetchJson, fetchText } = require('./http-fetch');
 
 setup('oidc-stub is running', retry({ retry: 10, interval: 2}, async () => {
     const oidcConfig = await fetchJson('http://localhost:8080/openam/.well-known/openid-configuration');
@@ -381,3 +381,11 @@ test('referrer-policy is added to response', async () => {
     });
     assertThat(page.headers['referrer-policy'], 'no-referrer', '/frontend has referrer-policy');
 });
+
+test('personal number is not scraped by Micrometer when proxy is used and the user is not logged in', async () => {
+    const personalNumber = '12345678910'
+
+    await fetch(`http://localhost:8083/frontend/proxy/${personalNumber}`)
+    const scrapeDump = await fetchText(`http://localhost:8083/frontend/internal/metrics`)
+    assertThat(scrapeDump.body, notContains(personalNumber), '/frontend masks personal number')
+})

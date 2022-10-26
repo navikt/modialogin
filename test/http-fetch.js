@@ -56,7 +56,18 @@ function fetchJson(url, headers, body) {
         });
 }
 
+const fetchText = (url, headers, body) => {
+    return fetch(url, headers, body).then(({ statusCode, statusMessage, redirectURI, body }) => {
+        if (body) {
+            return { statusCode, statusMessage, redirectURI, body: body.toString() }
+        } else {
+            throw new Error(`${url} did not return text, statuscode: ${statusCode} body: ${body}`);
+        }
+    })
+}
+
 module.exports = {
     fetch,
-    fetchJson
+    fetchJson,
+    fetchText
 };
