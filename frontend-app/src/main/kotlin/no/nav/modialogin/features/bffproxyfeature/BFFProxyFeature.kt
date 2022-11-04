@@ -53,6 +53,10 @@ object BFFProxyFeature {
     private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config: ProxyConfig) {
         val (responseHandler, requestHandler) = bffProxy.parseDirectives(config.rewriteDirectives)
         val client = HttpClient(Apache) {
+            engine {
+                // Setting infinte socket timeout, thus allowing source system to propagate its own timeout exception
+                socketTimeout = 0
+            }
             followRedirects = false
             defaultRequest {
                 headers {
