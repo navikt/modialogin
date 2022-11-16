@@ -31,5 +31,18 @@ COPY build /www
 <p>
     Environment variables 	&#36;env{APP_DUMMY_SECRET}: $env{APP_DUMMY_SECRET}
 </p>
+<p>
+    Feature toggles:
+<ul>
+    <li>Feature 1: $unleash{feature1}</li>
+    <li>Feature 2: $unleash{feature2}</li>
+    <li>Feature 3: $unleash{feature3}</li>
+    <li>Feature 3.1: <span id="injecthere"></span></li>
+</ul>
+</p>
 </body>
+<script>
+    const injectedFt = Boolean("$unleash{feature3}");
+    document.getElementById("injecthere").innerText = injectedFt ? 'Injected was true' : 'Injected was false';
+</script>
 </html>

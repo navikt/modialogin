@@ -25,7 +25,7 @@ object SetHeaderDirectiveSpecification : BFFProxy.RequestDirectiveSpecification 
             val (header, value) = lex(
                 Templating.replaceVariableReferences(
                     directive,
-                    call.request
+                    call
                 )
             )
             if (value.isBlank()) {

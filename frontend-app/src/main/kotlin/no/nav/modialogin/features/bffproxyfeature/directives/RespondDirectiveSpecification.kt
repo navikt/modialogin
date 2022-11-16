@@ -17,7 +17,7 @@ object RespondDirectiveSpecification : BFFProxy.ResponseDirectiveSpecification {
 
     override fun createHandler(directive: String): ResponseDirectiveHandler {
         return {
-            val (code, body) = lex(Templating.replaceVariableReferences(directive, this.call.request))
+            val (code, body) = lex(Templating.replaceVariableReferences(directive, this.call))
             this.call.response.status(code)
             this.call.respondText(body)
         }
