@@ -355,12 +355,14 @@ test('environments variables are injected into nginx config', async () => {
     assertThat(page.body, 'APP_NAME: frontend', 'Page contains environmentvariable value')
 });
 
-test('environments variables are injected into html config', async () => {
+test('environments and unleash variables are injected into html config', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const page = await fetch('http://localhost:8083/frontend/', {
         'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
     assertThat(page.body, contains('&#36;env{APP_NAME}: frontend'), 'Page contains environmentvariable value')
+    assertThat(page.body, contains('Feature 1: true'), 'Page contains enabled unleash variable')
+    assertThat(page.body, contains('Feature 2: false'), 'Page contains disabled unleash variable')
 });
 
 test('csp directive is added to request', async () => {

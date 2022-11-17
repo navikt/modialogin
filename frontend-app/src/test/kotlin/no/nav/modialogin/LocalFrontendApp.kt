@@ -25,7 +25,7 @@ fun main() {
     System.setProperty("EXPOSED_PORT", "8083")
     System.setProperty("OUTSIDE_DOCKER", "true")
     System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
-    System.setProperty("UNLEASH_API_URL", "http://dummy.io")
+    System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
     System.setProperty("SECRET", "some secret")
 
     setupAzureAdEnv()

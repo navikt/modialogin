@@ -1,6 +1,6 @@
 package no.nav.modialogin.common.unleash
 
-import io.getunleash.FakeUnleash
+import io.getunleash.DefaultUnleash
 import io.getunleash.Unleash
 import io.getunleash.UnleashContext
 import io.getunleash.util.UnleashConfig
@@ -14,12 +14,8 @@ class UnleashService(
         .appName(appname)
         .unleashAPI(unleashApiUrl)
         .build()
-    private val unleash: Unleash = FakeUnleash().apply {
-        enable("feature1")
-        disable("feature2")
-        enable("feature3")
-    }
 
+    private val unleash: Unleash = DefaultUnleash(unleashConfig)
     fun isEnabled(name: String, context: UnleashContext): Boolean {
         return unleash.isEnabled(name, context)
     }

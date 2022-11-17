@@ -44,6 +44,7 @@ services:
       CSP_REPORT_ONLY: "true"
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
+      UNLEASH_API_URL: "http://oidc-stub:8080/unleash"
       EXPOSED_PORT: '8083'
       NAIS_CLUSTER_NAME: 'dev-local'
       IS_LOCALHOST_DEV: "true"
