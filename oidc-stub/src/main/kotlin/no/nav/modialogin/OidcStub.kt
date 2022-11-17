@@ -30,5 +30,11 @@ fun startApplication() {
             outsideDocker = outsideDocker,
             supportOnBehalfOf = true
         )
+
+        unleash(
+            "feature1" to true,
+            "feature2" to false,
+            "feature3" to true
+        )
     }.start(wait = true)
 }

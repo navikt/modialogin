@@ -10,7 +10,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.modialogin.common.FileUtils
 import no.nav.modialogin.common.Templating
+import no.nav.modialogin.common.TemplatingEngine
 import no.nav.modialogin.common.features.DefaultFeatures
+import no.nav.modialogin.common.unleash.UnleashService
+import no.nav.modialogin.features.unleashtemplatefeature.UnleashTemplateFeature
 import java.io.File
 
 class HostStaticFilesFeature(val config: Config) {
@@ -22,15 +25,18 @@ class HostStaticFilesFeature(val config: Config) {
 
     class Config(
         val appname: String,
-        val rootFolder: String = "/"
+        val rootFolder: String = "/",
+        val unleashService: UnleashService? = null
     )
 
     fun install(application: Application) {
+        val templateEngine = TemplatingEngine(Templating.EnvSource)
+
         with(application) {
             val rootFolder = File(config.rootFolder)
             val tmplFolder = File("/tmp/www")
             FileUtils.copyAndProcessFiles(rootFolder, tmplFolder) {
-                Templating.replaceVariableReferences(it, null)
+                templateEngine.replaceVariableReferences(null, it)
             }
 
             install(IgnoreTrailingSlash)
@@ -51,6 +57,12 @@ class HostStaticFilesFeature(val config: Config) {
                         staticRootFolder = File("/tmp/www")
                         files(".")
                         default("index.html")
+                        if (config.unleashService != null) {
+                            install(UnleashTemplateFeature) {
+                                contextpath = config.appname
+                                unleashService = config.unleashService
+                            }
+                        }
                     }
                 }
             }
@@ -59,7 +71,7 @@ class HostStaticFilesFeature(val config: Config) {
 }
 
 private val fileRegex = Regex("\\.(?:css|js|jpe?g|gif|ico|png|xml|otf|ttf|eot|woff|svg|map|json)$")
-private fun ApplicationCall.isRequestForFile(): Boolean {
+fun ApplicationCall.isRequestForFile(): Boolean {
     val uri = this.request.uri
     return fileRegex.containsMatchIn(uri)
 }
