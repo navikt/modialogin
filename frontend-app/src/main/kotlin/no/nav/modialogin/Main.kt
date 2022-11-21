@@ -106,7 +106,7 @@ fun startApplication() {
             HostStaticFilesFeature.Config(
                 appname = config.appName,
                 rootFolder = staticFilesRootFolder,
-                unleashService = config.unleashService
+                unleash = config.unleash
             )
         )
         installBFFProxy(
