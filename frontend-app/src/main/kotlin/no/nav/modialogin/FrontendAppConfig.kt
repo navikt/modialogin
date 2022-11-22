@@ -1,5 +1,8 @@
 package no.nav.modialogin
 
+import io.getunleash.DefaultUnleash
+import io.getunleash.Unleash
+import io.getunleash.util.UnleashConfig
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.auth.AzureAdConfig
@@ -20,6 +23,14 @@ class FrontendAppConfig {
     val proxyConfigFile: String = getProperty("PROXY_CONFIG_FILE") ?: "/proxy-config.json"
     val openAm: OpenAmConfig? = OpenAmConfig.load()
     val azureAd: AzureAdConfig? = AzureAdConfig.load()
+    val unleash: Unleash? = getProperty("UNLEASH_API_URL")?.let {
+        val config = UnleashConfig
+            .builder()
+            .appName(requireProperty("APP_NAME"))
+            .unleashAPI(it)
+            .build()
+        DefaultUnleash(config)
+    }
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
 
     private fun readProxyConfig(): List<ProxyConfig> {

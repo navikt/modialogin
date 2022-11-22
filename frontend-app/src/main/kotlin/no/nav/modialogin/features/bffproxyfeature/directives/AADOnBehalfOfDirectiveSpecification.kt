@@ -44,7 +44,7 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
 
     override fun createHandler(directive: String): RequestDirectiveHandler {
         return { call ->
-            val lexed = lex(Templating.replaceVariableReferences(directive, call.request))
+            val lexed = lex(Templating.replaceVariableReferences(directive, call))
             val principal = requireNotNull(call.principal<AuthFilterPrincipals>()) {
                 "Cannot proxy call with OBO-flow without principals"
             }

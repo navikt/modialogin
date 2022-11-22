@@ -71,10 +71,7 @@ object BFFProxyFeature {
             } else {
                 val request = call.request
                 val proxyRequestPath = request.uri.removePrefix("/$appName/${config.prefix}/")
-                val proxyRequestURI = Templating.replaceVariableReferences(
-                    "${config.url}/$proxyRequestPath",
-                    request
-                )
+                val proxyRequestURI = Templating.replaceVariableReferences("${config.url}/$proxyRequestPath", call)
 
                 withContext(Dispatchers.IO) {
                     call.respondWith(

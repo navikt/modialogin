@@ -6,6 +6,7 @@ val logstash_version: String by project
 val prometheus_version: String by project
 val modia_common_version: String by project
 val junit_version: String by project
+val unleash_version: String by project
 
 plugins {
     `java-library`
@@ -34,6 +35,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
+    implementation("io.getunleash:unleash-client-java:$unleash_version")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }
