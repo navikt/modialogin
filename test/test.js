@@ -357,7 +357,7 @@ test('environments variables are injected into nginx config', async () => {
 
 test('environments and unleash variables are injected into html config', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
-    const page = await fetch('http://localhost:8083/frontend/', {
+    const page = await fetch('http://localhost:8083/frontend/and/some/path', {
         'Cookie': `modia_ID_token=${tokens.body['id_token']};`
     });
     assertThat(page.body, contains('&#36;env{APP_NAME}: frontend'), 'Page contains environmentvariable value')
