@@ -33,6 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
     implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
     implementation("io.getunleash:unleash-client-java:$unleash_version")
