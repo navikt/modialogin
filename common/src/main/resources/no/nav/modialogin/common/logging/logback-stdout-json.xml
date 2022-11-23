@@ -2,10 +2,15 @@
 <included>
     <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
 
-    <appender name="stdout_json" class="no.nav.modialogin.common.logging.MaskingAppender">
-        <appender name="stdout_json_masked" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
-        </appender>
+    <appender name="stdout_json" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
+                <valueMask>
+                    <value>(^|\W)\d{11}(?=$|\W)</value>
+                    <mask>$1***********</mask>
+                </valueMask>
+            </jsonGeneratorDecorator>
+        </encoder>
     </appender>
 
     <root level="${ROOT_LOG_LEVEL:-INFO}">
