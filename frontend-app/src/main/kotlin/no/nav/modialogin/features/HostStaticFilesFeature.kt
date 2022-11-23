@@ -53,16 +53,16 @@ class HostStaticFilesFeature(val config: Config) {
                 DefaultFeatures.statusPageConfig(this)
             }
 
+            install(TemplatingFeature.Plugin) {
+                templatingEngine = templateEngine
+            }
             routing {
                 authenticate {
                     static(config.appname) {
+                        install(TemplatingFeature.EnableRouteTransform)
                         staticRootFolder = File("/tmp/www")
                         files(".")
                         default("index.html")
-                        install(TemplatingFeature.Plugin) {
-                            contextpath = config.appname
-                            templatingEngine = templateEngine
-                        }
                     }
                 }
             }

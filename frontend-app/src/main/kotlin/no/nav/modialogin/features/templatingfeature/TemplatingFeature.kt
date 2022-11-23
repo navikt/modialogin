@@ -3,6 +3,7 @@ package no.nav.modialogin.features.templatingfeature
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,26 +12,19 @@ import no.nav.modialogin.common.FileUtils.processableContentTypes
 import no.nav.modialogin.common.TemplatingEngine
 
 object TemplatingFeature {
+    private val enabledForRoute = AttributeKey<Boolean>("templating.feature.route.transform.enabled")
     class Config(
-        var contextpath: String? = null,
         var templatingEngine: TemplatingEngine<ApplicationCall?>? = null,
     )
 
-    val Plugin = createRouteScopedPlugin("UnleashTemplate", ::Config) {
+    val Plugin = createApplicationPlugin("TemplatingPluging", ::Config) {
         val config = this.pluginConfig
-        val contextpath = requireNotNull(config.contextpath) {
-            "ContextPath must be specified"
-        }
         val templateEngine = requireNotNull(config.templatingEngine) {
             "TemplateEngine must be specified"
         }
 
         onCallRespond { call ->
-            val isProbablyARequestForFile = call.isRequestForFile()
-                    || call.request.uri == "/$contextpath"
-                    || call.request.uri == "/$contextpath/"
-
-            if (!isProbablyARequestForFile) return@onCallRespond
+            if (call.attributes.getOrNull(enabledForRoute) != true) return@onCallRespond
 
             transformBody { data ->
                 if (data !is OutgoingContent.ReadChannelContent) {
@@ -50,6 +44,12 @@ object TemplatingFeature {
                     }
                 )
             }
+        }
+    }
+
+    val EnableRouteTransform = createRouteScopedPlugin("EnableTemplatingPluging") {
+        onCall { call ->
+            call.attributes.put(enabledForRoute, true)
         }
     }
 
