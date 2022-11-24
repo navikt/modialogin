@@ -26,6 +26,8 @@ fun main() {
     System.setProperty("OUTSIDE_DOCKER", "true")
     System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
     System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
+    System.setProperty("REDIS_HOST", "localhost")
+    System.setProperty("REDIS_PASSWORD", "password123")
     System.setProperty("SECRET", "some secret")
 
     setupAzureAdEnv()

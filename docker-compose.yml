@@ -77,6 +77,9 @@ services:
       COOKIE_ENCRYPTION_KEY: "some secret"
       NAIS_CLUSTER_NAME: "dev-local"
       IS_LOCALHOST_DEV: "true"
+      # Redis configuration
+      REDIS_HOST: "redis"
+      REDIS_PASSWORD: "password123"
 
       # Dummy JWK randomly generated on a test startup
       AZURE_APP_CLIENT_ID: "foo"
@@ -97,3 +100,9 @@ services:
     image: mendhak/http-https-echo
     ports:
       - 8089:80
+  redis:
+    image: bitnami/redis:7.0.5
+    ports:
+      - '6379:6379'
+    environment:
+      REDIS_PASSWORD: "password123"

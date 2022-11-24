@@ -2,6 +2,7 @@ import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val ktor_version: String by project
+val jedis_version: String by project
 val logback_version: String by project
 val junit_version: String by project
 
@@ -19,6 +20,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("com.nimbusds:nimbus-jose-jwt:9.22")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("redis.clients:jedis:$jedis_version")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }

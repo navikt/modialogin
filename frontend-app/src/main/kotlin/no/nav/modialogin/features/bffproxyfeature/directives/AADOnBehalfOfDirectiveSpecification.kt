@@ -3,13 +3,17 @@ package no.nav.modialogin.features.bffproxyfeature.directives
 import io.ktor.server.auth.*
 import io.prometheus.client.Histogram
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
+import no.nav.common.token_client.cache.CaffeineTokenCache
+import no.nav.common.token_client.cache.TokenCache
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
+import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.Templating
 import no.nav.modialogin.features.authfeature.AuthFilterPrincipals
 import no.nav.modialogin.features.authfeature.AzureAdAuthProvider
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
+import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
 import java.util.concurrent.Callable
 
@@ -36,6 +40,7 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
             .withClientId(requireProperty(AZURE_APP_CLIENT_ID))
             .withPrivateJwk(requireProperty(AZURE_APP_JWK))
             .withTokenEndpointUrl(requireProperty(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
+            .withCache(wrapWithRedisCacheIfPresent(CaffeineTokenCache()))
             .buildOnBehalfOfTokenClient()
     }
     override fun canHandle(directive: String): Boolean {
@@ -70,5 +75,18 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
         val match = requireNotNull(regexp.matchEntire(directive))
         val group = match.groupValues.drop(1)
         return Lexed(group[0], group[1], group[2])
+    }
+
+    private fun wrapWithRedisCacheIfPresent(cache: TokenCache): TokenCache {
+        val url: String = getProperty("REDIS_HOST") ?: return cache
+        val password: String = getProperty("REDIS_PASSWORD") ?: return cache
+
+        return RedisTokenCache(
+            underlying = cache,
+            config = RedisTokenCache.Config(
+                host = url,
+                password = password,
+            )
+        )
     }
 }

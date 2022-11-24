@@ -36,5 +36,9 @@ fun startApplication() {
             "feature2" to false,
             "feature3" to true
         )
+        redisIntrospection(
+            if (outsideDocker) { "localhost" }
+            else { "redis" }
+        )
     }.start(wait = true)
 }
