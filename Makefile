@@ -15,7 +15,7 @@ start-silent:
 	docker-compose up --build -d
 
 start-idea:
-	docker-compose up -d echo-server
+	docker-compose up -d echo-server redis
 
 stop:
 	docker-compose down --remove-orphans

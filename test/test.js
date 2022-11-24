@@ -347,6 +347,19 @@ test('proxying with obo-flow-directive exchanges the provided token', async () =
     assertThat(apiEndpoint.body.headers['authorization'], notContains(openToken), 'authorization header is different from token')
 });
 
+test('should use redis-cache', async () => {
+    const openamTokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
+    const idtokencookie = `modia_ID_token=${openamTokens.body['id_token']}`;
+    const accesstokencookie = await azureadloginflow(idtokencookie, "8094", {
+        'Cookie': idtokencookie
+    });
+    await fetchJson('http://localhost:8094/frontend/api/some/data/endpoint', {
+        'Cookie': idtokencookie+';'+accesstokencookie,
+    });
+    const redisCachekeys = await fetchJson('http://localhost:8080/redis/keys');
+    assertThat(redisCachekeys.body, hasLengthGreaterThen(0), "Redis should have cached some keys")
+});
+
 test('environments variables are injected into nginx config', async () => {
     const tokens = await fetchJson('http://localhost:8080/openam/oauth/token', {}, {});
     const page = await fetch('http://localhost:8083/frontend/env-data', {
