@@ -1,12 +1,11 @@
 package no.nav.modialogin.features
 
-import com.auth0.jwt.JWT
 import io.getunleash.Unleash
 import io.getunleash.UnleashContext
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import no.nav.modialogin.common.TemplatingEngine
-import no.nav.modialogin.features.authfeature.AuthFilterPrincipals
+import no.nav.modialogin.features.authfeature.SessionAuthPrincipal
 
 object UnleashTemplateSource {
     fun create(unleash: Unleash): TemplatingEngine.Source<ApplicationCall?> {
@@ -14,11 +13,8 @@ object UnleashTemplateSource {
             prefix = "unleash",
             replacement = { call, name ->
                 val userId = call
-                    ?.principal<AuthFilterPrincipals>()
-                    ?.principals
-                    ?.firstOrNull()
-                    ?.token
-                    ?.let { JWT.decode(it) }
+                    ?.principal<SessionAuthPrincipal>()
+                    ?.accessToken
                     ?.let {
                         it.getClaim("NAVident").asString() ?: it.subject
                     }

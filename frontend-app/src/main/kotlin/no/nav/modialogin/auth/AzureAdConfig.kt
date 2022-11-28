@@ -37,12 +37,7 @@ class AzureAdConfig(
     )
 
     companion object {
-        fun load(): AzureAdConfig? {
-            val disableAzureAd = getProperty("DISABLE_AZURE_AD")?.toBooleanStrictOrNull() ?: false
-            if (disableAzureAd) {
-                return null
-            }
-
+        fun load(): AzureAdConfig {
             return kotlin.runCatching {
                 val clientId = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_ID)
                 val clientSecret = requireProperty(AzureAdEnvironmentVariables.AZURE_APP_CLIENT_SECRET)
@@ -67,10 +62,7 @@ class AzureAdConfig(
                     openidConfigTokenEndpoint = openidConfigTokenEndpoint,
                     cookieEncryptionKey = encryptionSecret
                 )
-            }.getOrElse {
-                log.info("Could not load azureAd config", it)
-                null
-            }
+            }.getOrThrow()
         }
     }
 }

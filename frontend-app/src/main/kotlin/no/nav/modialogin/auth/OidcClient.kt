@@ -65,25 +65,8 @@ class OidcClient(val config: Config) {
         }
     }
 
-    suspend fun exchangeAuthCodeForToken(clientId: String, code: String, callbackUrl: String): TokenExchangeResult =
-        withContext(Dispatchers.IO) {
-            httpClient.post(wellKnown.tokenEndpoint) {
-                setBody(
-                    FormDataContent(
-                        Parameters.build {
-                            set("grant_type", "authorization_code")
-                            set("client_id", config.clientId)
-                            set("client_secret", config.clientSecret)
-                            set("redirect_uri", callbackUrl)
-                            set("code", code)
-                            set("scope", "openid offline_access ${clientScope(clientId)}")
-                        }
-                    )
-                )
-            }.body()
-        }
 
-    suspend fun refreshToken(clientId: String, refreshToken: String): TokenExchangeResult =
+    suspend fun refreshToken(refreshToken: String): TokenExchangeResult =
         withContext(Dispatchers.IO) {
             httpClient.post(wellKnown.tokenEndpoint) {
                 setBody(
@@ -92,7 +75,7 @@ class OidcClient(val config: Config) {
                             set("grant_type", "refresh_token")
                             set("client_id", config.clientId)
                             set("client_secret", config.clientSecret)
-                            set("scope", "openid offline_access ${clientScope(clientId)}")
+                            set("scope", "openid offline_access ${clientScope(config.clientId)}")
                             set("refresh_token", refreshToken)
                         }
                     )

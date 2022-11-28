@@ -19,12 +19,6 @@ fun startApplication() {
         }
 
         oidc(
-            route = "openam",
-            issuer = "openam",
-            outsideDocker = outsideDocker,
-            supportOnBehalfOf = false
-        )
-        oidc(
             route = "azuread",
             issuer = "azuread",
             outsideDocker = outsideDocker,
@@ -36,7 +30,8 @@ fun startApplication() {
             "feature2" to false,
             "feature3" to true
         )
-        redisIntrospection(
+
+        redis(
             if (outsideDocker) { "localhost" }
             else { "redis" }
         )

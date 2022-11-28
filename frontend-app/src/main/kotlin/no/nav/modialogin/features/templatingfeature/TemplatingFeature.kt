@@ -2,12 +2,10 @@ package no.nav.modialogin.features.templatingfeature
 
 import io.ktor.http.content.*
 import io.ktor.server.application.*
-import io.ktor.server.request.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.modialogin.common.FileUtils
 import no.nav.modialogin.common.FileUtils.processableContentTypes
 import no.nav.modialogin.common.TemplatingEngine
 
@@ -34,12 +32,12 @@ object TemplatingFeature {
                     return@transformBody data
                 }
 
+                val content = templateEngine.replaceVariableReferences(call, data.readFrom().readFully())
                 WriterContent(
                     contentType = requireNotNull(data.contentType) { "ContentType null" },
                     body = {
                         withContext(Dispatchers.IO) {
-                            val content = templateEngine.replaceVariableReferences(call, data.readFrom().readFully())
-                            write(content)
+                         write(content)
                         }
                     }
                 )
@@ -57,10 +55,5 @@ object TemplatingFeature {
         while (!isClosedForRead) {
             append(readUTF8Line() ?: "")
         }
-    }
-
-    private fun ApplicationCall.isRequestForFile(): Boolean {
-        val uri = this.request.uri
-        return FileUtils.fileRegex.containsMatchIn(uri)
     }
 }

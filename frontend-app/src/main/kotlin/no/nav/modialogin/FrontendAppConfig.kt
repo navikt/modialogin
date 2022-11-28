@@ -6,7 +6,6 @@ import io.getunleash.util.UnleashConfig
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.auth.AzureAdConfig
-import no.nav.modialogin.auth.OpenAmConfig
 import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.KtorServer.log
@@ -14,15 +13,18 @@ import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.ProxyConfig
 import java.io.File
 
 class FrontendAppConfig {
+    val appMode: ApplicationMode = ApplicationMode.parse(getProperty("APP_MODE"))
     val appName: String = requireProperty("APP_NAME")
     val appVersion: String = requireProperty("APP_VERSION")
     val cspReportOnly: Boolean = getProperty("CSP_REPORT_ONLY")?.toBooleanStrictOrNull() ?: false
     val cspDirectives: String = getProperty("CSP_DIRECTIVES") ?: "default src 'self'"
     val referrerPolicy: String = getProperty("REFERRER_POLICY") ?: "origin"
-    val exposedPort: Int = getProperty("EXPOSED_PORT")?.toIntOrNull() ?: 8080
     val proxyConfigFile: String = getProperty("PROXY_CONFIG_FILE") ?: "/proxy-config.json"
-    val openAm: OpenAmConfig? = OpenAmConfig.load()
-    val azureAd: AzureAdConfig? = AzureAdConfig.load()
+    val azureAd: AzureAdConfig = AzureAdConfig.load()
+    val redis: RedisConfig = RedisConfig(
+        host = requireProperty("REDIS_HOST"),
+        password = requireProperty("REDIS_PASSWORD"),
+    )
     val unleash: Unleash? = getProperty("UNLEASH_API_URL")?.let {
         val config = UnleashConfig
             .builder()
@@ -31,6 +33,7 @@ class FrontendAppConfig {
             .build()
         DefaultUnleash(config)
     }
+    val cdnBucketUrl: String? = getProperty("CDN_BUCKET_URL")
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
 
     private fun readProxyConfig(): List<ProxyConfig> {
@@ -48,4 +51,9 @@ class FrontendAppConfig {
             emptyList()
         }
     }
+
 }
+class RedisConfig(
+    val host: String,
+    val password: String,
+)

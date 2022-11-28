@@ -32,6 +32,7 @@ class HostStaticFilesFeature(val config: Config) {
     fun install(application: Application) {
         val templateSources = listOfNotNull(
             Templating.EnvSource,
+            CSPFeature.NonceSource,
             if (config.unleash != null) UnleashTemplateSource.create(config.unleash) else null
         ).toTypedArray()
         val templateEngine = TemplatingEngine(*templateSources)
@@ -39,6 +40,10 @@ class HostStaticFilesFeature(val config: Config) {
         with(application) {
             val rootFolder = File(config.rootFolder)
             val tmpFolder = File("/tmp/www")
+            if (tmpFolder.exists()) {
+                tmpFolder.deleteRecursively()
+                tmpFolder.mkdirs()
+            }
             rootFolder.copyRecursively(target = tmpFolder, overwrite = true)
 
             install(IgnoreTrailingSlash)
