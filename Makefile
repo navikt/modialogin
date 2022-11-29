@@ -9,16 +9,16 @@ build:
 	./gradlew build
 
 start:
-	docker-compose up --build
+	docker compose up --build
 
 start-silent:
-	docker-compose up --build -d
+	docker compose up --build -d
 
 start-idea:
-	docker-compose up -d echo-server redis
+	docker compose up -d echo-server redis
 
 stop:
-	docker-compose down --remove-orphans
+	docker compose down --remove-orphans
 
 test:
 	node test/test.js
