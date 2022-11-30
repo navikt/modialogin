@@ -19,6 +19,7 @@ import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.features.oauthfeature.OAuthAuthProvider
 import no.nav.modialogin.features.oauthfeature.OAuthFeature
 import no.nav.modialogin.features.oauthfeature.OAuthFeature.Companion.installOAuthRoutes
+import no.nav.modialogin.features.staticFilesFromCDN
 
 fun main() {
     startApplication()
@@ -105,13 +106,21 @@ fun startApplication() {
                 }
             }
         )
-        installHostStaticFilesFeature(
-            HostStaticFilesFeature.Config(
-                appname = config.appName,
-                rootFolder = staticFilesRootFolder,
+        if (config.cdnBucketUrl != null) {
+            staticFilesFromCDN(
+                contextpath = config.appName,
+                cdnUrl = config.cdnBucketUrl,
                 unleash = config.unleash
             )
-        )
+        } else {
+            installHostStaticFilesFeature(
+                HostStaticFilesFeature.Config(
+                    appname = config.appName,
+                    rootFolder = staticFilesRootFolder,
+                    unleash = config.unleash
+                )
+            )
+        }
         installBFFProxy(
             BFFProxyFeature.Config(
                 appName = config.appName,

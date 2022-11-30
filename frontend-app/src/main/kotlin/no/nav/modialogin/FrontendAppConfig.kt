@@ -31,6 +31,7 @@ class FrontendAppConfig {
             .build()
         DefaultUnleash(config)
     }
+    val cdnBucketUrl: String? = getProperty("CDN_BUCKET_URL")
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
 
     private fun readProxyConfig(): List<ProxyConfig> {
