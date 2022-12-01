@@ -205,6 +205,7 @@ test('personal number is not scraped by Micrometer when proxy is used and the us
 
 async function azureadloginflow(port) {
     const initial = await fetch(`http://localhost:${port}/frontend/`);
+    const callbackCookie = initial.headers['set-cookie'][0];
 
     assertThat(initial.statusCode, 302, '/frontend returns 302');
     assertThat(
@@ -213,9 +214,9 @@ async function azureadloginflow(port) {
         '/frontend redirects to /frontend/oauth2/login'
     );
     assertThat(
-        initial.redirectURI.queryParams.redirect,
-        encodeURIComponent(`http://localhost:${port}/frontend/`),
-        '/frontend redirect passes original url encoded in queryparameter'
+        callbackCookie,
+        contains(encodeURIComponent(`http://localhost:${port}/frontend/`)),
+        '/frontend redirect passes original url encoded in cookie'
     );
 
     const startLogin = await fetch('http://localhost:8083'+initial.redirectURI.uri);
@@ -233,7 +234,7 @@ async function azureadloginflow(port) {
         startLogin.redirectURI.queryParams,
         {
             client_id: 'foo',
-            redirect_uri: encodeURIComponent(`http://localhost:8083/frontend/oauth2/callback?redirect=${encodeURIComponent('http://localhost:8083/frontend/')}`),
+            redirect_uri: encodeURIComponent(`http://localhost:8083/frontend/oauth2/callback`),
             scope: 'openid+offline_access+api%3A%2F%2Ffoo%2F.default',
             state,
             response_type: 'code',
@@ -258,7 +259,7 @@ async function azureadloginflow(port) {
     );
 
     const login = await fetch(authorize.redirectURI.uri, {
-        'Cookie': ''
+        'Cookie': callbackCookie
     });
     assertThat(login.statusCode, 302, '/modialogin/api/login returns 302');
     assertThat(

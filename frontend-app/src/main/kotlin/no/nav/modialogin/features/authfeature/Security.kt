@@ -25,7 +25,6 @@ import no.nav.modialogin.AppMode
 import no.nav.modialogin.RedisConfig
 import no.nav.modialogin.auth.AzureAdConfig
 import no.nav.modialogin.auth.OidcClient
-import no.nav.modialogin.common.KtorUtils
 import java.net.URL
 import java.security.interfaces.RSAPublicKey
 
@@ -65,6 +64,7 @@ val Security = createApplicationPlugin("security", ::Config) {
     val appname = checkNotNull(pluginConfig.appname) { "appname is required" }
     val appmode = checkNotNull(pluginConfig.appmode) { "appmode is required" }
     val sessionCookieName = "${appname}_sessionid"
+    val callbackCookieName = "${appname}_callback"
     val azureConfig = checkNotNull(pluginConfig.azureConfig) { "azureConfig is required" }
     val redisConfig = checkNotNull(pluginConfig.redisConfig) { "redisConfig is required" }
     val skipWhenPredicate = pluginConfig.skipWhen
@@ -110,19 +110,23 @@ val Security = createApplicationPlugin("security", ::Config) {
                     // get the url and pass on to /login?redirect=[url]
                     val port = if (appmode.hostport() == 8080) "" else ":${appmode.hostport()}"
                     val originalUri = "${call.request.origin.scheme}://${call.request.host()}$port${call.request.uri}"
-
-                    call.respondRedirect("/$appname/oauth2/login?redirect=${KtorUtils.encode(originalUri)}")
+                    call.response.cookies.append(
+                        Cookie(
+                            name = callbackCookieName,
+                            value = originalUri,
+                            path = "/$appname",
+                            maxAge = 3600,
+                            secure = !appmode.locally,
+                            httpOnly = true
+                        )
+                    )
+                    call.respondRedirect("/$appname/oauth2/login")
                 }
             }
 
             oauth("oauth") {
                 urlProvider = {
-                    // Call should be /oauth2/login here
-                    // Get 'redirect' queryparam, and pass-on to callback-url
-                    val returnUrl: String = requireNotNull(request.queryParameters["redirect"]) {
-                        "redirect url null when providing callback url"
-                    }
-                    redirectUrl("/$appname/oauth2/callback?redirect=${KtorUtils.encode(returnUrl)}", appmode.locally)
+                    redirectUrl("/$appname/oauth2/callback",  appmode.locally)
                 }
                 if (skipWhenPredicate != null) {
                     skipWhen(skipWhenPredicate)
@@ -168,7 +172,11 @@ val Security = createApplicationPlugin("security", ::Config) {
                                 cache.put(sessionId, tokenPrincipal)
                                 call.sessions.set(sessionCookieName, sessionId)
 
-                                val originalUrl = call.request.queryParameters["redirect"]?.let(KtorUtils::decode) ?: "/"
+                                val originalUrl = call.request.cookies[callbackCookieName] ?: "/$appname"
+                                call.response.cookies.appendExpired(
+                                    name = callbackCookieName,
+                                    path = "/$appname",
+                                )
                                 call.respondRedirect(url = originalUrl, permanent = false)
                             }
                         }
