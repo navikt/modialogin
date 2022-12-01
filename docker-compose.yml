@@ -46,6 +46,7 @@ services:
       REFERRER_POLICY: "no-referrer"
       UNLEASH_API_URL: "http://oidc-stub:8080/unleash"
       EXPOSED_PORT: '8083'
+      CDN_BUCKET_URL: "http://cdnstub:80/cdn/frontend/"
       NAIS_CLUSTER_NAME: 'dev-local'
       IS_LOCALHOST_DEV: "true"
     volumes:
@@ -106,3 +107,9 @@ services:
       - '6379:6379'
     environment:
       REDIS_PASSWORD: "password123"
+  cdnstub:
+    image: httpd:2.4-alpine
+    volumes:
+      - ./frontend-app/www:/usr/local/apache2/htdocs/cdn/frontend
+    ports:
+      - 8091:80
