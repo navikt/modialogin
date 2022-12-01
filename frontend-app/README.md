@@ -59,3 +59,9 @@ F.eks;
 - Hardkode svar; `RESPOND 200 '$env{token-from-environment} $header{Content-Type} $cookie{ID_token}'`
   I tilfeller man bruker `RESPOND` så vil ikke `url` feltet fra konfigurationen være i bruk, og man trenger ikke
   spesifisere dette.
+
+
+## Redis
+
+Imaget krever at man har tilgang på en redis instans for caching av sessionId og obo-tokens. 
+For oppsett av dette se på [nais sin dokumentasjon](https://doc.nais.io/persistence/redis/).
