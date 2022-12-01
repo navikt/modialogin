@@ -3,9 +3,7 @@ name: Frontend app
 on:
   push:
     paths-ignore:
-      - '.github/workflows/frontend-image-workflow.yml'
       - '.nais/**'
-      - 'frontend-image/**'
       - '**.md'
       - '.editorconfig'
       - '.gitignore'
