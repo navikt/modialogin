@@ -10,8 +10,7 @@ import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
 import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.features.authfeature.AuthFilterPrincipals
-import no.nav.modialogin.features.authfeature.AzureAdAuthProvider
+import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
@@ -43,6 +42,7 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
             .withCache(wrapWithRedisCacheIfPresent(CaffeineTokenCache()))
             .buildOnBehalfOfTokenClient()
     }
+
     override fun canHandle(directive: String): Boolean {
         return regexp.matches(directive)
     }
@@ -50,15 +50,12 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
     override fun createHandler(directive: String): RequestDirectiveHandler {
         return { call ->
             val lexed = lex(Templating.replaceVariableReferences(directive, call))
-            val principal = requireNotNull(call.principal<AuthFilterPrincipals>()) {
+            val principal = requireNotNull(call.principal<TokenPrincipal>()) {
                 "Cannot proxy call with OBO-flow without principals"
-            }
-            val token = requireNotNull(principal.principals.find { it.name == AzureAdAuthProvider }?.token) {
-                "Cannot proxy call with OBO-flow without AzureAdAuthProvider"
             }
 
             val oboToken: String = oboExchangeTimer.time(Callable {
-                aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, token)
+                aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
             })
 
             this.headers["Cookie"] = ""

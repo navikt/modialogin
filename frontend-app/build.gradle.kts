@@ -24,6 +24,7 @@ dependencies {
     implementation("io.ktor:ktor-server-default-headers:$ktor_version")
     implementation("io.ktor:ktor-server-auth:$ktor_version")
     implementation("io.ktor:ktor-server-auth-jwt:$ktor_version")
+    implementation("io.ktor:ktor-server-sessions:$ktor_version")
     implementation("io.ktor:ktor-server-status-pages:$ktor_version")
     implementation("io.ktor:ktor-client:$ktor_version")
     implementation("io.ktor:ktor-client-apache:$ktor_version")
@@ -37,6 +38,9 @@ dependencies {
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
     implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
     implementation("io.getunleash:unleash-client-java:$unleash_version")
+    implementation("io.ktor:ktor-server-auth-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-core-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-sessions-jvm:2.0.2")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }

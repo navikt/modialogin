@@ -19,12 +19,6 @@ fun startApplication() {
         }
 
         oidc(
-            route = "openam",
-            issuer = "openam",
-            outsideDocker = outsideDocker,
-            supportOnBehalfOf = false
-        )
-        oidc(
             route = "azuread",
             issuer = "azuread",
             outsideDocker = outsideDocker,

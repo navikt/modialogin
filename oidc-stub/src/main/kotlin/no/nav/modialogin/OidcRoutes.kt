@@ -72,11 +72,12 @@ fun Application.oidc(
                 val state = requireNotNull(call.parameters["state"])
                 val nonce = call.parameters["nonce"]
                 val code = UUID.randomUUID().toString()
+                val queryParamDelimiter = if (redirectUri.contains("?")) "&" else "?"
                 lastNonce = nonce
 
                 call.respondRedirect(
                     permanent = false,
-                    url = "$redirectUri?code=$code&state=$state"
+                    url = "$redirectUri${queryParamDelimiter}code=$code&state=$state"
                 )
             }
 
