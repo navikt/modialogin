@@ -2,7 +2,6 @@ package no.nav.modialogin.common.features
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -15,11 +14,13 @@ import no.nav.modialogin.common.NaisState
 object Metrics {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM)
 }
-interface WhoAmIPrincipal : Principal {
-    val description: String
-}
 
-fun Application.installNaisFeature(appname: String, appversion: String, config: NaisState, selftestAttributes: Map<String, Any> = emptyMap()) {
+fun Application.installNaisFeature(
+    appname: String,
+    appversion: String,
+    config: NaisState,
+    selftestAttributes: Map<String, Any> = emptyMap()
+) {
     install(MicrometerMetrics) {
         distinctNotRegisteredRoutes = false
         registry = Metrics.registry
@@ -55,12 +56,6 @@ fun Application.installNaisFeature(appname: String, appversion: String, config: 
                 }
                 get("metrics") {
                     call.respondText(Metrics.registry.scrape())
-                }
-
-                authenticate {
-                    get("whoami") {
-                        call.respondText(call.principal<WhoAmIPrincipal>()?.description ?: "Unknown")
-                    }
                 }
             }
         }

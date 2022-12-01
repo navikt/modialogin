@@ -9,26 +9,17 @@ import no.nav.modialogin.auth.AzureAdConfig
 import java.util.*
 
 fun main() {
-    System.setProperty("IS_LOCALHOST_DEV", "true")
-
     System.setProperty("APP_NAME", "frontend")
+    System.setProperty("APP_MODE", "LOCALLY_WITHIN_IDEA")
     System.setProperty("APP_VERSION", "localhost")
-    System.setProperty("IDP_DISCOVERY_URL", "http://localhost:8080/openam/.well-known/openid-configuration")
-    System.setProperty("IDP_CLIENT_ID", "foo")
-    System.setProperty("IDP_ISSUER", "openam")
-    System.setProperty("DELEGATED_LOGIN_URL", "http://localhost:8082/modialogin/api/start")
-    System.setProperty("DELEGATED_REFRESH_URL", "http://localhost:8082/modialogin/api/refresh")
-    System.setProperty("AUTH_TOKEN_RESOLVER", "modia_ID_token")
     System.setProperty("CSP_REPORT_ONLY", "true")
     System.setProperty("CSP_DIRECTIVES", "default-src 'self'; script-src 'self';")
     System.setProperty("REFERRER_POLICY", "no-referrer")
-    System.setProperty("EXPOSED_PORT", "8083")
-    System.setProperty("OUTSIDE_DOCKER", "true")
     System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
     System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
     System.setProperty("REDIS_HOST", "localhost")
     System.setProperty("REDIS_PASSWORD", "password123")
-    System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
+//    System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
     System.setProperty("SECRET", "some secret")
 
     setupAzureAdEnv()

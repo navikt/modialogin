@@ -5,83 +5,28 @@ services:
       context: oidc-stub
     ports:
       - 8080:8080
-  modialogin:
-    build:
-      context: login-app
-    ports:
-      - 8082:8080
-    depends_on:
-      - oidc-stub
-    environment:
-      APP_NAME: "modialogin"
-      APP_VERSION: "localhost"
-      IDP_DISCOVERY_URL: "http://oidc-stub:8080/openam/.well-known/openid-configuration"
-      IDP_CLIENT_ID: "foo"
-      IDP_CLIENT_SECRET: "bar"
-      AUTH_TOKEN_RESOLVER: "modia_ID_token"
-      REFRESH_TOKEN_RESOLVER: "modia_refresh_token"
-      EXPOSED_PORT: "8082"
-      IS_LOCALHOST_DEV: "true"
-  frontend:
+  frontend-with-azure-ad:
     build:
       context: frontend-app
     ports:
       - 8083:8080
     depends_on:
       - oidc-stub
-      - modialogin
       - echo-server
+      - redis
     environment:
+      NAIS_CLUSTER_NAME: "dev-local"
       APP_NAME: "frontend"
+      APP_MODE: "LOCALLY_WITHIN_DOCKER"
       APP_VERSION: "localhost"
-      IDP_DISCOVERY_URL: "http://oidc-stub:8080/openam/.well-known/openid-configuration"
-      IDP_CLIENT_ID: "foo"
-      IDP_ISSUER: "openam"
-      DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
-      DELEGATED_REFRESH_URL: "http://localhost:8082/modialogin/api/refresh"
-      AUTH_TOKEN_RESOLVER: "modia_ID_token"
       # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
       CSP_REPORT_ONLY: "true"
       CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
       REFERRER_POLICY: "no-referrer"
       UNLEASH_API_URL: "http://oidc-stub:8080/unleash"
-      EXPOSED_PORT: '8083'
-      CDN_BUCKET_URL: "http://cdnstub:80/cdn/frontend/"
-      NAIS_CLUSTER_NAME: 'dev-local'
-      IS_LOCALHOST_DEV: "true"
-    volumes:
-      - ./test/nginx-env:/var/run/secrets/nais.io/vault/
-      - ./test/nginx-proxy:/nginx
-      - ./frontend-app/proxy-config/proxy-config-docker-compose.json:/proxy-config.json
-  frontend-with-azure-ad:
-    build:
-      context: frontend-app
-    ports:
-      - 8094:8080
-    depends_on:
-      - oidc-stub
-      - modialogin
-      - echo-server
-    environment:
-      APP_NAME: "frontend"
-      APP_VERSION: "localhost"
-      IDP_DISCOVERY_URL: "http://oidc-stub:8080/openam/.well-known/openid-configuration"
-      IDP_CLIENT_ID: "foo"
-      IDP_ISSUER: "openam"
-      DELEGATED_LOGIN_URL: "http://localhost:8082/modialogin/api/start"
-      DELEGATED_REFRESH_URL: "http://localhost:8082/modialogin/api/refresh"
-      AUTH_TOKEN_RESOLVER: "modia_ID_token"
-      # Just for testing, recommend omitting "CSP_REPORT_ONLY" which will default the value to "false"
-      CSP_REPORT_ONLY: "true"
-      CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
-      REFERRER_POLICY: "no-referrer"
-      COOKIE_ENCRYPTION_KEY: "some secret"
-      NAIS_CLUSTER_NAME: "dev-local"
-      IS_LOCALHOST_DEV: "true"
       # Redis configuration
       REDIS_HOST: "redis"
       REDIS_PASSWORD: "password123"
-
       # Dummy JWK randomly generated on a test startup
       AZURE_APP_CLIENT_ID: "foo"
       AZURE_APP_CLIENT_SECRET: "secret"
@@ -92,7 +37,6 @@ services:
       AZURE_OPENID_CONFIG_ISSUER: "azuread"
       AZURE_OPENID_CONFIG_JWKS_URI: "http://oidc-stub:8080/azuread/.well-known/jwks.json"
       AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: "http://oidc-stub:8080/azuread/oauth/token"
-      EXPOSED_PORT: '8094'
     volumes:
       - ./test/nginx-env:/var/run/secrets/nais.io/vault/
       - ./test/nginx-proxy:/nginx
