@@ -22,7 +22,7 @@ fun main() {
 
 fun startApplication() {
     val config = FrontendAppConfig()
-    val staticFilesRootFolder = if (!config.appMode.usingDockercompose) "./frontend-app/www" else "/www"
+    val staticFilesRootFolder = if (config.appMode == AppMode.LOCALLY_WITHIN_IDEA) "./frontend-app/www" else "/www"
     val port = config.appMode.appport()
     log.info("Starting app: $port")
 
