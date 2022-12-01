@@ -22,7 +22,9 @@ class CSPDirective(private val directives: MutableMap<Directive, MutableList<Str
                 .filter { it.isNotBlank() }
                 .associateTo(LinkedHashMap()) { directive ->
                     val words = directive.split(" ").filter { it.isNotBlank() }
-                    val type = requireNotNull(Directive.reverseLUT[words.first()])
+                    val type = requireNotNull(Directive.reverseLUT[words.first().trim()]) {
+                        "${words.first()} not found in reverseLUT"
+                    }
                     val directiveValue = words.drop(1).toMutableList()
                     type to directiveValue
                 }
@@ -43,7 +45,8 @@ class CSPDirective(private val directives: MutableMap<Directive, MutableList<Str
         PREFETCH_SRC("prefetch-src"),
         SCRIPT_SRC("script-src"),
         STYLE_SRC("style-src"),
-        WORKER_SRC("worker-src");
+        WORKER_SRC("worker-src"),
+        REPORT_URI("report-uri");
 
         companion object {
             val reverseLUT: Map<String, Directive> = Directive.values().associateBy { it.directive }
