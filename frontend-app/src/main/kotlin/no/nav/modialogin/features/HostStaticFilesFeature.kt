@@ -13,6 +13,7 @@ import no.nav.modialogin.common.FileUtils.fileRegex
 import no.nav.modialogin.common.Templating
 import no.nav.modialogin.common.TemplatingEngine
 import no.nav.modialogin.common.features.DefaultFeatures
+import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.features.templatingfeature.TemplatingFeature
 import java.io.File
 
@@ -32,6 +33,7 @@ class HostStaticFilesFeature(val config: Config) {
     fun install(application: Application) {
         val templateSources = listOfNotNull(
             Templating.EnvSource,
+            CSPFeature.NonceSource,
             if (config.unleash != null) UnleashTemplateSource.create(config.unleash) else null
         ).toTypedArray()
         val templateEngine = TemplatingEngine(*templateSources)
@@ -39,6 +41,10 @@ class HostStaticFilesFeature(val config: Config) {
         with(application) {
             val rootFolder = File(config.rootFolder)
             val tmpFolder = File("/tmp/www")
+            if (tmpFolder.exists()) {
+                tmpFolder.deleteRecursively()
+                tmpFolder.mkdirs()
+            }
             rootFolder.copyRecursively(target = tmpFolder, overwrite = true)
 
             install(IgnoreTrailingSlash)

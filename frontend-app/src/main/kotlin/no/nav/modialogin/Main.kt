@@ -9,13 +9,13 @@ import no.nav.modialogin.common.KtorServer.log
 import no.nav.modialogin.common.KtorServer.server
 import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
 import no.nav.modialogin.common.features.installNaisFeature
-import no.nav.modialogin.features.CSPFeature.applyCSPFeature
 import no.nav.modialogin.features.HostStaticFilesFeature
 import no.nav.modialogin.features.HostStaticFilesFeature.Companion.installHostStaticFilesFeature
 import no.nav.modialogin.features.ReferrerPolicyFeature.applyReferrerPolicyFeature
 import no.nav.modialogin.features.authfeature.*
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
+import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.features.oauthfeature.OAuthAuthProvider
 import no.nav.modialogin.features.oauthfeature.OAuthFeature
 import no.nav.modialogin.features.oauthfeature.OAuthFeature.Companion.installOAuthRoutes
@@ -81,8 +81,11 @@ fun startApplication() {
         }
         installDefaultFeatures()
         install(DefaultHeaders) {
-            applyCSPFeature(config.cspReportOnly, config.cspDirectives)
             applyReferrerPolicyFeature(config.referrerPolicy)
+        }
+        install(CSPFeature.Plugin) {
+            reportOnly = config.cspReportOnly
+            directive = config.cspDirectives
         }
         installNaisFeature(
             config.appName, config.appVersion, naisState,
