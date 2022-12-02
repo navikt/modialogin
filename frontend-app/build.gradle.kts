@@ -39,6 +39,8 @@ dependencies {
     implementation("redis.clients:jedis:$jedis_version")
     implementation("no.nav.common:token-client:$java_common_version")
     implementation("no.nav.personoversikt:crypto:$modia_common_version")
+    implementation("no.nav.personoversikt:ktor-utils:$modia_common_version")
+    implementation("no.nav.personoversikt:kotlin-utils:$modia_common_version")
     implementation("io.micrometer:micrometer-registry-prometheus:$prometheus_version")
     implementation("io.getunleash:unleash-client-java:$unleash_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")

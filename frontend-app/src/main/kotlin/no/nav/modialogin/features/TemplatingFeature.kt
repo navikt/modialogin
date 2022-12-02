@@ -1,4 +1,4 @@
-package no.nav.modialogin.features.templatingfeature
+package no.nav.modialogin.features
 
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -15,7 +15,7 @@ object TemplatingFeature {
         var templatingEngine: TemplatingEngine<ApplicationCall?>? = null,
     )
 
-    val Plugin = createApplicationPlugin("TemplatingPluging", ::Config) {
+    val Plugin = createApplicationPlugin("TemplatingPluging", TemplatingFeature::Config) {
         val config = this.pluginConfig
         val templateEngine = requireNotNull(config.templatingEngine) {
             "TemplateEngine must be specified"

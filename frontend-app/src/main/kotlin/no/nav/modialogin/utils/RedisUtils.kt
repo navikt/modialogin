@@ -1,22 +1,29 @@
 package no.nav.modialogin.utils
 
+import no.nav.modialogin.Logging.log
+import no.nav.personoversikt.common.utils.EnvUtils.getRequiredConfig
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 
 object RedisUtils {
-    fun <T> JedisPool.useResource(password: String, block: (Jedis) -> T): T? {
-        if (this.isClosed) {
-            KtorServer.log.error("JedisPool is closed while trying to access it")
+    private val password = getRequiredConfig("REDIS_PASSWORD")
+    private val redisPool: JedisPool by lazy {
+        JedisPool(getRequiredConfig("REDIS_HOST"), 6379)
+    }
+
+    fun <T> useRedis(block: (Jedis) -> T): T? {
+        if (redisPool.isClosed) {
+            log.error("JedisPool is closed while trying to access it")
             return null
         }
 
         return runCatching {
-            this.resource.use { redis ->
+            redisPool.resource.use { redis ->
                 redis.auth(password)
                 block(redis)
             }
         }
-            .onFailure { KtorServer.log.error("Redis-error", it) }
+            .onFailure { log.error("Redis-error", it) }
             .getOrNull()
     }
 }

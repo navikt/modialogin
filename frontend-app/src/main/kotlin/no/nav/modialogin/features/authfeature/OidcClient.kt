@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.utils.KtorServer
+import no.nav.modialogin.Logging.log
 import no.nav.modialogin.utils.*
 import no.nav.modialogin.utils.KotlinUtils.callId
 import java.net.URL
@@ -54,7 +54,7 @@ class OidcClient(val config: Config) {
     val wellKnown: WellKnownResult by lazy {
         runBlocking {
             KotlinUtils.retry(10, 2.seconds) {
-                KtorServer.log.info("Fetching oidc from ${config.wellKnownUrl}")
+                log.info("Fetching oidc from ${config.wellKnownUrl}")
                 httpClient.get(URL(config.wellKnownUrl)).body()
             }
         }

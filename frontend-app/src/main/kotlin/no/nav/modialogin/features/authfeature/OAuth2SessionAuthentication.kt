@@ -51,7 +51,7 @@ class TokenPrincipal(
     }
 }
 
-class Config {
+class Oauth2SessionAuthenticationConfig {
     var appname: String? = null
     var appmode: AppMode? = null
     var azureConfig: AzureAdConfig? = null
@@ -59,7 +59,7 @@ class Config {
     var skipWhen: ((ApplicationCall) -> Boolean)? = null
 }
 
-val Security = createApplicationPlugin("security", ::Config) {
+val OAuth2SessionAuthentication = createApplicationPlugin("security", ::Oauth2SessionAuthenticationConfig) {
     val appname = checkNotNull(pluginConfig.appname) { "appname is required" }
     val appmode = checkNotNull(pluginConfig.appmode) { "appmode is required" }
     val sessionCookieName = "${appname}_sessionid"

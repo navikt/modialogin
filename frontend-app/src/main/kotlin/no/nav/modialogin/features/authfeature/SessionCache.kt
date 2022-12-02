@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.RedisConfig
+import no.nav.modialogin.utils.CaffeineRedisCache
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 

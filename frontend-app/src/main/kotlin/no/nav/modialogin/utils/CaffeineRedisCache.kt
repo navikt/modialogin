@@ -1,4 +1,4 @@
-package no.nav.modialogin.features.authfeature
+package no.nav.modialogin.utils
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
@@ -7,8 +7,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.RedisConfig
-import no.nav.modialogin.utils.RedisUtils.useResource
-import redis.clients.jedis.JedisPool
+import no.nav.modialogin.utils.RedisUtils.useRedis
 import kotlin.time.Duration.Companion.nanoseconds
 
 class CaffeineRedisCache<KEY, VALUE>(
@@ -18,7 +17,6 @@ class CaffeineRedisCache<KEY, VALUE>(
     val valueSerializer: KSerializer<VALUE>,
 ) {
     private val ticker = Ticker.systemTicker()
-    private val redisPool = JedisPool(redisConfig.host, 6379)
     private val localCache = Caffeine
         .newBuilder()
         .expireAfter(expirationStrategy)
@@ -26,7 +24,7 @@ class CaffeineRedisCache<KEY, VALUE>(
 
     fun get(key: KEY): VALUE? {
         return localCache.get(key) {
-            val value: String? = redisPool.useResource(redisConfig.password) { redis ->
+            val value: String? = useRedis { redis ->
                 redis.get(encode(keySerializer, key))
             }
             value?.let { decode(valueSerializer, it) }
@@ -36,7 +34,7 @@ class CaffeineRedisCache<KEY, VALUE>(
     fun put(key: KEY, value: VALUE) {
         val expiry = expirationStrategy.expireAfterCreate(key, value, ticker.read()).nanoseconds
         localCache.put(key, value)
-        redisPool.useResource(redisConfig.password) { redis ->
+        useRedis { redis ->
             redis.setex(
                 encode(keySerializer, key),
                 expiry.inWholeSeconds,
@@ -46,7 +44,7 @@ class CaffeineRedisCache<KEY, VALUE>(
     }
 
     fun invalidate(key: KEY) {
-        redisPool.useResource(redisConfig.password) { redis ->
+        useRedis { redis ->
             redis.del(encode(keySerializer, key))
         }
         localCache.invalidate(key)
