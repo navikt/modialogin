@@ -1,21 +1,14 @@
 package no.nav.modialogin.features
 
 import io.getunleash.Unleash
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.modialogin.common.FileUtils.fileRegex
 import no.nav.modialogin.common.Templating
 import no.nav.modialogin.common.TemplatingEngine
-import no.nav.modialogin.common.features.DefaultFeatures
 import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.features.templatingfeature.TemplatingFeature
-import java.io.File
 
 class HostStaticFilesFeature(val config: Config) {
     companion object {
@@ -39,43 +32,20 @@ class HostStaticFilesFeature(val config: Config) {
         val templateEngine = TemplatingEngine(*templateSources)
 
         with(application) {
-            val rootFolder = File(config.rootFolder)
-            val tmpFolder = File("/tmp/www")
-            if (tmpFolder.exists()) {
-                tmpFolder.deleteRecursively()
-                tmpFolder.mkdirs()
-            }
-            rootFolder.copyRecursively(target = tmpFolder, overwrite = true)
-
             install(IgnoreTrailingSlash)
-            install(StatusPages) {
-                status(HttpStatusCode.NotFound) { call, _ ->
-                    if (!call.isRequestForFile()) {
-                        call.response.status(HttpStatusCode.OK)
-                        call.respondFile(File(tmpFolder, "index.html"))
-                    }
-                }
-
-                DefaultFeatures.statusPageConfig(this)
-            }
-
             install(TemplatingFeature.Plugin) {
                 templatingEngine = templateEngine
             }
             routing {
-                authenticate {
-                    static(config.appname) {
+                route(config.appname) {
+                    authenticate {
                         install(TemplatingFeature.EnableRouteTransform)
-                        staticRootFolder = File("/tmp/www")
-                        files(".")
-                        default("index.html")
+                        singlePageApplication {
+                            react(config.rootFolder)
+                        }
                     }
                 }
             }
         }
-    }
-    private fun ApplicationCall.isRequestForFile(): Boolean {
-        val uri = this.request.uri
-        return fileRegex.containsMatchIn(uri)
     }
 }

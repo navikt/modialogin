@@ -19,7 +19,7 @@ fun main() {
     System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
     System.setProperty("REDIS_HOST", "localhost")
     System.setProperty("REDIS_PASSWORD", "password123")
-//    System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
+    System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
     System.setProperty("SECRET", "some secret")
 
     setupAzureAdEnv()
