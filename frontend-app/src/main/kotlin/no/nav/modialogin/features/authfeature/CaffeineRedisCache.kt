@@ -7,7 +7,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.RedisConfig
-import no.nav.modialogin.RedisUtils.useResource
+import no.nav.modialogin.utils.RedisUtils.useResource
 import redis.clients.jedis.JedisPool
 import kotlin.time.Duration.Companion.nanoseconds
 

@@ -5,10 +5,11 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.routing.*
-import no.nav.modialogin.common.Templating
-import no.nav.modialogin.common.TemplatingEngine
+import no.nav.modialogin.utils.Templating
+import no.nav.modialogin.utils.TemplatingEngine
 import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.features.templatingfeature.TemplatingFeature
+import no.nav.modialogin.utils.UnleashTemplateSource
 
 class HostStaticFilesFeature(val config: Config) {
     companion object {

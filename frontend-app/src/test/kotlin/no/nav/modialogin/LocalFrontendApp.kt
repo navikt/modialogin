@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables
-import no.nav.modialogin.auth.AzureAdConfig
 import java.util.*
 
 fun main() {

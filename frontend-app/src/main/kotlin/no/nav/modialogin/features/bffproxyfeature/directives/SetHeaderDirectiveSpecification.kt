@@ -1,7 +1,7 @@
 package no.nav.modialogin.features.bffproxyfeature.directives
 
-import no.nav.modialogin.common.KotlinUtils.cutoff
-import no.nav.modialogin.common.Templating
+import no.nav.modialogin.utils.KotlinUtils.cutoff
+import no.nav.modialogin.utils.Templating
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
 

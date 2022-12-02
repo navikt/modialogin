@@ -14,9 +14,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.modialogin.common.*
+import no.nav.modialogin.utils.KtorServer
 import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.features.templatingfeature.TemplatingFeature
+import no.nav.modialogin.utils.*
 import java.io.File
 
 

@@ -1,4 +1,4 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import io.ktor.client.*
 import io.ktor.client.engine.*

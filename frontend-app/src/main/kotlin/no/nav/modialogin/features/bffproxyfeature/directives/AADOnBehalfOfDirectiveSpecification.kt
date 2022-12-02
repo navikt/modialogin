@@ -10,9 +10,9 @@ import no.nav.common.token_client.cache.CaffeineTokenCache
 import no.nav.common.token_client.cache.TokenCache
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
-import no.nav.modialogin.common.KotlinUtils.getProperty
-import no.nav.modialogin.common.KotlinUtils.requireProperty
-import no.nav.modialogin.common.Templating
+import no.nav.modialogin.utils.KotlinUtils.getProperty
+import no.nav.modialogin.utils.KotlinUtils.requireProperty
+import no.nav.modialogin.utils.Templating
 import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache

@@ -1,4 +1,4 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import kotlinx.coroutines.delay
 import org.slf4j.MDC

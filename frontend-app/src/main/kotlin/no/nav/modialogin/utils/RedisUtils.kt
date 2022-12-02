@@ -1,6 +1,5 @@
-package no.nav.modialogin
+package no.nav.modialogin.utils
 
-import no.nav.modialogin.common.KtorServer
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 

@@ -4,7 +4,7 @@ import com.nimbusds.jwt.JWT
 import no.nav.common.token_client.cache.TokenCache
 import no.nav.common.token_client.utils.TokenUtils
 import no.nav.common.token_client.utils.TokenUtils.expiresWithin
-import no.nav.modialogin.RedisUtils.useResource
+import no.nav.modialogin.utils.RedisUtils.useResource
 import redis.clients.jedis.JedisPool
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.minutes

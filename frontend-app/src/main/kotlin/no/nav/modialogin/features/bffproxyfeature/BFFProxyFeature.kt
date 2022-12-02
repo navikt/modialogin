@@ -17,9 +17,9 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.common.KotlinUtils
-import no.nav.modialogin.common.KtorServer.log
-import no.nav.modialogin.common.Templating
+import no.nav.modialogin.utils.KotlinUtils
+import no.nav.modialogin.utils.KtorServer.log
+import no.nav.modialogin.utils.Templating
 import java.net.URL
 
 object BFFProxyFeature {

@@ -3,7 +3,7 @@ package no.nav.modialogin.features.bffproxyfeature
 import io.ktor.client.request.*
 import io.ktor.server.application.*
 import io.ktor.util.pipeline.*
-import no.nav.modialogin.common.KtorServer
+import no.nav.modialogin.utils.KtorServer
 import no.nav.modialogin.features.bffproxyfeature.directives.AADOnBehalfOfDirectiveSpecification
 import no.nav.modialogin.features.bffproxyfeature.directives.RespondDirectiveSpecification
 import no.nav.modialogin.features.bffproxyfeature.directives.SetHeaderDirectiveSpecification

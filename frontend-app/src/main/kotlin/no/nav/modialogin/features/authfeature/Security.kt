@@ -23,8 +23,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import no.nav.modialogin.AppMode
 import no.nav.modialogin.RedisConfig
-import no.nav.modialogin.auth.AzureAdConfig
-import no.nav.modialogin.auth.OidcClient
+import no.nav.modialogin.AzureAdConfig
 import java.net.URL
 import java.security.interfaces.RSAPublicKey
 

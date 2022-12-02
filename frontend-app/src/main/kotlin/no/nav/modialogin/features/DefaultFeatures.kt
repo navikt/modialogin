@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.features
 
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -10,8 +10,8 @@ import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import no.nav.modialogin.common.KotlinUtils.callIdProperty
-import no.nav.modialogin.common.KtorServer
+import no.nav.modialogin.utils.KotlinUtils.callIdProperty
+import no.nav.modialogin.utils.KtorServer
 import org.slf4j.event.Level
 import java.util.*
 
@@ -31,7 +31,7 @@ object DefaultFeatures {
         }
         install(CallLogging) {
             level = Level.INFO
-            format(::logFormat)
+            format(DefaultFeatures::logFormat)
             filter { call -> call.request.path().contains("/internal/").not() }
             callIdMdc(callIdProperty)
         }

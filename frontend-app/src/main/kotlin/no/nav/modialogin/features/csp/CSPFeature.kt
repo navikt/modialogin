@@ -5,7 +5,7 @@ import io.ktor.server.application.hooks.*
 import io.ktor.server.response.*
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
-import no.nav.modialogin.common.TemplatingEngine
+import no.nav.modialogin.utils.TemplatingEngine
 
 object CSPFeature {
     private val cspRequestNonceKey = AttributeKey<CSPNonceHolder>("templating.feature.csp.requested.nonces")

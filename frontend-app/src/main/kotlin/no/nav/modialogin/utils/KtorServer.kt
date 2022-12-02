@@ -1,10 +1,8 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.netty.handler.codec.http.HttpObjectDecoder
-import io.netty.handler.codec.http.HttpServerCodec
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

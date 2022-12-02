@@ -1,4 +1,4 @@
-package no.nav.modialogin.common.features
+package no.nav.modialogin.features
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -9,7 +9,7 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.prometheus.client.CollectorRegistry
-import no.nav.modialogin.common.NaisState
+import no.nav.modialogin.utils.NaisState
 
 object Metrics {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM)
