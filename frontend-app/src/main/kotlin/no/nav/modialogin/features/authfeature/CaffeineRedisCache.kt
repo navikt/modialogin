@@ -7,6 +7,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.RedisConfig
+import no.nav.modialogin.RedisUtils.useResource
 import redis.clients.jedis.JedisPool
 import kotlin.time.Duration.Companion.nanoseconds
 
@@ -25,8 +26,7 @@ class CaffeineRedisCache<KEY, VALUE>(
 
     fun get(key: KEY): VALUE? {
         return localCache.get(key) {
-            val value: String? = redisPool.resource.use { redis ->
-                redis.auth(redisConfig.password)
+            val value: String? = redisPool.useResource(redisConfig.password) { redis ->
                 redis.get(encode(keySerializer, key))
             }
             value?.let { decode(valueSerializer, it) }
@@ -34,10 +34,9 @@ class CaffeineRedisCache<KEY, VALUE>(
     }
 
     fun put(key: KEY, value: VALUE) {
+        val expiry = expirationStrategy.expireAfterCreate(key, value, ticker.read()).nanoseconds
         localCache.put(key, value)
-        redisPool.resource.use { redis ->
-            val expiry = expirationStrategy.expireAfterCreate(key, value, ticker.read()).nanoseconds
-            redis.auth(redisConfig.password)
+        redisPool.useResource(redisConfig.password) { redis ->
             redis.setex(
                 encode(keySerializer, key),
                 expiry.inWholeSeconds,
@@ -47,8 +46,7 @@ class CaffeineRedisCache<KEY, VALUE>(
     }
 
     fun invalidate(key: KEY) {
-        redisPool.resource.use { redis ->
-            redis.auth(redisConfig.password)
+        redisPool.useResource(redisConfig.password) { redis ->
             redis.del(encode(keySerializer, key))
         }
         localCache.invalidate(key)

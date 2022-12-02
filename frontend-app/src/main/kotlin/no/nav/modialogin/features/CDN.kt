@@ -8,6 +8,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -44,11 +45,12 @@ fun Application.staticFilesFromCDN(
 
     routing {
         route(contextpath) {
-            install(TemplatingFeature.EnableRouteTransform)
-            get("{$pathParameterName...}") {
-                val relativePath = call.parameters.getAll(pathParameterName)?.joinToString(File.separator) ?: return@get
-                call.respondWithFile(cdnUrl, relativePath)
-
+            authenticate {
+                install(TemplatingFeature.EnableRouteTransform)
+                get("{$pathParameterName...}") {
+                    val relativePath = call.parameters.getAll(pathParameterName)?.joinToString(File.separator) ?: return@get
+                    call.respondWithFile(cdnUrl, relativePath)
+                }
             }
         }
     }

@@ -1,7 +1,10 @@
 package no.nav.modialogin.features.bffproxyfeature.directives
 
+import io.ktor.http.*
 import io.ktor.server.auth.*
+import io.ktor.server.response.*
 import io.prometheus.client.Histogram
+import kotlinx.coroutines.runBlocking
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
 import no.nav.common.token_client.cache.CaffeineTokenCache
 import no.nav.common.token_client.cache.TokenCache
@@ -54,12 +57,18 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
                 "Cannot proxy call with OBO-flow without principals"
             }
 
-            val oboToken: String = oboExchangeTimer.time(Callable {
-                aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
-            })
+            try {
+                val oboToken: String = oboExchangeTimer.time(Callable {
+                    aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
+                })
 
-            this.headers["Cookie"] = ""
-            this.headers["Authorization"] = "Bearer $oboToken"
+                this.headers["Cookie"] = ""
+                this.headers["Authorization"] = "Bearer $oboToken"
+            } catch (e: Throwable) {
+                runBlocking {
+                    call.respond(status = HttpStatusCode.InternalServerError, "AADOnBehalfOfDirectiveSpecification failed: ${e.message ?: e.localizedMessage}")
+                }
+            }
         }
     }
 

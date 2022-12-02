@@ -11,20 +11,11 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import no.nav.modialogin.common.KotlinUtils.callIdProperty
-import no.nav.modialogin.common.KtorServer.log
+import no.nav.modialogin.common.KtorServer
 import org.slf4j.event.Level
 import java.util.*
 
 object DefaultFeatures {
-    val statusPageConfig: StatusPagesConfig.() -> Unit = {
-        exception<Throwable> { call, cause ->
-            val message = cause.message ?: cause.localizedMessage
-            log.error("Unhandled exception:", cause)
-            call.respond(HttpStatusCode.InternalServerError, message)
-            throw cause
-        }
-    }
-
     fun Application.installDefaultFeatures() {
         install(ContentNegotiation) {
             json()
@@ -43,6 +34,14 @@ object DefaultFeatures {
             format(::logFormat)
             filter { call -> call.request.path().contains("/internal/").not() }
             callIdMdc(callIdProperty)
+        }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                val message = cause.message ?: cause.localizedMessage
+                KtorServer.log.error("Unhandled exception:", cause)
+                call.respond(HttpStatusCode.InternalServerError, message)
+                throw cause
+            }
         }
     }
 
