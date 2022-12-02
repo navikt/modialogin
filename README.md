@@ -1,17 +1,19 @@
 # Modialogin mono-repo
 
 Dette repoet inneholder to artifakter:
-- login-app
-- frontend-image
+- frontend-app
 
-Login-app deployes automatisk som modialogin, men kan også deployes under ett annet navn om ønskelig. [Se dokumentasjon](login-app/README.md)
 
-Frontend-image er ett tilhørende docker-image som brukes login-app for innlogging av bruker. [Se dokumentasjon](frontend-image/README.md)
+Frontend-app er ett tilhørende docker-image som håndterer innlogging av bruker. [Se dokumentasjon](frontend-app/README.md)
 
 
 ## Kjøre lokal
-`MainTest.kt` kjøres opp med mock-konfigurasjon, og krever at `OidcStub.kt` er startet og kjører på `localhost:8081`.
-Om man ønsker å overstyre noen av mock-verdiene, kan dette gjøres vha `System.setProperty`.
+1. Start tredjeparts tjenester ved å kjøre `make start-idea`
+2. Start `LocalOidcStub.kt`
+3. Start `LocalFrontendApp.kt`
+4. Gå til http://localhost:8083/frontend
+
+Alternativt kan man starte alt vha docker-compose ved å kjøre `make build start-silent`, og `make stop` for å stoppe alle tjenestene.
 
 ## Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan rettes mot:

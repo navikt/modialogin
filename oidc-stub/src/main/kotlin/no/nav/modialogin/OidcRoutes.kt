@@ -72,11 +72,12 @@ fun Application.oidc(
                 val state = requireNotNull(call.parameters["state"])
                 val nonce = call.parameters["nonce"]
                 val code = UUID.randomUUID().toString()
+                val queryParamDelimiter = if (redirectUri.contains("?")) "&" else "?"
                 lastNonce = nonce
 
                 call.respondRedirect(
                     permanent = false,
-                    url = "$redirectUri?code=$code&state=$state"
+                    url = "$redirectUri${queryParamDelimiter}code=$code&state=$state"
                 )
             }
 
@@ -85,7 +86,7 @@ fun Application.oidc(
                 if (supportOnBehalfOf && params?.get("requested_token_use") == "on_behalf_of") {
                     val claimset = JWTClaimsSet
                         .Builder()
-                        .expirationTime(Date(System.currentTimeMillis() + 10_000))
+                        .expirationTime(Date(System.currentTimeMillis() + 600_000))
                         .build()
                     val accessToken = PlainJWT(claimset).serialize()
 

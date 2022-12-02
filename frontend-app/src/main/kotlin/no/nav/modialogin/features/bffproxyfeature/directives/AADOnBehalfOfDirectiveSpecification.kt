@@ -1,15 +1,21 @@
 package no.nav.modialogin.features.bffproxyfeature.directives
 
+import io.ktor.http.*
 import io.ktor.server.auth.*
+import io.ktor.server.response.*
 import io.prometheus.client.Histogram
+import kotlinx.coroutines.runBlocking
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
+import no.nav.common.token_client.cache.CaffeineTokenCache
+import no.nav.common.token_client.cache.TokenCache
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables.*
+import no.nav.modialogin.common.KotlinUtils.getProperty
 import no.nav.modialogin.common.KotlinUtils.requireProperty
 import no.nav.modialogin.common.Templating
-import no.nav.modialogin.features.authfeature.AuthFilterPrincipals
-import no.nav.modialogin.features.authfeature.AzureAdAuthProvider
+import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
+import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
 import java.util.concurrent.Callable
 
@@ -36,8 +42,10 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
             .withClientId(requireProperty(AZURE_APP_CLIENT_ID))
             .withPrivateJwk(requireProperty(AZURE_APP_JWK))
             .withTokenEndpointUrl(requireProperty(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
+            .withCache(wrapWithRedisCacheIfPresent(CaffeineTokenCache()))
             .buildOnBehalfOfTokenClient()
     }
+
     override fun canHandle(directive: String): Boolean {
         return regexp.matches(directive)
     }
@@ -45,19 +53,22 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
     override fun createHandler(directive: String): RequestDirectiveHandler {
         return { call ->
             val lexed = lex(Templating.replaceVariableReferences(directive, call))
-            val principal = requireNotNull(call.principal<AuthFilterPrincipals>()) {
+            val principal = requireNotNull(call.principal<TokenPrincipal>()) {
                 "Cannot proxy call with OBO-flow without principals"
             }
-            val token = requireNotNull(principal.principals.find { it.name == AzureAdAuthProvider }?.token) {
-                "Cannot proxy call with OBO-flow without AzureAdAuthProvider"
+
+            try {
+                val oboToken: String = oboExchangeTimer.time(Callable {
+                    aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
+                })
+
+                this.headers["Cookie"] = ""
+                this.headers["Authorization"] = "Bearer $oboToken"
+            } catch (e: Throwable) {
+                runBlocking {
+                    call.respond(status = HttpStatusCode.InternalServerError, "AADOnBehalfOfDirectiveSpecification failed: ${e.message ?: e.localizedMessage}")
+                }
             }
-
-            val oboToken: String = oboExchangeTimer.time(Callable {
-                aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, token)
-            })
-
-            this.headers["Cookie"] = ""
-            this.headers["Authorization"] = "Bearer $oboToken"
         }
     }
 
@@ -70,5 +81,18 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
         val match = requireNotNull(regexp.matchEntire(directive))
         val group = match.groupValues.drop(1)
         return Lexed(group[0], group[1], group[2])
+    }
+
+    private fun wrapWithRedisCacheIfPresent(cache: TokenCache): TokenCache {
+        val url: String = getProperty("REDIS_HOST") ?: return cache
+        val password: String = getProperty("REDIS_PASSWORD") ?: return cache
+
+        return RedisTokenCache(
+            underlying = cache,
+            config = RedisTokenCache.Config(
+                host = url,
+                password = password,
+            )
+        )
     }
 }

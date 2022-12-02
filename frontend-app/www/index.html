@@ -41,7 +41,7 @@ COPY build /www
 </ul>
 </p>
 </body>
-<script>
+<script nonce="$csp{script-src:featuretoggle}">
     const injectedFt = Boolean("$unleash{feature3}");
     document.getElementById("injecthere").innerText = injectedFt ? 'Injected was true' : 'Injected was false';
 </script>
