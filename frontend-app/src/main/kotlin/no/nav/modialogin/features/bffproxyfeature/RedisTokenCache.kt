@@ -4,6 +4,7 @@ import com.nimbusds.jwt.JWT
 import no.nav.common.token_client.cache.TokenCache
 import no.nav.common.token_client.utils.TokenUtils
 import no.nav.common.token_client.utils.TokenUtils.expiresWithin
+import no.nav.modialogin.RedisUtils.useResource
 import redis.clients.jedis.JedisPool
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.minutes
@@ -27,18 +28,17 @@ class RedisTokenCache(
         return underlying.getFromCacheOrTryProvider(cacheKey) {
             // Normally it would exchange tokens here.
             // But first we check if we can get it from redis ;)
-            pool.resource.use {redis ->
-                redis.auth(config.password)
-                val token = redis.get(cacheKey)
-                val jwt: JWT? = token?.let(TokenUtils::parseJwtToken)
-                if (token == null || jwt == null || expiresWithin(jwt, DEFAULT_EXPIRE_BEFORE_REFRESH_MS)) {
-                    // Passthrough call to original tokenProvider, which will do the token exchange
-                    val newToken = tokenProvider.get()
+            val token = pool.useResource(config.password) { redis -> redis.get(cacheKey) }
+            val jwt: JWT? = token?.let(TokenUtils::parseJwtToken)
+            if (jwt == null || expiresWithin(jwt, DEFAULT_EXPIRE_BEFORE_REFRESH_MS)) {
+                // Passthrough call to original tokenProvider, which will do the token exchange
+                val newToken = tokenProvider.get()
+                pool.useResource(config.password) { redis ->
                     redis.setex(cacheKey, DEFAULT_EXPIRE_AFTER_WRITE, newToken)
-                    newToken
-                } else {
-                    token
                 }
+                newToken
+            } else {
+                token
             }
         }
     }
