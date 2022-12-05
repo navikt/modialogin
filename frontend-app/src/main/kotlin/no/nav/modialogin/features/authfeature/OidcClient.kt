@@ -1,4 +1,4 @@
-package no.nav.modialogin.auth
+package no.nav.modialogin.features.authfeature
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -12,20 +12,17 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.common.*
-import no.nav.modialogin.common.KotlinUtils.callId
+import no.nav.modialogin.Logging.log
+import no.nav.modialogin.utils.*
+import no.nav.modialogin.utils.KotlinUtils.callId
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
 class OidcClient(val config: Config) {
-    sealed class Url(val url: String) {
-        class External(url: String) : Url(url)
-        class Internal(url: String) : Url(url)
-    }
     class Config(
         val clientId: String,
         val clientSecret: String,
-        val wellKnownUrl: Url
+        val wellKnownUrl: String
     )
     @Serializable
     class TokenExchangeResult(
@@ -43,9 +40,7 @@ class OidcClient(val config: Config) {
 
     val httpClient: HttpClient by lazy {
         HttpClient(Apache) {
-            if (config.wellKnownUrl is Url.External) {
-                useProxy()
-            }
+            useProxy()
             logging()
             basicAuth(config.clientId, requireNotNull(config.clientSecret))
             json()
@@ -59,8 +54,8 @@ class OidcClient(val config: Config) {
     val wellKnown: WellKnownResult by lazy {
         runBlocking {
             KotlinUtils.retry(10, 2.seconds) {
-                KtorServer.log.info("Fetching oidc from ${config.wellKnownUrl}")
-                httpClient.get(URL(config.wellKnownUrl.url)).body()
+                log.info("Fetching oidc from ${config.wellKnownUrl}")
+                httpClient.get(URL(config.wellKnownUrl)).body()
             }
         }
     }

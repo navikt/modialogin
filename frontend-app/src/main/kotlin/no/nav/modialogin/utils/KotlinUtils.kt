@@ -1,4 +1,4 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import kotlinx.coroutines.delay
 import org.slf4j.MDC
@@ -6,19 +6,6 @@ import java.util.*
 import kotlin.time.Duration
 
 object KotlinUtils {
-    fun String.cutoff(n: Int): String {
-        return if (this.length <= n) {
-            this
-        } else {
-            this.substring(0, n - 3) + "..."
-        }
-    }
-
-    fun getProperty(name: String): String? = System.getProperty(name, System.getenv(name))
-    fun requireProperty(name: String): String = requireNotNull(getProperty(name)) {
-        "'$name' was not defined"
-    }
-
     suspend fun <T> retry(numberOfTries: Int, interval: Duration, block: suspend () -> T): T {
         var attempt = 0
         var error: Throwable?
