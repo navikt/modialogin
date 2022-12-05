@@ -1,6 +1,5 @@
 package no.nav.modialogin
 
-import com.nimbusds.jose.jwk.JWK
 import io.getunleash.DefaultUnleash
 import io.getunleash.Unleash
 import io.getunleash.util.UnleashConfig
@@ -98,14 +97,13 @@ class AzureAdConfig(
     val clientId: String,
     val clientSecret: String,
     val tenantId: String,
-    appJWK: String,
+    val appJWK: String,
     preAuthorizedApps: String,
     val wellKnownUrl: String,
     val openidConfigIssuer: String,
     val openidConfigJWKSUri: String,
     val openidConfigTokenEndpoint: String,
 ) {
-    val appJWK: JWK = JWK.parse(appJWK)
     val preAuthorizedApps = Json.decodeFromString<List<PreauthorizedApp>>(preAuthorizedApps)
 
     @Serializable

@@ -8,6 +8,7 @@ import no.nav.modialogin.features.*
 import no.nav.modialogin.features.authfeature.*
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature
 import no.nav.modialogin.features.csp.CSPFeature
+import no.nav.modialogin.utils.AuthJedisPool
 import no.nav.personoversikt.common.ktor.utils.KtorServer
 import no.nav.personoversikt.common.ktor.utils.Metrics
 import no.nav.personoversikt.common.ktor.utils.Selftest
@@ -19,6 +20,7 @@ fun startApplication() {
     val config = FrontendAppConfig()
     val staticFilesRootFolder = if (config.appMode == AppMode.LOCALLY_WITHIN_IDEA) "./frontend-app/www" else "/www"
     val port = config.appMode.appport()
+    val redispool = AuthJedisPool(config.redis)
     log.info("Starting app: $port")
 
     KtorServer.create(Netty, port) {
@@ -26,6 +28,7 @@ fun startApplication() {
             appname = config.appName
             appmode = config.appMode
             azureConfig = config.azureAd
+            redis = redispool
             skipWhen = { call ->
                 val url = call.request.uri
                 val isInternal = url.contains("/${config.appName}/internal/")
@@ -71,6 +74,8 @@ fun startApplication() {
         install(BFFProxyFeature) {
             appName = config.appName
             proxyConfig = config.proxyConfig
+            azureAdConfig = config.azureAd
+            redis = redispool
         }
     }.start(wait = true)
 }

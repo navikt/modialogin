@@ -8,7 +8,7 @@ import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.ResponseDirectiveHandler
 import no.nav.personoversikt.common.utils.StringUtils.cutoff
 
-object RespondDirectiveSpecification : BFFProxy.ResponseDirectiveSpecification {
+class RespondDirectiveSpecification : BFFProxy.ResponseDirectiveSpecification {
     private val regexp = Regex("RESPOND (.*?) '(.*?)'")
     private data class Lexed(val code: HttpStatusCode, val body: String)
     override fun canHandle(directive: String): Boolean {

@@ -16,21 +16,46 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.serializer
+import no.nav.modialogin.AzureAdConfig
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.ProxyConfig
+import no.nav.modialogin.features.bffproxyfeature.directives.AADOnBehalfOfDirectiveSpecification
+import no.nav.modialogin.features.bffproxyfeature.directives.RespondDirectiveSpecification
+import no.nav.modialogin.features.bffproxyfeature.directives.SetHeaderDirectiveSpecification
+import no.nav.modialogin.persistence.RedisPersistence
+import no.nav.modialogin.utils.AuthJedisPool
 import no.nav.modialogin.utils.KotlinUtils
 import no.nav.modialogin.utils.Templating
 import java.net.URL
 
 class BFFProxyFeatureConfig(
     var appName: String = "",
-    var proxyConfig: List<ProxyConfig> = emptyList()
+    var proxyConfig: List<ProxyConfig> = emptyList(),
+    var azureAdConfig: AzureAdConfig? = null,
+    var redis: AuthJedisPool? = null,
 )
 
 val BFFProxyFeature = createApplicationPlugin("bff-proxy", ::BFFProxyFeatureConfig) {
     val config = pluginConfig
+    val azureAdConfig = requireNotNull(config.azureAdConfig) { "azureAdConfig is required" }
+    val redis = requireNotNull(config.redis) { "redis is required" }
+    val bffproxy = BFFProxy(
+        SetHeaderDirectiveSpecification(),
+        RespondDirectiveSpecification(),
+        AADOnBehalfOfDirectiveSpecification(
+            azureAdConfig = azureAdConfig,
+            persistence = RedisPersistence(
+                scope = "aadobo",
+                redisPool = redis,
+                keySerializer = String.serializer(),
+                valueSerializer = String.serializer()
+            )
+
+        ),
+    )
+
     with(application) {
-        val bffproxy = BFFProxy(config.proxyConfig.flatMap { it.rewriteDirectives })
         routing {
             route(config.appName) {
                 config.proxyConfig.forEach { proxyConfig ->
