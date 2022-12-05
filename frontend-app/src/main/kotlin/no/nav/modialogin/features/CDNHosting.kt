@@ -14,22 +14,30 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.modialogin.utils.KtorServer
-import no.nav.modialogin.features.csp.CSPFeature
-import no.nav.modialogin.features.templatingfeature.TemplatingFeature
+import no.nav.modialogin.Logging.log
+import no.nav.modialogin.features.csp.CSPNonceSource
 import no.nav.modialogin.utils.*
 import java.io.File
 
 
 private const val pathParameterName = "static-content-path-parameter"
-fun Application.staticFilesFromCDN(
-    contextpath: String,
-    cdnUrl: String,
-    unleash: Unleash? = null
-) {
+
+class CDNHostingConfig(
+    var contextpath: String = "",
+    var cdnUrl: String? = null,
+    var unleash: Unleash? = null
+)
+
+val CDNHosting = createApplicationPlugin("cdn-hosting", ::CDNHostingConfig) {
+    val contextpath = pluginConfig.contextpath
+    val cdnUrl = requireNotNull(pluginConfig.cdnUrl) {
+        "cdnUrl is required"
+    }
+    val unleash = pluginConfig.unleash
+
     val templateSources = listOfNotNull(
         Templating.EnvSource,
-        CSPFeature.NonceSource,
+        CSPNonceSource,
         if (unleash != null) UnleashTemplateSource.create(unleash) else null
     ).toTypedArray()
     val templateEngine = TemplatingEngine(*templateSources)
@@ -39,18 +47,20 @@ fun Application.staticFilesFromCDN(
         tmpDir.mkdirs()
     }
 
-    install(IgnoreTrailingSlash)
-    install(TemplatingFeature.Plugin) {
-        templatingEngine = templateEngine
-    }
+    with(application) {
+        install(IgnoreTrailingSlash)
+        install(TemplatingFeature.Plugin) {
+            templatingEngine = templateEngine
+        }
 
-    routing {
-        route(contextpath) {
-            authenticate {
-                install(TemplatingFeature.EnableRouteTransform)
-                get("{$pathParameterName...}") {
-                    val relativePath = call.parameters.getAll(pathParameterName)?.joinToString(File.separator) ?: return@get
-                    call.respondWithFile(cdnUrl, relativePath)
+        routing {
+            route(contextpath) {
+                authenticate {
+                    install(TemplatingFeature.EnableRouteTransform)
+                    get("{$pathParameterName...}") {
+                        val relativePath = call.parameters.getAll(pathParameterName)?.joinToString(File.separator) ?: return@get
+                        call.respondWithFile(cdnUrl, relativePath)
+                    }
                 }
             }
         }
@@ -84,7 +94,7 @@ private suspend fun ApplicationCall.respondWithFile(cdnUrl: String, path: String
     } else if (!file.exists()) {
         withContext(Dispatchers.IO) {
             try {
-                KtorServer.log.info("Fetching resource from $cdnUrl/$path")
+                log.info("Fetching resource from $cdnUrl/$path")
                 val response = cdnClient.get("$cdnUrl/$path")
                 if (!response.status.isSuccess()) {
                     statusMap[path] = response.status
@@ -99,7 +109,7 @@ private suspend fun ApplicationCall.respondWithFile(cdnUrl: String, path: String
                     respond(LocalFileContent(file, ContentType.defaultForFile(file)))
                 }
             } catch (e: Throwable) {
-                KtorServer.log.error("Error while fetching $path from CDN", e)
+                log.error("Error while fetching $path from CDN", e)
                 respond(status = HttpStatusCode.InternalServerError, e.message ?: "Unknown error")
             }
         }

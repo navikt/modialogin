@@ -7,43 +7,37 @@ import io.ktor.server.http.content.*
 import io.ktor.server.routing.*
 import no.nav.modialogin.utils.Templating
 import no.nav.modialogin.utils.TemplatingEngine
-import no.nav.modialogin.features.csp.CSPFeature
-import no.nav.modialogin.features.templatingfeature.TemplatingFeature
+import no.nav.modialogin.features.csp.CSPNonceSource
 import no.nav.modialogin.utils.UnleashTemplateSource
 
-class HostStaticFilesFeature(val config: Config) {
-    companion object {
-        fun Application.installHostStaticFilesFeature(config: Config) {
-            HostStaticFilesFeature(config).install(this)
+class StaticFileHostingConfig(
+    var contextpath: String = "",
+    var rootFolder: String = "/",
+    var unleash: Unleash? = null
+)
+val StaticFileHosting = createApplicationPlugin("static-file-hosting", ::StaticFileHostingConfig) {
+    val context = pluginConfig.contextpath
+    val rootFolder = pluginConfig.rootFolder
+    val unleash = pluginConfig.unleash
+
+    val templateSources = listOfNotNull(
+        Templating.EnvSource,
+        CSPNonceSource,
+        if (unleash != null) UnleashTemplateSource.create(unleash) else null
+    ).toTypedArray()
+    val templateEngine = TemplatingEngine(*templateSources)
+
+    with(application) {
+        install(IgnoreTrailingSlash)
+        install(TemplatingFeature.Plugin) {
+            templatingEngine = templateEngine
         }
-    }
-
-    class Config(
-        val appname: String,
-        val rootFolder: String = "/",
-        val unleash: Unleash? = null
-    )
-
-    fun install(application: Application) {
-        val templateSources = listOfNotNull(
-            Templating.EnvSource,
-            CSPFeature.NonceSource,
-            if (config.unleash != null) UnleashTemplateSource.create(config.unleash) else null
-        ).toTypedArray()
-        val templateEngine = TemplatingEngine(*templateSources)
-
-        with(application) {
-            install(IgnoreTrailingSlash)
-            install(TemplatingFeature.Plugin) {
-                templatingEngine = templateEngine
-            }
-            routing {
-                route(config.appname) {
-                    authenticate {
-                        install(TemplatingFeature.EnableRouteTransform)
-                        singlePageApplication {
-                            react(config.rootFolder)
-                        }
+        routing {
+            route(context) {
+                authenticate {
+                    install(TemplatingFeature.EnableRouteTransform)
+                    singlePageApplication {
+                        react(rootFolder)
                     }
                 }
             }

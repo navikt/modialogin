@@ -13,7 +13,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import io.ktor.util.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -22,10 +21,10 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import no.nav.modialogin.AppMode
-import no.nav.modialogin.RedisConfig
 import no.nav.modialogin.AzureAdConfig
 import java.net.URL
 import java.security.interfaces.RSAPublicKey
+import java.util.UUID
 
 typealias SessionId = String
 
@@ -51,28 +50,23 @@ class TokenPrincipal(
     }
 }
 
-class Config {
+class Oauth2SessionAuthenticationConfig {
     var appname: String? = null
     var appmode: AppMode? = null
     var azureConfig: AzureAdConfig? = null
-    var redisConfig: RedisConfig? = null
     var skipWhen: ((ApplicationCall) -> Boolean)? = null
 }
 
-val Security = createApplicationPlugin("security", ::Config) {
+val OAuth2SessionAuthentication = createApplicationPlugin("security", ::Oauth2SessionAuthenticationConfig) {
     val appname = checkNotNull(pluginConfig.appname) { "appname is required" }
     val appmode = checkNotNull(pluginConfig.appmode) { "appmode is required" }
     val sessionCookieName = "${appname}_sessionid"
     val callbackCookieName = "${appname}_callback"
     val azureConfig = checkNotNull(pluginConfig.azureConfig) { "azureConfig is required" }
-    val redisConfig = checkNotNull(pluginConfig.redisConfig) { "redisConfig is required" }
     val skipWhenPredicate = pluginConfig.skipWhen
     val oidcClient = OidcClient(azureConfig.toOidcClientConfig())
     val oidcWellknown : OidcClient.WellKnownResult by lazy { oidcClient.wellKnown }
-    val cache = SessionCache(
-        redisConfig = redisConfig,
-        oidcClient = oidcClient
-    )
+    val cache = SessionCache(oidcClient)
     val jwkProvider = JwkProviderBuilder(URL(azureConfig.openidConfigJWKSUri))
         .cached(true)
         .rateLimited(true)
@@ -159,7 +153,7 @@ val Security = createApplicationPlugin("security", ::Config) {
                             if (oauthPrincipal == null) {
                                 call.respond(status = HttpStatusCode.BadRequest, "No OAuth principal found")
                             } else {
-                                val sessionId = GenerateOnlyNonceManager.newNonce()
+                                val sessionId = UUID.randomUUID().toString()
                                 val accessToken = JWT.decode(oauthPrincipal.accessToken)
                                 verifyAccessToken(jwkProvider, accessToken, azureConfig, oidcWellknown)
 

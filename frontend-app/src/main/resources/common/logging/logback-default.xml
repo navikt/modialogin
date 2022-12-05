@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<included>
-    <include resource="no/nav/modialogin/common/logging/logback-stdout-json.xml"/>
-    <include resource="no/nav/modialogin/common/logging/logback-securelogs.xml"/>
-</included>
