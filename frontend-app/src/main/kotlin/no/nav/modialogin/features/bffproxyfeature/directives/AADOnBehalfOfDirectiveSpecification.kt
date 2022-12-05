@@ -5,6 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.prometheus.client.Histogram
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.builtins.serializer
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
 import no.nav.common.token_client.cache.CaffeineTokenCache
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
@@ -14,6 +15,8 @@ import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
+import no.nav.modialogin.persistence.RedisPersistence
+import no.nav.modialogin.utils.RedisUtils
 import no.nav.personoversikt.common.utils.EnvUtils.getRequiredConfig
 import java.util.concurrent.Callable
 
@@ -35,12 +38,18 @@ object AADOnBehalfOfDirectiveSpecification : BFFProxy.RequestDirectiveSpecificat
     }
 
     override fun initialize() {
+        val persistence = RedisPersistence(
+            scope = "aadobo",
+            redisPool = RedisUtils.pool,
+            keySerializer = String.serializer(),
+            valueSerializer = String.serializer()
+        )
         aadOboTokenClient = AzureAdTokenClientBuilder.builder()
             // Reimplement `withNaisDefaults` to support reading system properties
             .withClientId(getRequiredConfig(AZURE_APP_CLIENT_ID))
             .withPrivateJwk(getRequiredConfig(AZURE_APP_JWK))
             .withTokenEndpointUrl(getRequiredConfig(AZURE_OPENID_CONFIG_TOKEN_ENDPOINT))
-            .withCache(RedisTokenCache(CaffeineTokenCache()))
+            .withCache(RedisTokenCache(CaffeineTokenCache(), persistence))
             .buildOnBehalfOfTokenClient()
     }
 

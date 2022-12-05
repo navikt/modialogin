@@ -1,7 +1,6 @@
 package no.nav.modialogin
 
 import io.ktor.server.application.*
-import io.ktor.server.application.*
 import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import no.nav.modialogin.Logging.log
@@ -27,7 +26,6 @@ fun startApplication() {
             appname = config.appName
             appmode = config.appMode
             azureConfig = config.azureAd
-            redisConfig = config.redis
             skipWhen = { call ->
                 val url = call.request.uri
                 val isInternal = url.contains("/${config.appName}/internal/")
