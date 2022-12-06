@@ -10,8 +10,7 @@ import no.nav.modialogin.features.authfeature.*
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature
 import no.nav.modialogin.features.csp.CSPFeature
 import no.nav.modialogin.persistence.Persistence
-import no.nav.modialogin.persistence.RedisPersistence
-import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.persistence.PersistenceFactory
 import no.nav.personoversikt.common.ktor.utils.KtorServer
 import no.nav.personoversikt.common.ktor.utils.Metrics
 import no.nav.personoversikt.common.ktor.utils.Selftest
@@ -23,17 +22,16 @@ fun startApplication() {
     val config = FrontendAppConfig()
     val staticFilesRootFolder = if (config.appMode == AppMode.LOCALLY_WITHIN_IDEA) "./frontend-app/www" else "/www"
     val port = config.appMode.appport()
-    val redisPool = AuthJedisPool(config.redis)
 
-    val sessionPersistence: Persistence<String, TokenPrincipal> = RedisPersistence(
+    val sessionPersistence: Persistence<String, TokenPrincipal> = PersistenceFactory.create(
         scope = "session",
-        redisPool = redisPool,
+        config = config,
         keySerializer = String.serializer(),
         valueSerializer = TokenPrincipal.serializer()
     )
-    val bffProxyPersistence: Persistence<String, String> = RedisPersistence(
+    val bffProxyPersistence: Persistence<String, String> = PersistenceFactory.create(
         scope = "bffproxy",
-        redisPool = redisPool,
+        config = config,
         keySerializer = String.serializer(),
         valueSerializer = String.serializer()
     )

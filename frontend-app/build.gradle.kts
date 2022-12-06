@@ -45,6 +45,8 @@ dependencies {
     implementation("io.getunleash:unleash-client-java:$unleash_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
+    implementation("no.nav:vault-jdbc:1.3.10")
+    implementation("org.flywaydb:flyway-core:9.8.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }

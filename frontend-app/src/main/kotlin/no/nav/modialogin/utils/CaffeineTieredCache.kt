@@ -17,6 +17,13 @@ class CaffeineTieredCache<KEY, VALUE>(
         .expireAfter(expirationStrategy)
         .build<KEY, VALUE>()
 
+    init {
+        runBlocking {
+            val persistedValues = persistence.dump()
+            localCache.putAll(persistedValues)
+        }
+    }
+
     suspend fun get(key: KEY): VALUE? {
         return localCache.get(key) {
             runBlocking {

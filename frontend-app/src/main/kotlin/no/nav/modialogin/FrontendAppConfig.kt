@@ -9,6 +9,8 @@ import kotlinx.serialization.json.Json
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.features.authfeature.OidcClient
+import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.personoversikt.common.utils.ConditionalUtils
 import no.nav.personoversikt.common.utils.EnvUtils.getConfig
 import no.nav.personoversikt.common.utils.EnvUtils.getRequiredConfig
 import java.io.File
@@ -30,12 +32,24 @@ class FrontendAppConfig {
             .build()
         DefaultUnleash(config)
     }
-    val redis: RedisConfig = RedisConfig(
-        host = getRequiredConfig("REDIS_HOST"),
-        password = getRequiredConfig("REDIS_PASSWORD"),
-    )
+    val redis: AuthJedisPool? = ConditionalUtils.ifNotNull(
+        getConfig("REDIS_HOST"),
+        getConfig("REDIS_PASSWORD"),
+    ) { host, password -> AuthJedisPool(host, password) }
+
+    val database: DatabaseConfig? = ConditionalUtils.ifNotNull(
+        getConfig("DATABASE_JDBC_URL"),
+        getConfig("VAULT_MOUNTPATH")
+    ) { url, mountPath -> DatabaseConfig(url, mountPath) }
+
     val cdnBucketUrl: String? = getConfig("CDN_BUCKET_URL")
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
+
+    init {
+        check(redis != null || database != null) {
+            "Could not find configuration for redis or PostgreSQL."
+        }
+    }
 
     private fun readProxyConfig(): List<ProxyConfig> {
         val file = File(proxyConfigFile)
@@ -61,23 +75,18 @@ data class ProxyConfig(
     val rewriteDirectives: List<String> = emptyList()
 )
 
-class RedisConfig(
-    val host: String,
-    val password: String,
-)
+enum class AppMode(val locally: Boolean) {
+    LOCALLY_WITHIN_DOCKER(true),
+    LOCALLY_WITHIN_IDEA(true),
+    NAIS(false);
 
-enum class AppMode(val locally: Boolean, val usingDockercompose: Boolean) {
-    LOCALLY_WITHIN_DOCKER(true, true),
-    LOCALLY_WITHIN_IDEA(true, false),
-    NAIS(false, false);
-
-    fun appport(): Int = when(this) {
+    fun appport(): Int = when (this) {
         LOCALLY_WITHIN_DOCKER -> 8080
         LOCALLY_WITHIN_IDEA -> 8083
         NAIS -> 8080
     }
 
-    fun hostport(): Int = when(this) {
+    fun hostport(): Int = when (this) {
         LOCALLY_WITHIN_DOCKER -> 8083
         LOCALLY_WITHIN_IDEA -> 8083
         NAIS -> 8080
@@ -85,7 +94,7 @@ enum class AppMode(val locally: Boolean, val usingDockercompose: Boolean) {
 
     companion object {
         operator fun invoke(appMode: String?): AppMode {
-            return when(appMode) {
+            return when (appMode) {
                 null -> NAIS
                 else -> AppMode.valueOf(appMode)
             }
@@ -147,3 +156,8 @@ class AzureAdConfig(
         }
     }
 }
+
+data class DatabaseConfig(
+    val jdbcUrl: String,
+    val vaultMountpath: String,
+)

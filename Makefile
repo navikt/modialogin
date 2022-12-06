@@ -15,7 +15,7 @@ start-silent:
 	docker compose up --build -d
 
 start-idea:
-	docker compose up -d echo-server redis cdnstub
+	docker compose up -d echo-server redis cdnstub database
 
 stop:
 	docker compose down --remove-orphans
