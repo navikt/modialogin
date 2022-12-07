@@ -2,8 +2,11 @@ package no.nav.modialogin
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
 import org.flywaydb.core.Flyway
+import java.sql.Connection
 import javax.sql.DataSource
 
 class DataSourceConfiguration(val env: FrontendAppConfig) {
@@ -19,8 +22,8 @@ class DataSourceConfiguration(val env: FrontendAppConfig) {
         config.jdbcUrl = dbConfig.jdbcUrl
         config.minimumIdle = 1
         config.maximumPoolSize = 6
-        config.connectionTimeout = 5000
-        config.maxLifetime = 60_000
+        config.connectionTimeout = 1000
+        config.maxLifetime = 20_000
 
         Logging.log.info("Creating DataSource to ${dbConfig.jdbcUrl}")
 
@@ -49,6 +52,14 @@ class DataSourceConfiguration(val env: FrontendAppConfig) {
                 }
                 .load()
                 .migrate()
+        }
+
+        suspend fun <T> DataSource.useConnection(block: (Connection) -> T): T? {
+            return withContext(Dispatchers.IO) {
+                runCatching { this@useConnection.connection.use(block) }
+                    .onFailure { Logging.log.error("Database-error", it) }
+                    .getOrNull()
+            }
         }
     }
 }

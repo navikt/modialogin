@@ -1,6 +1,7 @@
 package no.nav.modialogin.persistence
 
 import kotlinx.serialization.KSerializer
+import no.nav.modialogin.DataSourceConfiguration.Companion.useConnection
 import no.nav.modialogin.utils.Encoding.decode
 import no.nav.modialogin.utils.Encoding.encode
 import java.sql.Connection
@@ -16,7 +17,7 @@ class JdbcPersistence<KEY, VALUE>(
     private val valueSerializer: KSerializer<VALUE>,
 ) : Persistence<KEY, VALUE>(scope) {
     override suspend fun doGet(key: KEY): VALUE? {
-        val value = dataSource.connection.use { connection ->
+        val value = dataSource.useConnection { connection ->
             doGet(connection, key)
         } ?: return null
 
@@ -24,19 +25,19 @@ class JdbcPersistence<KEY, VALUE>(
     }
 
     override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
-        dataSource.connection.use {
+        dataSource.useConnection {
             doPut(it, key, value, ttl)
         }
     }
 
     override suspend fun doRemove(key: KEY) {
-        dataSource.connection.use {
+        dataSource.useConnection {
             doRemove(it, key)
         }
     }
 
     override suspend fun doClean() {
-        dataSource.connection.use {
+        dataSource.useConnection {
             doClean(it)
         }
     }
