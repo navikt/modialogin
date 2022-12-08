@@ -57,3 +57,11 @@ services:
       - ./frontend-app/www:/usr/local/apache2/htdocs/cdn/frontend
     ports:
       - 8091:80
+  database:
+    image: postgres:14.6-alpine
+    ports:
+      - 8095:5432
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: frontend # should be equal to appname

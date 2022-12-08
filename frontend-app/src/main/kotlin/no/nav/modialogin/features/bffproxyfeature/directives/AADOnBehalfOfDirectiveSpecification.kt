@@ -14,12 +14,12 @@ import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
 import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
-import no.nav.modialogin.persistence.RedisPersistence
+import no.nav.modialogin.persistence.Persistence
 import java.util.concurrent.Callable
 
 class AADOnBehalfOfDirectiveSpecification(
     azureAdConfig: AzureAdConfig,
-    persistence: RedisPersistence<String, String>
+    persistence: Persistence<String, String>
 ) : BFFProxy.RequestDirectiveSpecification {
     /**
      * Usage: SET_ON_BEHALF_OF_TOKEN <cluster> <namespace> <servicename>

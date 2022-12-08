@@ -22,7 +22,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import no.nav.modialogin.AppMode
 import no.nav.modialogin.AzureAdConfig
-import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.persistence.Persistence
 import java.net.URL
 import java.security.interfaces.RSAPublicKey
 import java.util.UUID
@@ -55,7 +55,7 @@ class Oauth2SessionAuthenticationConfig(
     var appname: String? = null,
     var appmode: AppMode? = null,
     var azureConfig: AzureAdConfig? =null,
-    var redis: AuthJedisPool? = null,
+    var persistence: Persistence<String, TokenPrincipal>? = null,
     var skipWhen: ((ApplicationCall) -> Boolean)? = null,
 )
 
@@ -65,11 +65,11 @@ val OAuth2SessionAuthentication = createApplicationPlugin("security", ::Oauth2Se
     val sessionCookieName = "${appname}_sessionid"
     val callbackCookieName = "${appname}_callback"
     val azureConfig = checkNotNull(pluginConfig.azureConfig) { "azureConfig is required" }
-    val redis = requireNotNull(pluginConfig.redis) { "redis is required" }
+    val persistence = requireNotNull(pluginConfig.persistence) { "persistence is required" }
     val skipWhenPredicate = pluginConfig.skipWhen
     val oidcClient = OidcClient(azureConfig.toOidcClientConfig())
     val oidcWellknown : OidcClient.WellKnownResult by lazy { oidcClient.wellKnown }
-    val cache = SessionCache(oidcClient, redis)
+    val cache = SessionCache(oidcClient, persistence)
     val jwkProvider = JwkProviderBuilder(URL(azureConfig.openidConfigJWKSUri))
         .cached(true)
         .rateLimited(true)

@@ -5,24 +5,17 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.util.date.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.builtins.serializer
-import no.nav.modialogin.persistence.RedisPersistence
-import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.persistence.Persistence
 import no.nav.modialogin.utils.CaffeineTieredCache
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 class SessionCache(
     private val oidcClient: OidcClient,
-    redis: AuthJedisPool,
+    persistence: Persistence<String, TokenPrincipal>
 ) {
     private val cache = CaffeineTieredCache(
-        persistence = RedisPersistence(
-            scope = "session",
-            redisPool = redis,
-            keySerializer = String.serializer(),
-            valueSerializer = TokenPrincipal.serializer()
-        ),
+        persistence = persistence,
         expirationStrategy = AccessTokenExpirationStrategy,
     )
 
