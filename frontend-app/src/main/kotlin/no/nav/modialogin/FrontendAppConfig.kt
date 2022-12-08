@@ -32,6 +32,8 @@ class FrontendAppConfig {
             .build()
         DefaultUnleash(config)
     }
+    val cdnBucketUrl: String? = getConfig("CDN_BUCKET_URL")
+
     val redis: AuthJedisPool? = ConditionalUtils.ifNotNull(
         getConfig("REDIS_HOST"),
         getConfig("REDIS_PASSWORD"),
@@ -41,8 +43,6 @@ class FrontendAppConfig {
         getConfig("DATABASE_JDBC_URL"),
         getConfig("VAULT_MOUNTPATH")
     ) { url, mountPath -> DatabaseConfig(url, mountPath) }
-
-    val cdnBucketUrl: String? = getConfig("CDN_BUCKET_URL")
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
 
     init {
