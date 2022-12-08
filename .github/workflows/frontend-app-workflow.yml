@@ -34,14 +34,13 @@ jobs:
       - name: Build
         run:  ./gradlew build
       - name: Setup test-containers
-        run: docker-compose up --build -d
+        run: make integrationtest-setup
       - name: Test
         run: |
-          sleep 10
-          docker-compose logs
-          node test/test.js
+          make integrationtest-test-redis
+          make integrationtest-test-postgresql
       - name: Teardown test-containers
-        run: docker-compose down
+        run: make integrationtest-teardown
       - name: Publish beta-image
         if: github.ref == 'refs/heads/dev'
         env:
