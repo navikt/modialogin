@@ -54,11 +54,10 @@ class DataSourceConfiguration(val env: FrontendAppConfig) {
                 .migrate()
         }
 
-        suspend fun <T> DataSource.useConnection(block: (Connection) -> T): T? {
+        suspend fun <T> DataSource.useConnection(block: (Connection) -> T): Result<T?> {
             return withContext(Dispatchers.IO) {
                 runCatching { this@useConnection.connection.use(block) }
                     .onFailure { Logging.log.error("Database-error", it) }
-                    .getOrNull()
             }
         }
     }

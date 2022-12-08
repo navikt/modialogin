@@ -1,14 +1,20 @@
 package no.nav.modialogin.persistence
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import no.nav.modialogin.DataSourceConfiguration.Companion.useConnection
 import no.nav.modialogin.utils.Encoding.decode
 import no.nav.modialogin.utils.Encoding.encode
+import no.nav.modialogin.utils.KotlinUtils.filterNotNull
+import no.nav.personoversikt.common.utils.SelftestGenerator
 import java.sql.Connection
 import java.sql.Timestamp
 import java.time.Instant
 import javax.sql.DataSource
+import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class JdbcPersistence<KEY, VALUE>(
     scope: String,
@@ -16,12 +22,19 @@ class JdbcPersistence<KEY, VALUE>(
     private val keySerializer: KSerializer<KEY>,
     private val valueSerializer: KSerializer<VALUE>,
 ) : Persistence<KEY, VALUE>(scope) {
-    override suspend fun doGet(key: KEY): VALUE? {
-        val value = dataSource.useConnection { connection ->
-            doGet(connection, key)
-        } ?: return null
+    private val selftest = SelftestGenerator.Reporter("Database", critical = false)
 
-        return decode(valueSerializer, value)
+    init {
+        fixedRateTimer("Database check", daemon = true, initialDelay = 0, period = 10.seconds.inWholeMilliseconds) {
+            runBlocking(Dispatchers.IO) { ping() }
+        }
+    }
+
+    override suspend fun doGet(key: KEY): VALUE? {
+        return dataSource.useConnection { connection -> doGet(connection, key) }
+            .filterNotNull()
+            .map { value -> decode(valueSerializer, value) }
+            .getOrNull()
     }
 
     override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
@@ -119,5 +132,13 @@ class JdbcPersistence<KEY, VALUE>(
         val stmt = connection.prepareStatement("DELETE FROM persistence where expiry < ?")
         stmt.setTimestamp(1, Timestamp.from(Instant.now()))
         stmt.execute()
+    }
+
+    private suspend fun ping() {
+        dataSource.useConnection { connection ->
+            connection.prepareStatement("SELECT * FROM persistence LIMIT 1").execute()
+        }
+            .onSuccess{ selftest.reportOk() }
+            .onFailure(selftest::reportError)
     }
 }

@@ -1,11 +1,17 @@
 package no.nav.modialogin.persistence
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import no.nav.modialogin.utils.AuthJedisPool
-import no.nav.modialogin.utils.Encoding.encode
 import no.nav.modialogin.utils.Encoding.decode
+import no.nav.modialogin.utils.Encoding.encode
+import no.nav.modialogin.utils.KotlinUtils.filterNotNull
+import no.nav.personoversikt.common.utils.SelftestGenerator
 import redis.clients.jedis.params.ScanParams
+import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class RedisPersistence<KEY, VALUE>(
     scope: String,
@@ -13,11 +19,20 @@ class RedisPersistence<KEY, VALUE>(
     private val keySerializer: KSerializer<KEY>,
     private val valueSerializer: KSerializer<VALUE>,
 ) : Persistence<KEY, VALUE>(scope) {
-    override suspend fun doGet(key: KEY): VALUE? {
-        val value: String? = redisPool.useResource {
-            it.get("$scope:${encode(keySerializer, key)}")
+    private val selftest = SelftestGenerator.Reporter("Redis", critical = false)
+
+    init {
+        fixedRateTimer("Redis check", daemon = true, initialDelay = 0, period = 10.seconds.inWholeMilliseconds) {
+            runBlocking(Dispatchers.IO) { ping() }
         }
-        return value?.let { decode(valueSerializer, it) }
+    }
+
+    override suspend fun doGet(key: KEY): VALUE? {
+        return redisPool
+            .useResource { it.get("$scope:${encode(keySerializer, key)}") }
+            .filterNotNull()
+            .map { value -> decode(valueSerializer, value) }
+            .getOrNull()
     }
 
     override suspend fun doDump(): Map<KEY, VALUE> {
@@ -33,7 +48,7 @@ class RedisPersistence<KEY, VALUE>(
 
             val values = it.mget(*keys.toTypedArray())
             keys.zip(values).toMap()
-        } ?: emptyMap()
+        }.getOrNull() ?: emptyMap()
 
         return values
             .mapKeys { decode(keySerializer, it.key) }
@@ -58,5 +73,11 @@ class RedisPersistence<KEY, VALUE>(
 
     override suspend fun doClean() {
         // Automatically done by redis
+    }
+
+    private suspend fun ping() {
+        redisPool.useResource { it.ping() }
+            .onSuccess{ selftest.reportOk() }
+            .onFailure(selftest::reportError)
     }
 }

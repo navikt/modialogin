@@ -22,6 +22,8 @@ object KotlinUtils {
         throw error ?: IllegalStateException("Retry failed without error")
     }
 
+    fun <T> Result<T?>.filterNotNull(): Result<T> = this.mapCatching { checkNotNull(it) }
+
     const val callIdProperty = "callId"
     fun callId(): String {
         return MDC.get(callIdProperty) ?: UUID.randomUUID().toString()
