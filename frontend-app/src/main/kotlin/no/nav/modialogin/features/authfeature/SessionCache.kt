@@ -7,16 +7,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.persistence.RedisPersistence
+import no.nav.modialogin.utils.AuthJedisPool
 import no.nav.modialogin.utils.CaffeineTieredCache
-import no.nav.modialogin.utils.RedisUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-class SessionCache(private val oidcClient: OidcClient) {
+class SessionCache(
+    private val oidcClient: OidcClient,
+    redis: AuthJedisPool,
+) {
     private val cache = CaffeineTieredCache(
         persistence = RedisPersistence(
             scope = "session",
-            redisPool = RedisUtils.pool,
+            redisPool = redis,
             keySerializer = String.serializer(),
             valueSerializer = TokenPrincipal.serializer()
         ),
