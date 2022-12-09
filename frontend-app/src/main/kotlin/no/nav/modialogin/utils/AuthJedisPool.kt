@@ -8,11 +8,12 @@ import redis.clients.jedis.JedisPool
 
 class AuthJedisPool(host: String, private val password: String) {
     private val pool = JedisPool(host, 6379)
-    suspend fun <T> useResource(block: (Jedis) -> T): T? {
+
+    suspend fun <T> useResource(block: (Jedis) -> T): Result<T?> {
         return withContext(Dispatchers.IO) {
             if (pool.isClosed) {
                 Logging.log.error("JedisPool is closed while trying to access it")
-                null
+                Result.failure(IllegalStateException("RedisPool is closed"))
             } else {
                 runCatching {
                     pool.resource.use {
@@ -20,9 +21,9 @@ class AuthJedisPool(host: String, private val password: String) {
                         block(it)
                     }
                 }
-                    .onFailure { Logging.log.error("Redis-error", it) }
-                    .getOrNull()
             }
+        }.onFailure {
+            Logging.log.error("Redis-error", it)
         }
     }
 }
