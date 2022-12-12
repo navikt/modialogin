@@ -6,13 +6,12 @@ import io.ktor.server.response.*
 import io.prometheus.client.Histogram
 import kotlinx.coroutines.runBlocking
 import no.nav.common.token_client.builder.AzureAdTokenClientBuilder
-import no.nav.common.token_client.cache.CaffeineTokenCache
 import no.nav.common.token_client.client.OnBehalfOfTokenClient
 import no.nav.modialogin.AzureAdConfig
 import no.nav.modialogin.utils.Templating
 import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.features.bffproxyfeature.BFFProxy
-import no.nav.modialogin.features.bffproxyfeature.RedisTokenCache
+import no.nav.modialogin.features.bffproxyfeature.PersistentTokenCache
 import no.nav.modialogin.features.bffproxyfeature.RequestDirectiveHandler
 import no.nav.modialogin.persistence.Persistence
 import java.util.concurrent.Callable
@@ -32,7 +31,7 @@ class AADOnBehalfOfDirectiveSpecification(
         .withClientId(azureAdConfig.clientId)
         .withPrivateJwk(azureAdConfig.appJWK)
         .withTokenEndpointUrl(azureAdConfig.openidConfigTokenEndpoint)
-        .withCache(RedisTokenCache(CaffeineTokenCache(), persistence))
+        .withCache(PersistentTokenCache(persistence))
         .buildOnBehalfOfTokenClient()
     private val oboExchangeTimer = Histogram.build(
         "azure_ad_obo_exchange_latency_histogram",

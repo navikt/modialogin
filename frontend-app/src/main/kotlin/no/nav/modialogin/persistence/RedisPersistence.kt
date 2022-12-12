@@ -46,8 +46,12 @@ class RedisPersistence<KEY, VALUE>(
                 cursor = result.cursor
             } while (cursor != "0")
 
-            val values = it.mget(*keys.toTypedArray())
-            keys.zip(values).toMap()
+            if (keys.isEmpty()) {
+                emptyMap()
+            } else {
+                val values = it.mget(*keys.toTypedArray())
+                keys.zip(values).toMap()
+            }
         }.getOrNull() ?: emptyMap()
 
         return values

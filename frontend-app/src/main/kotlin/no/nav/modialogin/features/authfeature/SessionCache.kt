@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.modialogin.persistence.Persistence
 import no.nav.modialogin.utils.CaffeineTieredCache
+import no.nav.personoversikt.common.utils.SelftestGenerator
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -17,6 +18,7 @@ class SessionCache(
     private val cache = CaffeineTieredCache(
         persistence = persistence,
         expirationStrategy = AccessTokenExpirationStrategy,
+        selftest = SelftestGenerator.Reporter("sessioncache", false)
     )
 
     suspend fun get(key: SessionId): TokenPrincipal? {

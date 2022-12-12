@@ -4,12 +4,15 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
 import com.github.benmanes.caffeine.cache.Ticker
 import kotlinx.coroutines.runBlocking
+import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.Persistence
+import no.nav.personoversikt.common.utils.SelftestGenerator
 import kotlin.time.Duration.Companion.nanoseconds
 
 class CaffeineTieredCache<KEY, VALUE>(
-    val persistence: Persistence<KEY, VALUE>,
     val expirationStrategy: Expiry<KEY, VALUE>,
+    val persistence: Persistence<KEY, VALUE>,
+    val selftest: SelftestGenerator.Reporter,
 ) {
     private val ticker = Ticker.systemTicker()
     private val localCache = Caffeine
@@ -19,8 +22,16 @@ class CaffeineTieredCache<KEY, VALUE>(
 
     init {
         runBlocking {
-            val persistedValues = persistence.dump()
-            localCache.putAll(persistedValues)
+            log.info("Loading cached data from persistence backup for ${selftest.name}")
+            try {
+                val persistedValues = persistence.dump()
+                localCache.putAll(persistedValues)
+                selftest.reportOk()
+                log.info("Cached data loaded for ${selftest.name}")
+            } catch (e: Throwable) {
+                log.error("Failed to load cached data for ${selftest.name}")
+                selftest.reportError(e)
+            }
         }
     }
 
