@@ -1,13 +1,13 @@
-package no.nav.modialogin.features.templatingfeature
+package no.nav.modialogin.features
 
+import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.modialogin.common.FileUtils.processableContentTypes
-import no.nav.modialogin.common.TemplatingEngine
+import no.nav.modialogin.utils.TemplatingEngine
 
 object TemplatingFeature {
     private val enabledForRoute = AttributeKey<Boolean>("templating.feature.route.transform.enabled")
@@ -15,7 +15,7 @@ object TemplatingFeature {
         var templatingEngine: TemplatingEngine<ApplicationCall?>? = null,
     )
 
-    val Plugin = createApplicationPlugin("TemplatingPluging", ::Config) {
+    val Plugin = createApplicationPlugin("TemplatingPluging", TemplatingFeature::Config) {
         val config = this.pluginConfig
         val templateEngine = requireNotNull(config.templatingEngine) {
             "TemplateEngine must be specified"
@@ -56,4 +56,11 @@ object TemplatingFeature {
             append(readUTF8Line() ?: "")
         }
     }
+
+    private val processableContentTypes = arrayOf(
+        ContentType.Text.Any,
+        ContentType.Application.JavaScript,
+        ContentType.Application.Json,
+        ContentType.Application.Xml,
+    )
 }

@@ -18,7 +18,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.*
 
-val TOKEN_LIFESPAN = 10 * 60 * 60 * 1000
+val TOKEN_LIFESPAN = 60 * 60 * 1000
 @Serializable
 class WellKnownResult(
     @SerialName("jwks_uri") val url: String,
@@ -86,7 +86,7 @@ fun Application.oidc(
                 if (supportOnBehalfOf && params?.get("requested_token_use") == "on_behalf_of") {
                     val claimset = JWTClaimsSet
                         .Builder()
-                        .expirationTime(Date(System.currentTimeMillis() + 600_000))
+                        .expirationTime(Date(System.currentTimeMillis() + TOKEN_LIFESPAN))
                         .build()
                     val accessToken = PlainJWT(claimset).serialize()
 

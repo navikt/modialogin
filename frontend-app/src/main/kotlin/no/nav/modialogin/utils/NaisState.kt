@@ -1,4 +1,4 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 data class NaisState(
     var isAlive: Boolean = true,

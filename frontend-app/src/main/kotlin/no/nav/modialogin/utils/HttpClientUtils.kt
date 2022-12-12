@@ -1,4 +1,4 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -8,6 +8,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import no.nav.modialogin.Logging.tjenestekallLogger
 
 fun <T : HttpClientEngineConfig> HttpClientConfig<T>.basicAuth(clientId: String, clientSecret: String) {
     val basicAuthCredentials = BasicAuthCredentials(clientId, clientSecret)
@@ -41,7 +42,7 @@ fun <T : HttpClientEngineConfig> HttpClientConfig<T>.logging() {
         level = LogLevel.ALL
         logger = object : Logger {
             override fun log(message: String) {
-                KtorServer.tjenestekallLogger.info(message)
+                tjenestekallLogger.info(message)
             }
         }
     }

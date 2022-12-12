@@ -5,24 +5,23 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.util.date.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.builtins.serializer
-import no.nav.modialogin.RedisConfig
-import no.nav.modialogin.auth.OidcClient
+import no.nav.modialogin.persistence.Persistence
+import no.nav.modialogin.utils.CaffeineTieredCache
+import no.nav.personoversikt.common.utils.SelftestGenerator
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 class SessionCache(
-    redisConfig: RedisConfig,
     private val oidcClient: OidcClient,
+    persistence: Persistence<String, TokenPrincipal>
 ) {
-    val cache = CaffeineRedisCache(
-        redisConfig = redisConfig,
+    private val cache = CaffeineTieredCache(
+        persistence = persistence,
         expirationStrategy = AccessTokenExpirationStrategy,
-        keySerializer = String.serializer(),
-        valueSerializer = TokenPrincipal.serializer()
+        selftest = SelftestGenerator.Reporter("sessioncache", false)
     )
 
-    fun get(key: SessionId): TokenPrincipal? {
+    suspend fun get(key: SessionId): TokenPrincipal? {
         val value: TokenPrincipal? = cache.get(key)
         return when {
             value == null -> null
@@ -32,11 +31,11 @@ class SessionCache(
         }
     }
 
-    fun put(key: SessionId, value: TokenPrincipal) {
+    suspend fun put(key: SessionId, value: TokenPrincipal) {
         cache.put(key, value)
     }
 
-    fun refreshCache(key: SessionId, refreshToken: String): TokenPrincipal {
+    private suspend fun refreshCache(key: SessionId, refreshToken: String): TokenPrincipal {
         val newTokens = runBlocking(Dispatchers.IO) {
             oidcClient.refreshToken(refreshToken)
         }
@@ -49,7 +48,7 @@ class SessionCache(
         return newPrincipal
     }
 
-    fun invalidateCache(key: SessionId): TokenPrincipal? {
+    private suspend fun invalidateCache(key: SessionId): TokenPrincipal? {
         cache.invalidate(key)
         return null
     }

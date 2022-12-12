@@ -3,20 +3,17 @@ package no.nav.modialogin.features.bffproxyfeature
 import io.ktor.client.request.*
 import io.ktor.server.application.*
 import io.ktor.util.pipeline.*
-import no.nav.modialogin.common.KtorServer
-import no.nav.modialogin.features.bffproxyfeature.directives.AADOnBehalfOfDirectiveSpecification
-import no.nav.modialogin.features.bffproxyfeature.directives.RespondDirectiveSpecification
-import no.nav.modialogin.features.bffproxyfeature.directives.SetHeaderDirectiveSpecification
 import java.lang.StringBuilder
 
 typealias ResponseDirectiveHandler = suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 typealias RequestDirectiveHandler = HttpRequestBuilder.(ApplicationCall) -> Unit
-class BFFProxy(initializingDirectives: List<String>) {
+class BFFProxy(private val handlers: List<DirectiveSpecification>) {
+    constructor(vararg handlers: DirectiveSpecification): this(handlers.toList())
+
     enum class DirectiveSpecificationType {
         RESPONSE, REQUEST
     }
     sealed interface DirectiveSpecification {
-        fun initialize() {}
         fun canHandle(directive: String): Boolean
         fun describe(directive: String, sb: StringBuilder)
         val type: DirectiveSpecificationType
@@ -37,21 +34,6 @@ class BFFProxy(initializingDirectives: List<String>) {
         val responseHandler: ResponseDirectiveHandler?,
         val requestHandler: RequestDirectiveHandler?
     )
-
-    private val handlers: List<DirectiveSpecification> = listOf(
-        SetHeaderDirectiveSpecification,
-        RespondDirectiveSpecification,
-        AADOnBehalfOfDirectiveSpecification
-    )
-
-    init {
-        KtorServer.log.info("Directives: $initializingDirectives")
-        initializingDirectives
-            .map(::findHandler)
-            .map { it.first }
-            .distinct()
-            .forEach { it.initialize() }
-    }
 
     fun parseDirectives(directives: List<String>): DirectiveHandlers {
         val parsedDirectives = directives

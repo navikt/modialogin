@@ -1,37 +1,49 @@
 package no.nav.modialogin
 
 import io.ktor.server.application.*
-import io.ktor.server.plugins.defaultheaders.*
+import io.ktor.server.netty.*
 import io.ktor.server.request.*
-import no.nav.modialogin.common.KtorServer.log
-import no.nav.modialogin.common.KtorServer.server
-import no.nav.modialogin.common.features.DefaultFeatures.installDefaultFeatures
-import no.nav.modialogin.common.features.installNaisFeature
-import no.nav.modialogin.features.HostStaticFilesFeature
-import no.nav.modialogin.features.HostStaticFilesFeature.Companion.installHostStaticFilesFeature
-import no.nav.modialogin.features.ReferrerPolicyFeature.applyReferrerPolicyFeature
+import kotlinx.serialization.builtins.serializer
+import no.nav.modialogin.Logging.log
+import no.nav.modialogin.features.*
 import no.nav.modialogin.features.authfeature.*
 import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature
-import no.nav.modialogin.features.bffproxyfeature.BFFProxyFeature.installBFFProxy
 import no.nav.modialogin.features.csp.CSPFeature
-import no.nav.modialogin.features.staticFilesFromCDN
+import no.nav.modialogin.persistence.Persistence
+import no.nav.modialogin.persistence.PersistenceFactory
+import no.nav.personoversikt.common.ktor.utils.KtorServer
+import no.nav.personoversikt.common.ktor.utils.Metrics
+import no.nav.personoversikt.common.ktor.utils.Selftest
 
 fun main() {
     startApplication()
 }
-
 fun startApplication() {
     val config = FrontendAppConfig()
     val staticFilesRootFolder = if (config.appMode == AppMode.LOCALLY_WITHIN_IDEA) "./frontend-app/www" else "/www"
     val port = config.appMode.appport()
+
+    val sessionPersistence: Persistence<String, TokenPrincipal> = PersistenceFactory.create(
+        scope = "session",
+        config = config,
+        keySerializer = String.serializer(),
+        valueSerializer = TokenPrincipal.serializer()
+    )
+    val bffProxyPersistence: Persistence<String, String> = PersistenceFactory.create(
+        scope = "bffproxy",
+        config = config,
+        keySerializer = String.serializer(),
+        valueSerializer = String.serializer()
+    )
+
     log.info("Starting app: $port")
 
-    server(port) { naisState ->
-        install(Security) {
+    KtorServer.create(Netty, port) {
+        install(OAuth2SessionAuthentication) {
             appname = config.appName
             appmode = config.appMode
             azureConfig = config.azureAd
-            redisConfig = config.redis
+            persistence = sessionPersistence
             skipWhen = { call ->
                 val url = call.request.uri
                 val isInternal = url.contains("/${config.appName}/internal/")
@@ -39,42 +51,46 @@ fun startApplication() {
             }
         }
 
-        installDefaultFeatures()
-        install(DefaultHeaders) {
-            applyReferrerPolicyFeature(config.referrerPolicy)
+        install(Selftest.Plugin) {
+            appname = config.appName
+            version = config.appVersion
+            contextpath = config.appName
         }
-        install(CSPFeature.Plugin) {
+
+        install(Metrics.Plugin) {
+            contextpath = config.appName
+        }
+
+        install(CSPFeature) {
             reportOnly = config.cspReportOnly
             directive = config.cspDirectives
         }
-        installNaisFeature(
-            config.appName, config.appVersion, naisState,
-            buildMap {
-                put("AZURE_APP_CLIENT_ID", config.azureAd.clientId)
-                put("AZURE_APP_TENANT_ID", config.azureAd.tenantId)
-                put("AZURE_APP_WELL_KNOWN_URL", config.azureAd.wellKnownUrl)
-            }
-        )
-        if (config.cdnBucketUrl != null) {
-            staticFilesFromCDN(
-                contextpath = config.appName,
-                cdnUrl = config.cdnBucketUrl,
-                unleash = config.unleash
-            )
-        } else {
-            installHostStaticFilesFeature(
-                HostStaticFilesFeature.Config(
-                    appname = config.appName,
-                    rootFolder = staticFilesRootFolder,
-                    unleash = config.unleash
-                )
-            )
+
+        install(DefaultFeatures) {
+            referrerPolicy(config.referrerPolicy)
         }
-        installBFFProxy(
-            BFFProxyFeature.Config(
-                appName = config.appName,
-                proxyConfig = config.proxyConfig
-            )
-        )
-    }
+
+
+        if (config.cdnBucketUrl != null) {
+            install(CDNHosting) {
+                contextpath = config.appName
+                cdnUrl = config.cdnBucketUrl
+                unleash = config.unleash
+            }
+        } else {
+            install(StaticFileHosting) {
+                contextpath = config.appName
+                rootFolder = staticFilesRootFolder
+                unleash = config.unleash
+            }
+        }
+
+
+        install(BFFProxyFeature) {
+            appName = config.appName
+            proxyConfig = config.proxyConfig
+            azureAdConfig = config.azureAd
+            persistence = bffProxyPersistence
+        }
+    }.start(wait = true)
 }

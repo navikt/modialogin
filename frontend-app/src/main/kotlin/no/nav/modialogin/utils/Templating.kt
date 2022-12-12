@@ -1,7 +1,8 @@
-package no.nav.modialogin.common
+package no.nav.modialogin.utils
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import no.nav.personoversikt.common.utils.EnvUtils
 
 class TemplatingEngine<CTX>(vararg sources: Source<CTX>) {
     class Source<CTX>(val prefix: String, val replacement: (CTX, String) -> String)
@@ -49,7 +50,7 @@ object Templating : RequestTemplating {
     )
     val EnvSource = TemplatingEngine.Source<ApplicationCall?>(
         prefix = "env",
-        replacement = { _, name -> KotlinUtils.getProperty(name) ?: "$name not found" }
+        replacement = { _, name -> EnvUtils.getConfig(name) ?: "$name not found" }
     )
 
     private val standard = TemplatingEngine(

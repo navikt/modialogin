@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables
-import no.nav.modialogin.auth.AzureAdConfig
 import java.util.*
 
 fun main() {
@@ -16,15 +15,25 @@ fun main() {
     System.setProperty("CSP_DIRECTIVES", "default-src 'self'; script-src 'self';")
     System.setProperty("REFERRER_POLICY", "no-referrer")
     System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
-    System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
-    System.setProperty("REDIS_HOST", "localhost")
-    System.setProperty("REDIS_PASSWORD", "password123")
-    System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
-    System.setProperty("SECRET", "some secret")
 
+    System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
+    System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
+
+    setupRedis()
+//    setupPostgresql()
     setupAzureAdEnv()
 
     startApplication()
+}
+
+fun setupRedis() {
+    System.setProperty("REDIS_HOST", "localhost")
+    System.setProperty("REDIS_PASSWORD", "password123")
+}
+
+fun setupPostgresql() {
+    System.setProperty("DATABASE_JDBC_URL", "jdbc:postgresql://localhost:8095/frontend")
+    System.setProperty("VAULT_MOUNTPATH", "")
 }
 
 fun setupAzureAdEnv() {
