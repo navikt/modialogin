@@ -79,6 +79,21 @@ class RedisPersistence<KEY, VALUE>(
         // Automatically done by redis
     }
 
+    override suspend fun doSize(): Long {
+        return redisPool.useResource { redis ->
+            val params = ScanParams().count(100).match("$scope:*")
+            var cursor = ScanParams.SCAN_POINTER_START
+            var count = 0L
+            do {
+                val result = redis.scan(cursor, params)
+                count += result.result.size
+                cursor = result.cursor
+            } while (cursor != "0")
+
+            count
+        }.getOrNull() ?: -1L
+    }
+
     private suspend fun ping() {
         redisPool.useResource { it.ping() }
             .onSuccess{ selftest.reportOk() }

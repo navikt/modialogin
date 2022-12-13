@@ -10,9 +10,11 @@ abstract class Persistence<KEY, VALUE>(val scope: String) {
     suspend fun remove(key: KEY) = withContext(Dispatchers.IO) { doRemove(key) }
     suspend fun clean() = withContext(Dispatchers.IO) { doClean() }
     suspend fun dump(): Map<KEY, VALUE> = withContext(Dispatchers.IO) { doDump() }
+    suspend fun size(): Long = withContext(Dispatchers.IO) { doSize() }
     abstract suspend fun doGet(key: KEY): VALUE?
     abstract suspend fun doPut(key: KEY, value: VALUE, ttl: Duration)
     abstract suspend fun doRemove(key: KEY)
     abstract suspend fun doClean()
     abstract suspend fun doDump(): Map<KEY, VALUE>
+    abstract suspend fun doSize(): Long
 }

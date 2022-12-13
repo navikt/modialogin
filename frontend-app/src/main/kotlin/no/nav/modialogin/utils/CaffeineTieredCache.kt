@@ -33,6 +33,14 @@ class CaffeineTieredCache<KEY, VALUE>(
                 selftest.reportError(e)
             }
         }
+        SelftestGenerator.Metadata(name = "${selftest.name} in-memory size") {
+            localCache.estimatedSize().toString()
+        }
+        SelftestGenerator.Metadata(name = "${selftest.name} persistent size") {
+            runBlocking {
+                persistence.size().toString()
+            }
+        }
     }
 
     suspend fun get(key: KEY): VALUE? {
