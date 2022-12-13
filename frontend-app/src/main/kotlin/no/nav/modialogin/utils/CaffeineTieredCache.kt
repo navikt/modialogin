@@ -27,7 +27,7 @@ class CaffeineTieredCache<KEY, VALUE>(
                 val persistedValues = persistence.dump()
                 localCache.putAll(persistedValues)
                 selftest.reportOk()
-                log.info("Cached data loaded for ${selftest.name}")
+                log.info("Cached data loaded for ${selftest.name}: ${persistedValues.size}")
             } catch (e: Throwable) {
                 log.error("Failed to load cached data for ${selftest.name}")
                 selftest.reportError(e)
