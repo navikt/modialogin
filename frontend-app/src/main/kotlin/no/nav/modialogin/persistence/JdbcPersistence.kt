@@ -56,11 +56,28 @@ class JdbcPersistence<KEY, VALUE>(
     }
 
     override suspend fun doDump(): Map<KEY, VALUE> {
-        doClean()
-        return dataSource.connection
-            .use { connection -> doDump(connection) }
+        val data = dataSource.useConnection { connection ->
+            doClean(connection)
+            doDump(connection)
+        }.getOrNull() ?: emptyMap()
+
+        return data
             .mapKeys { decode(keySerializer, it.key) }
             .mapValues { decode(valueSerializer, it.value) }
+    }
+
+    override suspend fun doSize(): Long {
+        return dataSource.useConnection { connection ->
+            val stmt = connection.prepareStatement("SELECT count(*) AS total FROM persistence WHERE scope = ?")
+            stmt.setString(1, scope)
+
+            val rs = stmt.executeQuery()
+            if (rs.next()) {
+                rs.getLong("total")
+            } else {
+                -1L
+            }
+        }.getOrNull() ?: -2L
     }
 
     private fun doDump(connection: Connection): Map<String, String> {
