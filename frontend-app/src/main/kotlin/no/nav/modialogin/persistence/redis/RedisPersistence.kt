@@ -1,9 +1,13 @@
-package no.nav.modialogin.persistence
+package no.nav.modialogin.persistence.redis
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.KSerializer
-import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.persistence.EncodedSubMessage
+import no.nav.modialogin.persistence.Persistence
+import no.nav.modialogin.utils.*
 import no.nav.modialogin.utils.Encoding.decode
 import no.nav.modialogin.utils.Encoding.encode
 import no.nav.modialogin.utils.KotlinUtils.filterNotNull
@@ -15,10 +19,11 @@ import kotlin.time.Duration.Companion.seconds
 
 class RedisPersistence<KEY, VALUE>(
     scope: String,
+    keySerializer: KSerializer<KEY>,
+    valueSerializer: KSerializer<VALUE>,
     private val redisPool: AuthJedisPool,
-    private val keySerializer: KSerializer<KEY>,
-    private val valueSerializer: KSerializer<VALUE>,
-) : Persistence<KEY, VALUE>(scope) {
+    pubSub: RedisPersistencePubSub? = null
+) : Persistence<KEY, VALUE>(scope, keySerializer, valueSerializer, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Redis", critical = false)
 
     init {
@@ -60,13 +65,20 @@ class RedisPersistence<KEY, VALUE>(
     }
 
     override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
+        val encodedKey = encode(keySerializer, key)
+        val encodedValue = encode(valueSerializer, value)
+        val ttlInSeconds = ttl.inWholeSeconds
         redisPool.useResource {
             it.setex(
-                "$scope:${encode(keySerializer, key)}",
-                ttl.inWholeSeconds,
-                encode(valueSerializer, value)
+                "$scope:$encodedKey",
+                ttlInSeconds,
+                encodedValue
             )
         }
+        if (pubSub == null) return
+        val expiry = Clock.System.now().plus(ttlInSeconds.seconds).toLocalDateTime(TimeZone.currentSystemDefault())
+        val data = EncodedSubMessage(scope, encodedKey, encodedValue, expiry)
+        pubSub.publishData(encode(EncodedSubMessage.serializer(), data))
     }
 
     override suspend fun doRemove(key: KEY) {
@@ -96,7 +108,7 @@ class RedisPersistence<KEY, VALUE>(
 
     private suspend fun ping() {
         redisPool.useResource { it.ping() }
-            .onSuccess{ selftest.reportOk() }
+            .onSuccess { selftest.reportOk() }
             .onFailure(selftest::reportError)
     }
 }

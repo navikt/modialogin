@@ -13,17 +13,17 @@ class DataSourceConfiguration(val env: FrontendAppConfig) {
     val userDataSource: DataSource by lazy { createDatasource("user") }
     val adminDataSource: DataSource by lazy { createDatasource("admin") }
 
-    private fun createDatasource(user: String): DataSource {
+    fun createDatasource(user: String, minimumIdle: Int = 1, maximumPoolSize: Int = 6, connectionTimeOut: Long = 1000, maxLifeTime: Long = 30_000): HikariDataSource {
         val dbConfig = checkNotNull(env.database) {
             "Must have database configration to create a DataSource"
         }
         val mountPath = dbConfig.vaultMountpath
         val config = HikariConfig()
         config.jdbcUrl = dbConfig.jdbcUrl
-        config.minimumIdle = 1
-        config.maximumPoolSize = 6
-        config.connectionTimeout = 1000
-        config.maxLifetime = 20_000
+        config.minimumIdle = minimumIdle
+        config.maximumPoolSize = maximumPoolSize
+        config.connectionTimeout = connectionTimeOut
+        config.maxLifetime = maxLifeTime
 
         Logging.log.info("Creating DataSource to ${dbConfig.jdbcUrl}")
 

@@ -55,8 +55,8 @@ class AADOnBehalfOfDirectiveSpecification(
 
             try {
                 val oboToken: String = oboExchangeTimer.time(Callable {
-                    aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
-                })
+                        aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
+                    })
 
                 this.headers["Cookie"] = ""
                 this.headers["Authorization"] = "Bearer $oboToken"
