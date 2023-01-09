@@ -1,14 +1,15 @@
-package no.nav.modialogin.persistence
+package no.nav.modialogin.persistence.redis
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.KSerializer
-import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.persistence.Persistence
+import no.nav.modialogin.utils.*
 import no.nav.modialogin.utils.Encoding.decode
 import no.nav.modialogin.utils.Encoding.encode
 import no.nav.modialogin.utils.KotlinUtils.filterNotNull
 import no.nav.personoversikt.common.utils.SelftestGenerator
 import redis.clients.jedis.params.ScanParams
+import java.time.LocalDateTime
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -18,7 +19,8 @@ class RedisPersistence<KEY, VALUE>(
     private val redisPool: AuthJedisPool,
     private val keySerializer: KSerializer<KEY>,
     private val valueSerializer: KSerializer<VALUE>,
-) : Persistence<KEY, VALUE>(scope) {
+    pubSub: RedisPersistentPubSub? = null
+) : Persistence<KEY, VALUE>(scope, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Redis", critical = false)
 
     init {
@@ -60,12 +62,19 @@ class RedisPersistence<KEY, VALUE>(
     }
 
     override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
-        redisPool.useResource {
+        redisPool.useResource<Unit> {
+            val encodedKey = encode(keySerializer, key)
+            val encodedValue = encode(valueSerializer, value)
+            val ttlInSeconds = ttl.inWholeSeconds
             it.setex(
-                "$scope:${encode(keySerializer, key)}",
-                ttl.inWholeSeconds,
-                encode(valueSerializer, value)
+                "$scope:$encodedKey",
+                ttlInSeconds,
+                encodedValue
             )
+            runBlocking {
+                val expiry = LocalDateTime.now().plusSeconds(ttl.inWholeSeconds)
+                pubSub?.publishMessage(encodedKey, encodedValue, expiry)
+            }
         }
     }
 
@@ -81,7 +90,7 @@ class RedisPersistence<KEY, VALUE>(
 
     private suspend fun ping() {
         redisPool.useResource { it.ping() }
-            .onSuccess{ selftest.reportOk() }
+            .onSuccess { selftest.reportOk() }
             .onFailure(selftest::reportError)
     }
 }

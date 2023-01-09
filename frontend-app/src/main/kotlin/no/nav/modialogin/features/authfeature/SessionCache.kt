@@ -5,7 +5,9 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.util.date.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.persistence.Persistence
+import no.nav.modialogin.persistence.SubMessage
 import no.nav.modialogin.utils.CaffeineTieredCache
 import no.nav.personoversikt.common.utils.SelftestGenerator
 import kotlin.time.Duration
@@ -13,12 +15,14 @@ import kotlin.time.Duration.Companion.minutes
 
 class SessionCache(
     private val oidcClient: OidcClient,
-    persistence: Persistence<String, TokenPrincipal>
+    persistence: Persistence<String, TokenPrincipal>,
 ) {
     private val cache = CaffeineTieredCache(
         persistence = persistence,
         expirationStrategy = AccessTokenExpirationStrategy,
-        selftest = SelftestGenerator.Reporter("sessioncache", false)
+        selftest = SelftestGenerator.Reporter("sessioncache", false),
+        keySerializer = String.serializer(),
+        valueSerializer = TokenPrincipal.serializer()
     )
 
     suspend fun get(key: SessionId): TokenPrincipal? {

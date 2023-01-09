@@ -1,9 +1,10 @@
-package no.nav.modialogin.persistence
+package no.nav.modialogin.persistence.jdbc
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import no.nav.modialogin.DataSourceConfiguration.Companion.useConnection
+import no.nav.modialogin.persistence.Persistence
 import no.nav.modialogin.utils.Encoding.decode
 import no.nav.modialogin.utils.Encoding.encode
 import no.nav.modialogin.utils.KotlinUtils.filterNotNull
@@ -21,7 +22,8 @@ class JdbcPersistence<KEY, VALUE>(
     private val dataSource: DataSource,
     private val keySerializer: KSerializer<KEY>,
     private val valueSerializer: KSerializer<VALUE>,
-) : Persistence<KEY, VALUE>(scope) {
+    pubSub: PostgresPersistencePubSub? = null
+) : Persistence<KEY, VALUE>(scope, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Database", critical = false)
 
     init {
@@ -106,12 +108,11 @@ class JdbcPersistence<KEY, VALUE>(
             VALUES (?, ?, ?, ?)
             ON CONFLICT (scope, key) DO
             UPDATE SET value = ?, expiry = ?
-        """.trimIndent()
+            """.trimIndent()
         )
 
         val valueString = encode(valueSerializer, value)
         val expiry = Timestamp.from(Instant.now().plusSeconds(ttl.inWholeSeconds))
-
         stmt.setString(1, scope)
         stmt.setString(2, encode(keySerializer, key))
         stmt.setString(3, valueString)
@@ -138,7 +139,7 @@ class JdbcPersistence<KEY, VALUE>(
         dataSource.useConnection { connection ->
             connection.prepareStatement("SELECT * FROM persistence LIMIT 1").execute()
         }
-            .onSuccess{ selftest.reportOk() }
+            .onSuccess { selftest.reportOk() }
             .onFailure(selftest::reportError)
     }
 }

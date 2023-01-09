@@ -54,8 +54,9 @@ class TokenPrincipal(
 class Oauth2SessionAuthenticationConfig(
     var appname: String? = null,
     var appmode: AppMode? = null,
-    var azureConfig: AzureAdConfig? =null,
+    var azureConfig: AzureAdConfig? = null,
     var persistence: Persistence<String, TokenPrincipal>? = null,
+    var enablePersistencePubSub: Boolean = false,
     var skipWhen: ((ApplicationCall) -> Boolean)? = null,
 )
 
@@ -122,7 +123,7 @@ val OAuth2SessionAuthentication = createApplicationPlugin("security", ::Oauth2Se
 
             oauth("oauth") {
                 urlProvider = {
-                    redirectUrl("/$appname/oauth2/callback",  appmode.locally)
+                    redirectUrl("/$appname/oauth2/callback", appmode.locally)
                 }
                 if (skipWhenPredicate != null) {
                     skipWhen(skipWhenPredicate)
@@ -203,7 +204,7 @@ private fun verifyAccessToken(
 private fun ApplicationCall.redirectUrl(path: String, development: Boolean): String {
     val protocol = if (!development) "https" else request.origin.scheme
     val defaultPort = if (protocol == "http") 80 else 443
-    val host = if(!development) request.host() else "localhost"
+    val host = if (!development) request.host() else "localhost"
 
     val hostPort = host + request.port().let { port ->
         if (port == defaultPort || !development) "" else ":$port"

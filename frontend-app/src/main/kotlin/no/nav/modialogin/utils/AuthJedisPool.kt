@@ -6,8 +6,8 @@ import no.nav.modialogin.Logging
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 
-class AuthJedisPool(host: String, private val password: String) {
-    private val pool = JedisPool(host, 6379)
+class AuthJedisPool(private val redisConfig: RedisConfig) {
+    private val pool = JedisPool(redisConfig.host, redisConfig.port)
 
     suspend fun <T> useResource(block: (Jedis) -> T): Result<T?> {
         return withContext(Dispatchers.IO) {
@@ -17,7 +17,7 @@ class AuthJedisPool(host: String, private val password: String) {
             } else {
                 runCatching {
                     pool.resource.use {
-                        it.auth(password)
+                        it.auth(redisConfig.password)
                         block(it)
                     }
                 }

@@ -4,7 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 
-abstract class Persistence<KEY, VALUE>(val scope: String) {
+abstract class Persistence<KEY, VALUE>(val scope: String, val pubSub: PersistentPubSub? = null) {
     suspend fun get(key: KEY): VALUE? = withContext(Dispatchers.IO) { doGet(key) }
     suspend fun put(key: KEY, value: VALUE, ttl: Duration) = withContext(Dispatchers.IO) { doPut(key, value, ttl) }
     suspend fun remove(key: KEY) = withContext(Dispatchers.IO) { doRemove(key) }

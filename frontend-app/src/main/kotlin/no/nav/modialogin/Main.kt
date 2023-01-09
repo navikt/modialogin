@@ -27,7 +27,7 @@ fun startApplication() {
         scope = "session",
         config = config,
         keySerializer = String.serializer(),
-        valueSerializer = TokenPrincipal.serializer()
+        valueSerializer = TokenPrincipal.serializer(),
     )
     val bffProxyPersistence: Persistence<String, String> = PersistenceFactory.create(
         scope = "bffproxy",
@@ -44,6 +44,7 @@ fun startApplication() {
             appmode = config.appMode
             azureConfig = config.azureAd
             persistence = sessionPersistence
+            enablePersistencePubSub = config.enablePersistencePubSub
             skipWhen = { call ->
                 val url = call.request.uri
                 val isInternal = url.contains("/${config.appName}/internal/")
