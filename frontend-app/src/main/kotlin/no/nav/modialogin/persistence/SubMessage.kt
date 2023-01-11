@@ -2,9 +2,10 @@ package no.nav.modialogin.persistence
 
 import java.time.LocalDateTime
 
-data class SubMessage(
-    val key: String,
-    val value: String,
-    val ttl: LocalDateTime
+data class SubMessage<KEY, VALUE>(
+    val scope: String,
+    val key: KEY,
+    val value: VALUE,
+    val ttl: LocalDateTime,
 )
 

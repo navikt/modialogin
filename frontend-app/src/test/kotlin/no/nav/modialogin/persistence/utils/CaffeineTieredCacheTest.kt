@@ -40,8 +40,6 @@ class CaffeineTieredCacheTest : TestUtils.WithRedis {
         persistence = persistence,
         expirationStrategy = expirationStrategy,
         selftest = SelftestGenerator.Reporter("tokencache", false),
-        keySerializer = String.serializer(),
-        valueSerializer = DummyChannelValue.serializer(),
     )
 
     @Test()

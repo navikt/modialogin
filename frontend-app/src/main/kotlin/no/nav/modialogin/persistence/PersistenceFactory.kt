@@ -8,7 +8,7 @@ import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.jdbc.JdbcPersistence
 import no.nav.modialogin.persistence.jdbc.PostgresPersistencePubSub
 import no.nav.modialogin.persistence.redis.RedisPersistence
-import no.nav.modialogin.persistence.redis.RedisPersistentPubSub
+import no.nav.modialogin.persistence.redis.RedisPersistencePubSub
 import no.nav.modialogin.utils.AuthJedisPool
 import kotlin.concurrent.fixedRateTimer
 import kotlin.system.measureTimeMillis
@@ -26,12 +26,12 @@ object PersistenceFactory {
     ): Persistence<KEY, VALUE> {
         val persistence = if (config.redisConfig != null) {
             val redisPool = AuthJedisPool(config.redisConfig)
-            val pubSub = if (config.enablePersistencePubSub) RedisPersistentPubSub("RedisPubSub", redisPool) else null
+            val pubSub = if (config.enablePersistencePubSub) RedisPersistencePubSub("RedisPubSub", keySerializer, valueSerializer, redisPool) else null
             RedisPersistence(scope, redisPool, keySerializer, valueSerializer, pubSub)
         } else {
             val dbConfig = DataSourceConfiguration(config)
             DataSourceConfiguration.migrate(config, dbConfig.adminDataSource)
-            val pubSub = if (config.enablePersistencePubSub) PostgresPersistencePubSub("persistence_updates", dbConfig.userDataSource) else null
+            val pubSub = if (config.enablePersistencePubSub) PostgresPersistencePubSub("persistence_updates", keySerializer, valueSerializer, dbConfig.userDataSource) else null
             JdbcPersistence(scope, dbConfig.userDataSource, keySerializer, valueSerializer, pubSub)
         }
 

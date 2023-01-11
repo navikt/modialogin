@@ -4,25 +4,30 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.modialogin.Logging
 import no.nav.modialogin.Logging.log
+import no.nav.modialogin.persistence.EncodedSubMessage
 import no.nav.modialogin.persistence.PersistentPubSub
 import no.nav.modialogin.persistence.SubMessage
 import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.utils.Encoding.decode
 import redis.clients.jedis.JedisPubSub
 import java.time.LocalDateTime
 
-class RedisPersistentPubSub(
-    chanelName: String,
+class RedisPersistencePubSub<KEY, VALUE>(
+    channelName: String,
+    keySerializer: KSerializer<KEY>,
+    valueSerializer: KSerializer<VALUE>,
     private val redisPool: AuthJedisPool,
-) : PersistentPubSub(chanelName) {
+) : PersistentPubSub<KEY, VALUE>(channelName, keySerializer, valueSerializer) {
     private var job: Job? = null
-    private var channel = Channel<SubMessage>()
+    private var channel = Channel<SubMessage<KEY, VALUE>>()
 
-    override fun startSubscribing(): Flow<SubMessage> {
+    override fun startSubscribing(): Flow<SubMessage<KEY, VALUE>> {
         doStart()
         return channel.consumeAsFlow()
     }
@@ -33,26 +38,28 @@ class RedisPersistentPubSub(
         channel = Channel()
     }
 
-    override suspend fun publishMessage(key: String, value: String, expiry: LocalDateTime) {
-        val message = Json.encodeToString(RedisEncodedMessage(key, value, expiry))
+    override suspend fun publishMessage(scope: String, key: String, value: String, expiry: LocalDateTime) {
+        val message = Json.encodeToString(EncodedSubMessage(scope, key, value, expiry))
         redisPool.useResource {
             it.publish(channelName, message)
         }
     }
 
     private val subscriber = object : JedisPubSub() {
-        override fun onMessage(channelName: String?, message: String?) {
-            if (channelName == chanelName && message != null) {
+        override fun onMessage(messageChannel: String?, message: String?) {
+            if (channelName == messageChannel && message != null) {
                 try {
-                    val (encodedKey, encodedValue, expiry) = Json.decodeFromString<RedisEncodedMessage>(message)
+                    val (scope, encodedKey, encodedValue, expiry) = Json.decodeFromString<EncodedSubMessage>(message)
+                    val key = decode(keySerializer, encodedKey)
+                    val value = decode(valueSerializer, encodedValue)
                     runBlocking(Dispatchers.IO) {
-                        channel.send(SubMessage(encodedKey, encodedValue, expiry))
+                        channel.send(SubMessage(scope, key, value, expiry))
                     }
                 } catch (e: Exception) {
-                    Logging.log.error("Failed to parse Redis Sub message: ", e)
+                    log.error("Failed to parse Redis Sub message: ", e)
                 }
             }
-            super.onMessage(channelName, message)
+            super.onMessage(messageChannel, message)
         }
     }
 

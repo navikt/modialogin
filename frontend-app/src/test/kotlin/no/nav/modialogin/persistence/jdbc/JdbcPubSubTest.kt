@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
-import no.nav.modialogin.utils.Encoding.encode
 
 class JdbcPubSubTest : TestUtils.WithPostgres {
     @Test()
@@ -32,12 +31,13 @@ class JdbcPubSubTest : TestUtils.WithPostgres {
 
         val firstMessage = subscription.first()
 
-        val expectedMessage = SubMessage(testKey, encode(DummyChannelValue.serializer(), testValue), LocalDateTime.now().plusSeconds(ttl.inWholeSeconds))
+        val expectedMessage = SubMessage(scope, testKey, testValue, LocalDateTime.now().plusSeconds(ttl.inWholeSeconds))
 
         receivePostgres.pubSub!!.stopSubscribing()
 
         Assertions.assertEquals(expectedMessage.value, firstMessage.value)
-        Assertions.assertEquals("$scope:${expectedMessage.key}", firstMessage.key)
+        Assertions.assertEquals(expectedMessage.key, firstMessage.key)
+        Assertions.assertEquals(expectedMessage.scope, firstMessage.scope)
         Assertions.assertTrue(Duration.between(expectedMessage.ttl, firstMessage.ttl) < 1.seconds.toJavaDuration())
     }
 }

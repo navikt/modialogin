@@ -1,14 +1,11 @@
 package no.nav.modialogin.persistence
 
 import kotlinx.serialization.KSerializer
-import no.nav.modialogin.AppMode
-import no.nav.modialogin.DataSourceConfiguration
-import no.nav.modialogin.DatabaseConfig
-import no.nav.modialogin.FrontendAppConfig
+import no.nav.modialogin.*
 import no.nav.modialogin.persistence.jdbc.JdbcPersistence
 import no.nav.modialogin.persistence.jdbc.PostgresPersistencePubSub
 import no.nav.modialogin.persistence.redis.RedisPersistence
-import no.nav.modialogin.persistence.redis.RedisPersistentPubSub
+import no.nav.modialogin.persistence.redis.RedisPersistencePubSub
 import no.nav.modialogin.utils.AuthJedisPool
 import no.nav.modialogin.utils.RedisConfig
 import org.junit.jupiter.api.AfterAll
@@ -53,8 +50,8 @@ object TestUtils {
         val sendPool = AuthJedisPool(redisConfig)
         val receivePool = AuthJedisPool(redisConfig)
 
-        val sendPubSub = if (enablePubSub == true) RedisPersistentPubSub("test", sendPool) else null
-        val receivePubSub = if (enablePubSub == true) RedisPersistentPubSub("test", receivePool) else null
+        val sendPubSub = if (enablePubSub == true) RedisPersistencePubSub("test", keySerializer, valueSerializer, sendPool) else null
+        val receivePubSub = if (enablePubSub == true) RedisPersistencePubSub("test", keySerializer, valueSerializer, receivePool) else null
 
         val sendRedis = RedisPersistence(scope, sendPool, keySerializer, valueSerializer, sendPubSub)
         val receiveRedis = RedisPersistence(scope, receivePool, keySerializer, valueSerializer, receivePubSub)
@@ -86,17 +83,19 @@ object TestUtils {
 
     fun <KEY, VALUE>setupSendAndReceivePostgres(scope: String, keySerializer: KSerializer<KEY>, valueSerializer: KSerializer<VALUE>, enablePubSub: Boolean? = false): Pair<JdbcPersistence<KEY, VALUE>, JdbcPersistence<KEY, VALUE>> {
         val hostAndPort = postgresHostAndPort()
+        setupAzureAdEnv()
         val frontendAppConfig = FrontendAppConfig(
             appName = "testApp",
             appVersion = "1.0.0",
             appMode = AppMode.LOCALLY_WITHIN_DOCKER,
-            database = DatabaseConfig("jdbc:postgresql://${hostAndPort.host}:${hostAndPort.port}/postgres")
+            database = DatabaseConfig("jdbc:postgresql://${hostAndPort.host}:${hostAndPort.port}/postgres"),
+
         )
 
         val dataSourceConfiguration = DataSourceConfiguration(frontendAppConfig)
         DataSourceConfiguration.migrate(frontendAppConfig, dataSourceConfiguration.adminDataSource)
 
-        val pubSub = if (enablePubSub == true) PostgresPersistencePubSub("test", dataSourceConfiguration.userDataSource) else null
+        val pubSub = if (enablePubSub == true) PostgresPersistencePubSub("test", keySerializer, valueSerializer, dataSourceConfiguration.userDataSource) else null
 
         val sendPostgres = JdbcPersistence(scope, dataSourceConfiguration.userDataSource, keySerializer, valueSerializer, pubSub)
         val receivePostgres = JdbcPersistence(scope, dataSourceConfiguration.userDataSource, keySerializer, valueSerializer, pubSub)

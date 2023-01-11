@@ -19,7 +19,7 @@ class RedisPersistence<KEY, VALUE>(
     private val redisPool: AuthJedisPool,
     private val keySerializer: KSerializer<KEY>,
     private val valueSerializer: KSerializer<VALUE>,
-    pubSub: RedisPersistentPubSub? = null
+    pubSub: RedisPersistencePubSub<KEY, VALUE>? = null
 ) : Persistence<KEY, VALUE>(scope, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Redis", critical = false)
 
@@ -73,7 +73,7 @@ class RedisPersistence<KEY, VALUE>(
             )
             runBlocking {
                 val expiry = LocalDateTime.now().plusSeconds(ttl.inWholeSeconds)
-                pubSub?.publishMessage(encodedKey, encodedValue, expiry)
+                pubSub?.publishMessage(scope, encodedKey, encodedValue, expiry)
             }
         }
     }

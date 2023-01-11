@@ -8,10 +8,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.KSerializer
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.Persistence
-import no.nav.modialogin.utils.Encoding.decode
 import no.nav.personoversikt.common.utils.SelftestGenerator
 import java.time.Duration
 import java.time.LocalDateTime
@@ -21,8 +19,6 @@ class CaffeineTieredCache<KEY, VALUE>(
     val expirationStrategy: Expiry<KEY, VALUE>,
     val persistence: Persistence<KEY, VALUE>,
     val selftest: SelftestGenerator.Reporter,
-    private val keySerializer: KSerializer<KEY>,
-    private val valueSerializer: KSerializer<VALUE>
 ) {
     private val ticker = Ticker.systemTicker()
     private val localCache = Caffeine
@@ -75,9 +71,7 @@ class CaffeineTieredCache<KEY, VALUE>(
 
     private suspend fun doSubscribeToPersistentUpdates() {
         if (persistence.pubSub == null) return
-        persistence.pubSub.startSubscribing().filterNotNull().collect { (encodedKey, encodedValue, expiry) ->
-            val key = decode(keySerializer, encodedKey)
-            val value = decode(valueSerializer, encodedValue)
+        persistence.pubSub.startSubscribing().filterNotNull().collect { (_, key, value, expiry) ->
             val ttl = Duration.between(LocalDateTime.now(), expiry)
             if (checkIfNewValueFromPubSubShouldBeStored(key, ttl)) {
                 localCache.policy().expireVariably().get().put(key, value, ttl)

@@ -21,8 +21,6 @@ class SessionCache(
         persistence = persistence,
         expirationStrategy = AccessTokenExpirationStrategy,
         selftest = SelftestGenerator.Reporter("sessioncache", false),
-        keySerializer = String.serializer(),
-        valueSerializer = TokenPrincipal.serializer()
     )
 
     suspend fun get(key: SessionId): TokenPrincipal? {

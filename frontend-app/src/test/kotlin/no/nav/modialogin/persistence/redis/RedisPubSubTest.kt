@@ -7,7 +7,6 @@ import no.nav.modialogin.persistence.DummyChannelValue
 import no.nav.modialogin.persistence.SubMessage
 import no.nav.modialogin.persistence.TestUtils
 import no.nav.modialogin.persistence.TestUtils.setupSendAndReceiveRedis
-import no.nav.modialogin.utils.Encoding.encode
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -32,7 +31,7 @@ class RedisPubSubTest : TestUtils.WithRedis {
         sendRedis.doPut(testKey, testValue, ttl)
 
         val firstMessage = subscription.first()
-        val expectedMessage = SubMessage(testKey, encode(DummyChannelValue.serializer(), testValue), LocalDateTime.now().plusSeconds(ttl.inWholeSeconds))
+        val expectedMessage = SubMessage(scope, testKey, testValue, LocalDateTime.now().plusSeconds(ttl.inWholeSeconds))
 
         receiveRedis.pubSub!!.stopSubscribing()
 

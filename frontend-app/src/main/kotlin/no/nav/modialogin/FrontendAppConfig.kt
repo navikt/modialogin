@@ -41,10 +41,9 @@ class FrontendAppConfig(
         getConfig("VAULT_MOUNTPATH"),
     ) { url, mountPath -> DatabaseConfig(url, mountPath) },
     val enablePersistencePubSub: Boolean = getConfig("ENABLE_PERSISTENCE_PUB_SUB")?.toBooleanStrict() ?: false,
-    loadAzureAdLocally: Boolean = false,
 ) {
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
-    val azureAd: AzureAdConfig? = if (appMode.locally && !loadAzureAdLocally) null else AzureAdConfig.load()
+    val azureAd: AzureAdConfig = AzureAdConfig.load()
 
     init {
         check(redisConfig != null || database != null) {

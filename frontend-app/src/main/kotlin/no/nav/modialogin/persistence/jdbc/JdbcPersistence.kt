@@ -22,7 +22,7 @@ class JdbcPersistence<KEY, VALUE>(
     private val dataSource: DataSource,
     private val keySerializer: KSerializer<KEY>,
     private val valueSerializer: KSerializer<VALUE>,
-    pubSub: PostgresPersistencePubSub? = null
+    pubSub: PostgresPersistencePubSub<KEY, VALUE>? = null
 ) : Persistence<KEY, VALUE>(scope, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Database", critical = false)
 

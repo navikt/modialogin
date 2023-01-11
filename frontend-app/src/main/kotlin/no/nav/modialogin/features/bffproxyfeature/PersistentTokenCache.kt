@@ -50,8 +50,6 @@ class PersistentTokenCache(
                 return (expiresAt.time - System.currentTimeMillis()).milliseconds
             }
         },
-        keySerializer = String.serializer(),
-        valueSerializer = String.serializer()
     )
 
     override fun getFromCacheOrTryProvider(cacheKey: String, tokenProvider: Supplier<String>): String {
