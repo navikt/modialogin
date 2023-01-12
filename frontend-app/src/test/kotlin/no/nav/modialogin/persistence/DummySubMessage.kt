@@ -4,9 +4,9 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SubMessage<KEY, VALUE>(
+data class DummySubMessage<KEY, VALUE>(
     val key: KEY,
     val value: VALUE,
+    val scope: String,
     val ttl: Instant,
 )
-

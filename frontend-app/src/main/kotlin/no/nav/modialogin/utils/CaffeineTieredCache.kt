@@ -5,15 +5,18 @@ import com.github.benmanes.caffeine.cache.Expiry
 import com.github.benmanes.caffeine.cache.Ticker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 import no.nav.modialogin.Logging.log
+import no.nav.modialogin.persistence.EncodedSubMessage
 import no.nav.modialogin.persistence.Persistence
+import no.nav.modialogin.persistence.SubMessage
 import no.nav.personoversikt.common.utils.SelftestGenerator
-import java.time.Duration
-import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
+import kotlin.time.toJavaDuration
 
 class CaffeineTieredCache<KEY, VALUE>(
     val expirationStrategy: Expiry<KEY, VALUE>,
@@ -71,21 +74,25 @@ class CaffeineTieredCache<KEY, VALUE>(
 
     private suspend fun doSubscribeToPersistentUpdates() {
         if (persistence.pubSub == null) return
-        persistence.pubSub.startSubscribing().filterNotNull().collect { (_, key, value, expiry) ->
-            val ttl = Duration.between(LocalDateTime.now(), expiry)
+
+        FlowTransformer.mapData(persistence.pubSub.startSubscribing(), EncodedSubMessage.serializer()) {
+            val key = persistence.decodeKey(it.key)
+            val value = persistence.decodeValue(it.value)
+            SubMessage(key, value, it.expiry)
+        }.collect { (key, value, expiry) ->
+            val ttl = expiry.epochSeconds - Clock.System.now().epochSeconds
             if (checkIfNewValueFromPubSubShouldBeStored(key, ttl)) {
-                localCache.policy().expireVariably().get().put(key, value, ttl)
+                localCache.policy().expireVariably().get().put(key, value, ttl.toDuration(DurationUnit.SECONDS).toJavaDuration())
             }
         }
     }
 
-    private fun checkIfNewValueFromPubSubShouldBeStored(key: KEY, ttl: Duration): Boolean {
+    private fun checkIfNewValueFromPubSubShouldBeStored(key: KEY, ttl: Long): Boolean {
         localCache.getIfPresent(key) ?: return true
         val existingTtl = localCache.policy().expireVariably().get().getExpiresAfter(key) ?: return true
-        return ttl > existingTtl.get()
+        return ttl > existingTtl.get().seconds
     }
 
-    // TODO: Do we need this?
     fun stop() {
         if (persistence.pubSub == null) return
         persistence.pubSub.stopSubscribing()

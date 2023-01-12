@@ -4,28 +4,19 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import no.nav.modialogin.Logging
 import no.nav.modialogin.Logging.log
-import no.nav.modialogin.persistence.EncodedSubMessage
-import no.nav.modialogin.persistence.PersistentPubSub
-import no.nav.modialogin.persistence.SubMessage
-import no.nav.modialogin.utils.Encoding.decode
+import no.nav.modialogin.persistence.PersistencePubSub
 import org.postgresql.jdbc.PgConnection
 import java.sql.SQLException
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class PostgresPersistencePubSub<KEY, VALUE>(
+class PostgresPersistencePubSub(
     channelName: String,
-    keySerializer: KSerializer<KEY>,
-    valueSerializer: KSerializer<VALUE>,
     dataSource: DataSource,
-) : PersistentPubSub<KEY, VALUE>(channelName, keySerializer, valueSerializer) {
+) : PersistencePubSub(channelName) {
     private var job: Job? = null
-    private var channel = Channel<SubMessage<KEY, VALUE>>()
+    private var channel = Channel<String>()
     private var running = false
 
     private var listener: PgConnection? = null
@@ -44,7 +35,7 @@ class PostgresPersistencePubSub<KEY, VALUE>(
             log.warn(
                 """
                 The Postgres Pub/Sub was unable to unwrap the PG connection from the datasource connection.
-                 This means that you most likely are not using a Postgres driver, and pub/sub will not be supported.
+                This means that you most likely are not using a Postgres driver, and pub/sub will not be supported.
                 """.trimIndent()
             )
         }
@@ -58,11 +49,8 @@ class PostgresPersistencePubSub<KEY, VALUE>(
                 while (true) {
                     val notifications = listener!!.getNotifications(10 * 1000) ?: continue
                     for (notification in notifications) {
-                        val (scope, encodedKey, encodedValue, expiry) = Json.decodeFromString<EncodedSubMessage>(notification.parameter)
-                        val key = decode(keySerializer, encodedKey)
-                        val value = decode(valueSerializer, encodedValue)
                         runBlocking(Dispatchers.IO) {
-                            channel.send(SubMessage(scope, key, value, expiry))
+                            channel.send(notification.parameter)
                         }
                     }
                 }
@@ -72,7 +60,7 @@ class PostgresPersistencePubSub<KEY, VALUE>(
         }
     }
 
-    override fun startSubscribing(): Flow<SubMessage<KEY, VALUE>> {
+    override fun startSubscribing(): Flow<String> {
         doStart()
         return channel.consumeAsFlow()
     }
@@ -83,21 +71,21 @@ class PostgresPersistencePubSub<KEY, VALUE>(
         channel = Channel()
     }
 
-    override suspend fun publishMessage(scope: String, key: String, value: String, expiry: LocalDateTime) {
-        // Skip. Postgres publishes the notifications with pg_notify and a trigger
+    override suspend fun publishData(data: String) {
+        // Pass. This is handled internally by postgres.
     }
 
     private fun doStart() {
         requireNotNull(listener)
         running = true
-        Logging.log.info("Starting jdbc subscriber on channel '$channelName'")
+        log.info("Starting jdbc subscriber on channel '$channelName'")
         job = GlobalScope.launch {
             subscribe()
         }
     }
 
     private fun doStop() {
-        Logging.log.info("Stopping the jdbc subsriber on channel '$channelName")
+        log.info("Stopping the jdbc subsriber on channel '$channelName")
         running = false
         job?.cancel()
     }

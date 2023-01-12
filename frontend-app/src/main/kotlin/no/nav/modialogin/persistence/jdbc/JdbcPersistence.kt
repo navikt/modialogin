@@ -19,11 +19,11 @@ import kotlin.time.Duration.Companion.seconds
 
 class JdbcPersistence<KEY, VALUE>(
     scope: String,
+    keySerializer: KSerializer<KEY>,
+    valueSerializer: KSerializer<VALUE>,
     private val dataSource: DataSource,
-    private val keySerializer: KSerializer<KEY>,
-    private val valueSerializer: KSerializer<VALUE>,
-    pubSub: PostgresPersistencePubSub<KEY, VALUE>? = null
-) : Persistence<KEY, VALUE>(scope, pubSub) {
+    pubSub: PostgresPersistencePubSub? = null
+) : Persistence<KEY, VALUE>(scope, keySerializer, valueSerializer, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Database", critical = false)
 
     init {

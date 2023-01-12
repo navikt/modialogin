@@ -50,11 +50,11 @@ object TestUtils {
         val sendPool = AuthJedisPool(redisConfig)
         val receivePool = AuthJedisPool(redisConfig)
 
-        val sendPubSub = if (enablePubSub == true) RedisPersistencePubSub("test", keySerializer, valueSerializer, sendPool) else null
-        val receivePubSub = if (enablePubSub == true) RedisPersistencePubSub("test", keySerializer, valueSerializer, receivePool) else null
+        val sendPubSub = if (enablePubSub == true) RedisPersistencePubSub("test", sendPool) else null
+        val receivePubSub = if (enablePubSub == true) RedisPersistencePubSub("test", receivePool) else null
 
-        val sendRedis = RedisPersistence(scope, sendPool, keySerializer, valueSerializer, sendPubSub)
-        val receiveRedis = RedisPersistence(scope, receivePool, keySerializer, valueSerializer, receivePubSub)
+        val sendRedis = RedisPersistence(scope, keySerializer, valueSerializer, sendPool, sendPubSub)
+        val receiveRedis = RedisPersistence(scope, keySerializer, valueSerializer, receivePool, receivePubSub)
         return Pair(sendRedis, receiveRedis)
     }
 
@@ -95,10 +95,10 @@ object TestUtils {
         val dataSourceConfiguration = DataSourceConfiguration(frontendAppConfig)
         DataSourceConfiguration.migrate(frontendAppConfig, dataSourceConfiguration.adminDataSource)
 
-        val pubSub = if (enablePubSub == true) PostgresPersistencePubSub("test", keySerializer, valueSerializer, dataSourceConfiguration.userDataSource) else null
+        val pubSub = if (enablePubSub == true) PostgresPersistencePubSub("test", dataSourceConfiguration.userDataSource) else null
 
-        val sendPostgres = JdbcPersistence(scope, dataSourceConfiguration.userDataSource, keySerializer, valueSerializer, pubSub)
-        val receivePostgres = JdbcPersistence(scope, dataSourceConfiguration.userDataSource, keySerializer, valueSerializer, pubSub)
+        val sendPostgres = JdbcPersistence(scope, keySerializer, valueSerializer, dataSourceConfiguration.userDataSource, pubSub)
+        val receivePostgres = JdbcPersistence(scope, keySerializer, valueSerializer, dataSourceConfiguration.userDataSource, pubSub)
         return Pair(sendPostgres, receivePostgres)
     }
 }

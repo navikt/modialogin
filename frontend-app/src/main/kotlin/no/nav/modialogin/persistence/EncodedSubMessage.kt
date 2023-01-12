@@ -1,14 +1,20 @@
 package no.nav.modialogin.persistence
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import no.nav.modialogin.utils.LocalDateTimeSerializer
-import java.time.LocalDateTime
+import kotlinx.serialization.Transient
 
 @Serializable
 data class EncodedSubMessage(
     val scope: String,
     val key: String,
     val value: String,
-    @Serializable(LocalDateTimeSerializer::class)
-    val expiry: LocalDateTime,
-)
+    @SerialName("expiry")
+    private val _expiry: LocalDateTime,
+) {
+    @Transient
+    val expiry = _expiry.toInstant(TimeZone.currentSystemDefault())
+}

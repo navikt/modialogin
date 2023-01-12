@@ -26,13 +26,13 @@ object PersistenceFactory {
     ): Persistence<KEY, VALUE> {
         val persistence = if (config.redisConfig != null) {
             val redisPool = AuthJedisPool(config.redisConfig)
-            val pubSub = if (config.enablePersistencePubSub) RedisPersistencePubSub("RedisPubSub", keySerializer, valueSerializer, redisPool) else null
-            RedisPersistence(scope, redisPool, keySerializer, valueSerializer, pubSub)
+            val pubSub = if (config.enablePersistencePubSub) RedisPersistencePubSub("RedisPubSub", redisPool) else null
+            RedisPersistence(scope, keySerializer, valueSerializer, redisPool, pubSub)
         } else {
             val dbConfig = DataSourceConfiguration(config)
             DataSourceConfiguration.migrate(config, dbConfig.adminDataSource)
-            val pubSub = if (config.enablePersistencePubSub) PostgresPersistencePubSub("persistence_updates", keySerializer, valueSerializer, dbConfig.userDataSource) else null
-            JdbcPersistence(scope, dbConfig.userDataSource, keySerializer, valueSerializer, pubSub)
+            val pubSub = if (config.enablePersistencePubSub) PostgresPersistencePubSub("persistence_updates", dbConfig.userDataSource) else null
+            JdbcPersistence(scope, keySerializer, valueSerializer, dbConfig.userDataSource, pubSub)
         }
 
         log.info("Starting cleanup timer [delay:${cleanupInitialDelay.inWholeSeconds}s, period:${cleanupPeriod.inWholeSeconds}s]")

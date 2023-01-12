@@ -72,21 +72,18 @@ class CaffeineTieredCacheTest : TestUtils.WithRedis {
             enablePubSub = true
         )
 
-        val testKey = "TEST_KEY"
-
         val caffeineTieredCache = getCaffeineTieredCache(receiveRedis)
 
+        val testKey = "TEST_KEY"
         val valueToPersist = DummyChannelValue("store me", 2, false)
         val valueNotToPersist = DummyChannelValue("do not store me", 2, false)
 
         caffeineTieredCache.put(testKey, valueNotToPersist)
-
         sendRedis.doPut(testKey, valueToPersist, 1.hours)
 
         delay(1000L)
 
         val entryInCache = caffeineTieredCache.get(testKey)
-
         Assertions.assertEquals(valueToPersist, entryInCache)
     }
 
@@ -99,22 +96,18 @@ class CaffeineTieredCacheTest : TestUtils.WithRedis {
             enablePubSub = true
         )
 
-        val testKey = "TEST_KEY"
-
         val caffeineTieredCache = getCaffeineTieredCache(receiveRedis)
 
+        val testKey = "TEST_KEY"
         val valueNotToPersist = DummyChannelValue("do not store me", 2, false)
-
         val valueToPersist = DummyChannelValue("store me", 2, false)
 
-        caffeineTieredCache.put(testKey, valueNotToPersist)
-
-        sendRedis.doPut(testKey, valueToPersist, 15.minutes)
+        caffeineTieredCache.put(testKey, valueToPersist)
+        sendRedis.doPut(testKey, valueNotToPersist, 5.minutes)
 
         delay(1000L)
 
         val entryInCache = caffeineTieredCache.get(testKey)
-
         Assertions.assertEquals(valueToPersist, entryInCache)
     }
 }

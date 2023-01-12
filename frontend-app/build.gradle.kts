@@ -12,6 +12,7 @@ val junit_version: String by project
 val unleash_version: String by project
 val test_containers_version: String by project
 val postgres_version: String by project
+val kotlinx_version: String by project
 
 plugins {
     id("setup.repository")
@@ -50,6 +51,7 @@ dependencies {
     implementation("no.nav:vault-jdbc:1.3.10")
     implementation("org.flywaydb:flyway-core:9.8.3")
     implementation("org.postgresql:postgresql:$postgres_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinx_version")
     testImplementation("org.testcontainers:testcontainers:$test_containers_version")
     testImplementation("org.testcontainers:postgresql:$test_containers_version")
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")

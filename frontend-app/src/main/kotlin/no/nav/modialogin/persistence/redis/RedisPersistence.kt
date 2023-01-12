@@ -1,7 +1,11 @@
 package no.nav.modialogin.persistence.redis
 
 import kotlinx.coroutines.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.KSerializer
+import no.nav.modialogin.persistence.EncodedSubMessage
 import no.nav.modialogin.persistence.Persistence
 import no.nav.modialogin.utils.*
 import no.nav.modialogin.utils.Encoding.decode
@@ -9,18 +13,17 @@ import no.nav.modialogin.utils.Encoding.encode
 import no.nav.modialogin.utils.KotlinUtils.filterNotNull
 import no.nav.personoversikt.common.utils.SelftestGenerator
 import redis.clients.jedis.params.ScanParams
-import java.time.LocalDateTime
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class RedisPersistence<KEY, VALUE>(
     scope: String,
+    keySerializer: KSerializer<KEY>,
+    valueSerializer: KSerializer<VALUE>,
     private val redisPool: AuthJedisPool,
-    private val keySerializer: KSerializer<KEY>,
-    private val valueSerializer: KSerializer<VALUE>,
-    pubSub: RedisPersistencePubSub<KEY, VALUE>? = null
-) : Persistence<KEY, VALUE>(scope, pubSub) {
+    pubSub: RedisPersistencePubSub? = null
+) : Persistence<KEY, VALUE>(scope, keySerializer, valueSerializer, pubSub) {
     private val selftest = SelftestGenerator.Reporter("Redis", critical = false)
 
     init {
@@ -71,9 +74,11 @@ class RedisPersistence<KEY, VALUE>(
                 ttlInSeconds,
                 encodedValue
             )
+            if (pubSub == null) return@useResource
             runBlocking {
-                val expiry = LocalDateTime.now().plusSeconds(ttl.inWholeSeconds)
-                pubSub?.publishMessage(scope, encodedKey, encodedValue, expiry)
+                val expiry = Clock.System.now().plus(ttlInSeconds.seconds).toLocalDateTime(TimeZone.currentSystemDefault())
+                val data = EncodedSubMessage(scope, encodedKey, encodedValue, expiry)
+                pubSub.publishData(encode(EncodedSubMessage.serializer(), data))
             }
         }
     }
