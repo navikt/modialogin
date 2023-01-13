@@ -1,9 +1,6 @@
 package no.nav.modialogin.persistence.redis
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.PersistencePubSub
 import no.nav.modialogin.utils.AuthJedisPool
@@ -12,21 +9,7 @@ import redis.clients.jedis.JedisPubSub
 class RedisPersistencePubSub(
     channelName: String,
     private val redisPool: AuthJedisPool,
-) : PersistencePubSub(channelName) {
-    private var job: Job? = null
-    private var channel = Channel<String>()
-    private var running = false
-    override fun startSubscribing(): Flow<String> {
-        doStart()
-        return channel.consumeAsFlow()
-    }
-
-    override fun stopSubscribing() {
-        channel.close()
-        doStop()
-        channel = Channel()
-    }
-
+) : PersistencePubSub(channelName, "redis") {
     override suspend fun publishData(data: String) {
         redisPool.useResource {
             it.publish(channelName, data)
@@ -48,20 +31,7 @@ class RedisPersistencePubSub(
         }
     }
 
-    private fun doStop() {
-        log.info("Stopping redis subscriber on channel '$channelName'")
-        subscriber.unsubscribe()
-        job?.cancel()
-        running = false
-    }
-
-    private fun doStart() {
-        log.info("starting redis subscriber on channel '$channelName'")
-        running = true
-        job = GlobalScope.launch { subscribe() }
-    }
-
-    private suspend fun subscribe(retryInterval: Long = 5000) {
+    override suspend fun subscribe(retryInterval: Long) {
         while (running) {
             val exitStatus = redisPool.useResource {
                 it.subscribe(subscriber, channelName)

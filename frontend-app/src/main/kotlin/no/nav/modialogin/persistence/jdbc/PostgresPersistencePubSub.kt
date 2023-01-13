@@ -1,9 +1,6 @@
 package no.nav.modialogin.persistence.jdbc
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.PersistencePubSub
 import org.postgresql.jdbc.PgConnection
@@ -14,12 +11,8 @@ import javax.sql.DataSource
 class PostgresPersistencePubSub(
     channelName: String,
     private val dataSource: DataSource,
-) : PersistencePubSub(channelName) {
-    private var job: Job? = null
-    private var channel = Channel<String>()
-    private var running = false
-
-    private suspend fun subscribe(retryInterval: Long = 5000) {
+) : PersistencePubSub(channelName, "postgres") {
+    override suspend fun subscribe(retryInterval: Long) {
         while (running) {
             try {
                 val listener = dataSource.connection.unwrap(PgConnection::class.java)
@@ -50,32 +43,7 @@ class PostgresPersistencePubSub(
         }
     }
 
-    override fun startSubscribing(): Flow<String> {
-        doStart()
-        return channel.consumeAsFlow()
-    }
-
-    override fun stopSubscribing() {
-        channel.close()
-        doStop()
-        channel = Channel()
-    }
-
     override suspend fun publishData(data: String) {
         // Pass. This is handled internally by postgres.
-    }
-
-    private fun doStart() {
-        running = true
-        log.info("Starting jdbc subscriber on channel '$channelName'")
-        job = GlobalScope.launch {
-            subscribe()
-        }
-    }
-
-    private fun doStop() {
-        log.info("Stopping the jdbc subsriber on channel '$channelName")
-        running = false
-        job?.cancel()
     }
 }
