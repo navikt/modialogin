@@ -18,7 +18,7 @@ import java.util.concurrent.Callable
 
 class AADOnBehalfOfDirectiveSpecification(
     azureAdConfig: AzureAdConfig,
-    persistence: Persistence<String, String>,
+    persistence: Persistence<String, String>
 ) : BFFProxy.RequestDirectiveSpecification {
     /**
      * Usage: SET_ON_BEHALF_OF_TOKEN <cluster> <namespace> <servicename>
@@ -54,11 +54,9 @@ class AADOnBehalfOfDirectiveSpecification(
             }
 
             try {
-                val oboToken: String = oboExchangeTimer.time(
-                    Callable {
+                val oboToken: String = oboExchangeTimer.time(Callable {
                         aadOboTokenClient.exchangeOnBehalfOfToken(lexed.scope, principal.accessToken.token)
-                    }
-                )
+                    })
 
                 this.headers["Cookie"] = ""
                 this.headers["Authorization"] = "Bearer $oboToken"

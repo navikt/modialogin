@@ -43,7 +43,7 @@ val BFFProxyFeature = createApplicationPlugin("bff-proxy", ::BFFProxyFeatureConf
         RespondDirectiveSpecification(),
         AADOnBehalfOfDirectiveSpecification(
             azureAdConfig = azureAdConfig,
-            persistence = persistence,
+            persistence = persistence
         )
     )
 

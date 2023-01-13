@@ -49,7 +49,7 @@ class PersistentTokenCache(
             private fun DecodedJWT.durationToExpiry(): Duration {
                 return (expiresAt.time - System.currentTimeMillis()).milliseconds
             }
-        },
+        }
     )
 
     override fun getFromCacheOrTryProvider(cacheKey: String, tokenProvider: Supplier<String>): String {
