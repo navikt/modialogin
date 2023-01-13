@@ -4,7 +4,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
-import no.nav.modialogin.Logging
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.PersistencePubSub
 import no.nav.modialogin.utils.AuthJedisPool
@@ -16,7 +15,7 @@ class RedisPersistencePubSub(
 ) : PersistencePubSub(channelName) {
     private var job: Job? = null
     private var channel = Channel<String>()
-
+    private var running = false
     override fun startSubscribing(): Flow<String> {
         doStart()
         return channel.consumeAsFlow()
@@ -53,20 +52,23 @@ class RedisPersistencePubSub(
         log.info("Stopping redis subscriber on channel '$channelName'")
         subscriber.unsubscribe()
         job?.cancel()
+        running = false
     }
 
     private fun doStart() {
         log.info("starting redis subscriber on channel '$channelName'")
+        running = true
         job = GlobalScope.launch { subscribe() }
     }
 
-    private suspend fun subscribe() {
-        try {
-            redisPool.useResource {
+    private suspend fun subscribe(retryInterval: Long = 5000) {
+        while (running) {
+            val exitStatus = redisPool.useResource {
                 it.subscribe(subscriber, channelName)
             }
-        } catch (e: Exception) {
-            Logging.log.error("Error when subscribing to Redis pub/sub", e)
+            if (exitStatus.isFailure) {
+                delay(retryInterval)
+            }
         }
     }
 }
