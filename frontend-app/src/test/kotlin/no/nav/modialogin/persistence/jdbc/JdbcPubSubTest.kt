@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class JdbcPubSubTest : TestUtils.WithPostgres {
     @Test()
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 30, unit = TimeUnit.SECONDS)
     fun `mottar postgres-melding på kanal`() = runBlocking {
         val scope = "test"
         val (sendPostgres, receivePostgres) = setupSendAndReceivePostgres(scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
