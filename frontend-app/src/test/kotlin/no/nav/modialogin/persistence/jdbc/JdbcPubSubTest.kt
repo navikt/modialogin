@@ -1,5 +1,6 @@
 package no.nav.modialogin.persistence.jdbc
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -27,8 +28,8 @@ class JdbcPubSubTest : TestUtils.WithPostgres {
 
         val expectedMessage = DummySubMessage(testKey, testValue, "test", Clock.System.now().plus(10.minutes))
 
+        delay(2000L)
         sendPostgres.doPut(testKey, testValue, ttl)
-
         val firstMessage = FlowTransformer.mapData(subscription, EncodedSubMessage.serializer()) {
             val key = decode(String.serializer(), it.key)
             val value = decode(DummyChannelValue.serializer(), it.value)

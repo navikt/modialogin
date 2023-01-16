@@ -6,7 +6,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
-import no.nav.modialogin.Logging
+import no.nav.modialogin.Logging.log
 
 abstract class PersistencePubSub(
     open val channelName: String,
@@ -27,14 +27,14 @@ abstract class PersistencePubSub(
     }
     private fun doStart() {
         running = true
-        Logging.log.info("Starting $implementationName subscriber on channel '$channelName'")
+        log.info("Starting $implementationName subscriber on channel '$channelName'")
         job = GlobalScope.launch {
             subscribe()
         }
     }
 
     private fun doStop() {
-        Logging.log.info("Stopping the $implementationName subsriber on channel '$channelName")
+        log.info("Stopping the $implementationName subscriber on channel '$channelName")
         running = false
         job?.cancel()
     }
