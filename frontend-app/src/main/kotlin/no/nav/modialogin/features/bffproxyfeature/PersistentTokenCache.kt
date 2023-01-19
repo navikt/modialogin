@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.github.benmanes.caffeine.cache.Expiry
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.builtins.serializer
 import no.nav.common.token_client.cache.TokenCache
 import no.nav.common.token_client.utils.TokenUtils
 import no.nav.common.token_client.utils.TokenUtils.expiresWithin
