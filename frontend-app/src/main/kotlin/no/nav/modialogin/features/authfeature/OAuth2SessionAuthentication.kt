@@ -56,7 +56,6 @@ class Oauth2SessionAuthenticationConfig(
     var appmode: AppMode? = null,
     var azureConfig: AzureAdConfig? = null,
     var persistence: Persistence<String, TokenPrincipal>? = null,
-    var enablePersistencePubSub: Boolean = false,
     var skipWhen: ((ApplicationCall) -> Boolean)? = null,
 )
 
