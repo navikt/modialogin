@@ -6,6 +6,7 @@ import no.nav.modialogin.persistence.PersistencePubSub
 import org.postgresql.jdbc.PgConnection
 import org.postgresql.util.PSQLException
 import java.sql.SQLException
+import java.sql.SQLTransientConnectionException
 import javax.sql.DataSource
 
 class PostgresPersistencePubSub(
@@ -19,7 +20,7 @@ class PostgresPersistencePubSub(
                 val stmt = listener.prepareStatement("LISTEN  persistence_updates")
                 stmt.execute()
                 while (true) {
-                    val notifications = listener!!.getNotifications(10 * 1000) ?: continue
+                    val notifications = listener!!.getNotifications(retryInterval.toInt()) ?: continue
                     for (notification in notifications) {
                         runBlocking(Dispatchers.IO) {
                             channel.send(notification.parameter)
@@ -27,6 +28,10 @@ class PostgresPersistencePubSub(
                     }
                 }
             } catch (e: PSQLException) {
+                log.error("Error when subscribing to Postgres pub/sub", e)
+                delay(retryInterval)
+            } catch (e: SQLTransientConnectionException) {
+                log.error("Error when subscribing to Postgres pub/sub", e)
                 delay(retryInterval)
             } catch (e: SQLException) {
                 log.warn(

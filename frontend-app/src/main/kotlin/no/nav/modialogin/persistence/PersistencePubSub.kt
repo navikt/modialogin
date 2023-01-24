@@ -15,8 +15,8 @@ abstract class PersistencePubSub(
     private var job: Job? = null
     protected var channel = Channel<String>()
     protected var running = false
-    fun startSubscribing(): Flow<String> {
-        doStart()
+    fun startSubscribing(retryInterval: Long = 5000): Flow<String> {
+        doStart(retryInterval)
         return channel.consumeAsFlow()
     }
 
@@ -25,11 +25,11 @@ abstract class PersistencePubSub(
         doStop()
         channel = Channel()
     }
-    private fun doStart() {
+    private fun doStart(retryInterval: Long) {
         running = true
         log.info("Starting $implementationName subscriber on channel '$channelName'")
         job = GlobalScope.launch {
-            subscribe()
+            subscribe(retryInterval)
         }
     }
 
@@ -39,6 +39,6 @@ abstract class PersistencePubSub(
         job?.cancel()
     }
 
-    abstract suspend fun subscribe(retryInterval: Long = 5000)
+    abstract suspend fun subscribe(retryInterval: Long)
     abstract suspend fun publishData(data: String)
 }

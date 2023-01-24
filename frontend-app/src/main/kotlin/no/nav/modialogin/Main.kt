@@ -44,7 +44,6 @@ fun startApplication() {
             appmode = config.appMode
             azureConfig = config.azureAd
             persistence = sessionPersistence
-            enablePersistencePubSub = config.enablePersistencePubSub
             skipWhen = { call ->
                 val url = call.request.uri
                 val isInternal = url.contains("/${config.appName}/internal/")

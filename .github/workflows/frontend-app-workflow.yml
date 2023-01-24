@@ -19,6 +19,8 @@ env:
   BETA_IMAGE: ghcr.io/${{ github.repository }}/modialogin-frontend:${{ github.sha }}-beta
   CI: true
   TZ: Europe/Oslo
+  ACTIONS_STEP_DEBUG: true
+  ACTIONS_RUNNER_DEBUG: true
 jobs:
   build:
     name: Test, build and publish
