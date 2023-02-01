@@ -31,8 +31,8 @@ object RedisTestUtils {
         val sendPool = AuthJedisPool(redisConfig)
         val receivePool = AuthJedisPool(redisConfig)
 
-        val sendPubSub = if (enablePubSub) RedisPersistencePubSub("test", sendPool) else null
-        val receivePubSub = if (enablePubSub) RedisPersistencePubSub("test", receivePool) else null
+        val sendPubSub = if (enablePubSub) RedisPersistencePubSub("test", redisConfig) else null
+        val receivePubSub = if (enablePubSub) RedisPersistencePubSub("test", redisConfig) else null
 
         val sendRedis = RedisPersistence(scope, keySerializer, valueSerializer, sendPool, sendPubSub)
         val receiveRedis = RedisPersistence(scope, keySerializer, valueSerializer, receivePool, receivePubSub)

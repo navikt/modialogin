@@ -14,7 +14,7 @@ abstract class Persistence<KEY, VALUE>(val scope: String, val keySerializer: KSe
     suspend fun dump(): Map<KEY, VALUE> = withContext(Dispatchers.IO) { doDump() }
     suspend fun size(): Long = withContext(Dispatchers.IO) { doSize() }
     abstract suspend fun doGet(key: KEY): VALUE?
-    abstract suspend fun doPut(key: KEY, value: VALUE, ttl: Duration)
+    abstract suspend fun doPut(key: KEY, value: VALUE, ttl: Duration): Result<*>
     abstract suspend fun doRemove(key: KEY)
     abstract suspend fun doClean()
     abstract suspend fun doDump(): Map<KEY, VALUE>

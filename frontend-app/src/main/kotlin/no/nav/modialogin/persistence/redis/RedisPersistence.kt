@@ -64,11 +64,11 @@ class RedisPersistence<KEY, VALUE>(
             .mapValues { decode(valueSerializer, it.value) }
     }
 
-    override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
-        redisPool.useResource<Unit> {
-            val encodedKey = encode(keySerializer, key)
-            val encodedValue = encode(valueSerializer, value)
-            val ttlInSeconds = ttl.inWholeSeconds
+    override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration): Result<*> {
+        val encodedKey = encode(keySerializer, key)
+        val encodedValue = encode(valueSerializer, value)
+        val ttlInSeconds = ttl.inWholeSeconds
+        return redisPool.useResource {
             it.setex(
                 "$scope:$encodedKey",
                 ttlInSeconds,

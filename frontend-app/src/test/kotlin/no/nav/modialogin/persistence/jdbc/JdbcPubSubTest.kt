@@ -1,13 +1,12 @@
 package no.nav.modialogin.persistence.jdbc
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.persistence.*
 import no.nav.modialogin.utils.Encoding
-import no.nav.modialogin.utils.FlowTransformer
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -21,66 +20,56 @@ class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
 
     @Test()
     @Timeout(value = 30, unit = TimeUnit.SECONDS)
-    fun `mottar postgres-melding på kanal`() = runBlocking {
-        container = RestartablePostgresContainer()
+    fun `klarer å hente seg inn etter at postgres går ned`() = runBlocking {
+        val channel = Channel<DummySubMessage<String, DummyChannelValue>>()
 
         val scope = "test"
 
         val testUtils = PostgresTestUtils.getIntegrationTestUtils(container, scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
 
-        val testKey = "TEST_KEY"
+        val firstKey = "first"
+        val secondKey = "second"
+
         val testValue = DummyChannelValue("foo", 2, false)
         val ttl = 10.minutes
-        val subscription = testUtils.receivePostgres.pubSub!!.startSubscribing()
 
-        val expectedMessage = DummySubMessage(testKey, testValue, "test", Clock.System.now().plus(10.minutes))
+        GlobalScope.launch {
+            val sub = testUtils.receivePostgres.pubSub!!.startSubscribing(1000L)
+            sub.onEach {
+                val decodedMessage = Encoding.decode(EncodedSubMessage.serializer(), it)
+                val key = Encoding.decode(String.serializer(), decodedMessage.key)
+                val value = Encoding.decode(DummyChannelValue.serializer(), decodedMessage.value)
+                channel.send(DummySubMessage(key, value, decodedMessage.scope, decodedMessage.expiry))
+            }.collect()
+        }
 
-        testUtils.sendPostgres.doPut(testKey, testValue, ttl)
-        val firstMessage = FlowTransformer.mapData(subscription, EncodedSubMessage.serializer()) {
-            val key = Encoding.decode(String.serializer(), it.key)
-            val value = Encoding.decode(DummyChannelValue.serializer(), it.value)
-            DummySubMessage(key, value, it.scope, it.expiry)
-        }.first()
+        val firstExpectedMessage = DummySubMessage(firstKey, testValue, "test", Clock.System.now().plus(10.minutes))
+        val secondExpectedMessage = DummySubMessage(secondKey, testValue, "test", Clock.System.now().plus(10.minutes))
 
-        testUtils.receivePostgres.pubSub!!.stopSubscribing()
-
-        Assertions.assertEquals(expectedMessage.value, firstMessage.value)
-        Assertions.assertEquals(expectedMessage.key, firstMessage.key)
-        Assertions.assertEquals(expectedMessage.scope, firstMessage.scope)
-        Assertions.assertTrue(expectedMessage.ttl.epochSeconds - firstMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
-    }
-
-    @Test()
-    @Timeout(value = 40, unit = TimeUnit.SECONDS)
-    fun `klarer å hente seg inn etter at postgres går ned`() = runBlocking {
-        val scope = "test"
-
-        val testUtils = PostgresTestUtils.getIntegrationTestUtils(container, scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
-
-        val subscription = testUtils.receivePostgres.pubSub!!.startSubscribing(1000L)
+        delay(1000L)
+        testUtils.sendPostgres.doPut(firstKey, testValue, ttl)
+        delay(1000L)
 
         container!!.restart()
 
-        delay(2500L)
+        delay(1000L)
+        testUtils.sendPostgres.doPut(secondKey, testValue, ttl)
 
-        val testKey = "TEST_KEY"
-        val testValue = DummyChannelValue("foo", 2, false)
-        val ttl = 10.minutes
-        val expectedMessage = DummySubMessage(testKey, testValue, "test", Clock.System.now().plus(10.minutes))
+        val messages = channel.consumeAsFlow().take(2).toList()
 
-        testUtils.sendPostgres.doPut(testKey, testValue, ttl)
+        channel.close()
 
-        val firstMessage = FlowTransformer.mapData(subscription, EncodedSubMessage.serializer()) {
-            val key = Encoding.decode(String.serializer(), it.key)
-            val value = Encoding.decode(DummyChannelValue.serializer(), it.value)
-            DummySubMessage(key, value, it.scope, it.expiry)
-        }.first()
+        val firstMessage = messages[0]
+        val secondMessage = messages[1]
 
-        testUtils.receivePostgres.pubSub!!.stopSubscribing()
+        Assertions.assertEquals(firstExpectedMessage.value, firstMessage.value)
+        Assertions.assertEquals(firstExpectedMessage.key, firstMessage.key)
+        Assertions.assertEquals(firstExpectedMessage.scope, firstMessage.scope)
+        Assertions.assertTrue(firstExpectedMessage.ttl.epochSeconds - firstMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
 
-        Assertions.assertEquals(expectedMessage.value, firstMessage.value)
-        Assertions.assertEquals(expectedMessage.key, firstMessage.key)
-        Assertions.assertEquals(expectedMessage.scope, firstMessage.scope)
-        Assertions.assertTrue(expectedMessage.ttl.epochSeconds - firstMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
+        Assertions.assertEquals(secondExpectedMessage.value, secondMessage.value)
+        Assertions.assertEquals(secondExpectedMessage.key, secondMessage.key)
+        Assertions.assertEquals(secondExpectedMessage.scope, secondMessage.scope)
+        Assertions.assertTrue(secondExpectedMessage.ttl.epochSeconds - secondMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
     }
 }

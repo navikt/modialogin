@@ -1,18 +1,16 @@
 package no.nav.modialogin.persistence
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.launch
 import no.nav.modialogin.Logging.log
+import kotlin.concurrent.thread
 
 abstract class PersistencePubSub(
     open val channelName: String,
     private val implementationName: String
 ) {
-    private var job: Job? = null
+    private var job: Thread? = null
     protected var channel = Channel<String>()
     protected var running = false
     fun startSubscribing(retryInterval: Long = 5000): Flow<String> {
@@ -28,7 +26,7 @@ abstract class PersistencePubSub(
     private fun doStart(retryInterval: Long) {
         running = true
         log.info("Starting $implementationName subscriber on channel '$channelName'")
-        job = GlobalScope.launch {
+        job = thread(isDaemon = true, priority = 1) {
             subscribe(retryInterval)
         }
     }
@@ -36,9 +34,11 @@ abstract class PersistencePubSub(
     private fun doStop() {
         log.info("Stopping the $implementationName subscriber on channel '$channelName")
         running = false
-        job?.cancel()
+        job?.interrupt()
     }
 
-    abstract suspend fun subscribe(retryInterval: Long)
-    abstract suspend fun publishData(data: String)
+    abstract fun subscribe(retryInterval: Long)
+    open suspend fun publishData(data: String): Result<*> {
+        return Result.success(null)
+    }
 }

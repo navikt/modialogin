@@ -39,8 +39,8 @@ class JdbcPersistence<KEY, VALUE>(
             .getOrNull()
     }
 
-    override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
-        dataSource.useConnection {
+    override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration): Result<*> {
+        return dataSource.useConnection {
             doPut(it, key, value, ttl)
         }
     }

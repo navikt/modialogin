@@ -4,14 +4,18 @@ import kotlinx.coroutines.*
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.persistence.PersistencePubSub
 import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.utils.RedisConfig
+import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPubSub
 
 class RedisPersistencePubSub(
     channelName: String,
-    private val redisPool: AuthJedisPool,
+    private val redisConfig: RedisConfig,
 ) : PersistencePubSub(channelName, "redis") {
-    override suspend fun publishData(data: String) {
-        redisPool.useResource {
+    private val publishPool = AuthJedisPool(redisConfig)
+
+    override suspend fun publishData(data: String): Result<*> {
+        return publishPool.useResource {
             it.publish(channelName, data)
         }
     }
@@ -24,21 +28,23 @@ class RedisPersistencePubSub(
                         channel.send(message)
                     }
                 } catch (e: Exception) {
-                    log.error("Failed to parse Redis Sub message: ", e)
+                    log.error("Failed to parse Redis Sub message", e)
                 }
             }
             super.onMessage(messageChannel, message)
         }
     }
 
-    override suspend fun subscribe(retryInterval: Long) {
+    override fun subscribe(retryInterval: Long) {
         while (running) {
-            val exitStatus = redisPool.useResource {
-                it.subscribe(subscriber, channelName)
+            try {
+                val jedis = Jedis(redisConfig.host, redisConfig.port)
+                jedis.auth(redisConfig.password)
+                jedis.subscribe(subscriber, channelName)
+            } catch (e: Exception) {
+                log.error("Encountered an exception when subscribing to Redis", e)
             }
-            if (exitStatus.isFailure) {
-                delay(retryInterval)
-            }
+            Thread.sleep(retryInterval)
         }
     }
 }

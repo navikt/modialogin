@@ -26,12 +26,12 @@ object PersistenceFactory {
     ): Persistence<KEY, VALUE> {
         val persistence = if (config.redisConfig != null) {
             val redisPool = AuthJedisPool(config.redisConfig)
-            val pubSub = if (config.enablePersistencePubSub) RedisPersistencePubSub("RedisPubSub", redisPool) else null
+            val pubSub = if (config.enablePersistencePubSub) RedisPersistencePubSub("RedisPubSub", config.redisConfig) else null
             RedisPersistence(scope, keySerializer, valueSerializer, redisPool, pubSub)
         } else {
             val dbConfig = DataSourceConfiguration(config)
             DataSourceConfiguration.migrate(config, dbConfig.adminDataSource)
-            val pubSub = if (config.enablePersistencePubSub) PostgresPersistencePubSub("persistence_updates", dbConfig.userDataSource) else null
+            val pubSub = if (config.enablePersistencePubSub) PostgresPersistencePubSub("persistence_updates", dbConfig) else null
             JdbcPersistence(scope, keySerializer, valueSerializer, dbConfig.userDataSource, pubSub)
         }
 

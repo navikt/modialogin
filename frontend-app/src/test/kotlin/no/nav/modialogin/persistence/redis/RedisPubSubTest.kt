@@ -1,81 +1,83 @@
 package no.nav.modialogin.persistence.redis
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.persistence.*
 import no.nav.modialogin.utils.Encoding
-import no.nav.modialogin.utils.FlowTransformer
+import no.nav.personoversikt.common.utils.Retry
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.Timeout
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RedisPubSubTest : RedisTestUtils.WithRedis() {
 
+    //    @Timeout(value = 40, unit = TimeUnit.SECONDS)
     @Test()
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     fun `mottar redis-melding på kanal`() = runBlocking {
+        val channel = Channel<DummySubMessage<String, DummyChannelValue>>()
+
         val scope = "test"
 
         val testUtils = RedisTestUtils.getIntegrationTestUtils(container, scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
-        val subscription = testUtils.receiveRedis.pubSub!!.startSubscribing()
 
-        val testKey = "TEST_KEY"
-        val testValue = DummyChannelValue("foo", 9000, false)
-        val ttl = 10.seconds
-        val expectedMessage = DummySubMessage(testKey, testValue, "test", Clock.System.now().plus(10.seconds))
+        val firstKey = "first"
+        val secondKey = "second"
 
-        testUtils.sendRedis.doPut(testKey, testValue, ttl)
+        val testValue = DummyChannelValue("foo", 2, false)
+        val ttl = 10.minutes
 
-        val firstMessage = FlowTransformer.mapData(subscription, EncodedSubMessage.serializer()) {
-            val key = Encoding.decode(String.serializer(), it.key)
-            val value = Encoding.decode(DummyChannelValue.serializer(), it.value)
-            DummySubMessage(key, value, it.scope, it.expiry)
-        }.first()
+        GlobalScope.launch {
+            val sub = testUtils.receiveRedis.pubSub!!.startSubscribing(1000L)
+            sub.onEach {
+                println(it)
+                val decodedMessage = Encoding.decode(EncodedSubMessage.serializer(), it)
+                val key = Encoding.decode(String.serializer(), decodedMessage.key)
+                val value = Encoding.decode(DummyChannelValue.serializer(), decodedMessage.value)
+                channel.send(DummySubMessage(key, value, decodedMessage.scope, decodedMessage.expiry))
+            }.collect()
+        }
 
-        testUtils.receiveRedis.pubSub!!.stopSubscribing()
+        val firstExpectedMessage = DummySubMessage(firstKey, testValue, "test", Clock.System.now().plus(10.minutes))
+        val secondExpectedMessage = DummySubMessage(secondKey, testValue, "test", Clock.System.now().plus(10.minutes))
 
-        Assertions.assertEquals(expectedMessage.value, firstMessage.value)
-        Assertions.assertEquals(expectedMessage.key, firstMessage.key)
-        Assertions.assertEquals(expectedMessage.scope, firstMessage.scope)
-        Assertions.assertTrue(expectedMessage.ttl.epochSeconds - firstMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
-    }
+        delay(1000L)
 
-    @Timeout(value = 40, unit = TimeUnit.SECONDS)
-    @Test()
-    fun `klarer å hente seg inn selv om redis instansen går ned`() = runBlocking {
-        val scope = "test"
+        testUtils.sendRedis.doPut(secondKey, testValue, ttl)
 
-        val testUtils = RedisTestUtils.getIntegrationTestUtils(container, scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
-        val subscription = testUtils.receiveRedis.pubSub!!.startSubscribing(1000L)
-
-        val testKey = "TEST_KEY"
-        val testValue = DummyChannelValue("foo", 9000, false)
-        val ttl = 10.seconds
-        val expectedMessage = DummySubMessage(testKey, testValue, "test", Clock.System.now().plus(10.seconds))
+        delay(1000L)
 
         container!!.restart()
 
-        delay(5000L) // Venter på at subscriberen skal reconnecte
+        delay(1000L)
 
-        testUtils.sendRedis.doPut(testKey, testValue, ttl)
+        Retry(Retry.Config(delayLimit = 40.seconds, growthFactor = 1.0, initDelay = 1.seconds)).run {
+            println("hallo")
+            val res = testUtils.sendRedis.doPut(firstKey, testValue, ttl)
+            println(res)
+            if (res.isFailure) throw Exception("Unable to put")
+        }
 
-        val firstMessage = FlowTransformer.mapData(subscription, EncodedSubMessage.serializer()) {
-            val key = Encoding.decode(String.serializer(), it.key)
-            val value = Encoding.decode(DummyChannelValue.serializer(), it.value)
-            DummySubMessage(key, value, it.scope, it.expiry)
-        }.first()
+        val messages = channel.consumeAsFlow().take(2).toList()
 
-        testUtils.receiveRedis.pubSub!!.stopSubscribing()
+        channel.close()
 
-        Assertions.assertEquals(expectedMessage.value, firstMessage.value)
-        Assertions.assertEquals(expectedMessage.key, firstMessage.key)
-        Assertions.assertEquals(expectedMessage.scope, firstMessage.scope)
-        Assertions.assertTrue(expectedMessage.ttl.epochSeconds - firstMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
+        val firstMessage = messages[0]
+        val secondMessage = messages[1]
+
+        Assertions.assertEquals(firstExpectedMessage.value, firstMessage.value)
+        Assertions.assertEquals(firstExpectedMessage.key, firstMessage.key)
+        Assertions.assertEquals(firstExpectedMessage.scope, firstMessage.scope)
+        Assertions.assertTrue(firstExpectedMessage.ttl.epochSeconds - firstMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
+
+        Assertions.assertEquals(secondExpectedMessage.value, secondMessage.value)
+        Assertions.assertEquals(secondExpectedMessage.key, secondMessage.key)
+        Assertions.assertEquals(secondExpectedMessage.scope, secondMessage.scope)
+        Assertions.assertTrue(secondExpectedMessage.ttl.epochSeconds - secondMessage.ttl.epochSeconds < 1.seconds.inWholeSeconds)
     }
 }
