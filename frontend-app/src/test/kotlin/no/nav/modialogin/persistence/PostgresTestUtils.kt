@@ -40,7 +40,7 @@ object PostgresTestUtils {
             DataSourceConfiguration.migrate(frontendAppConfig, dataSourceConfiguration.adminDataSource)
         }
 
-        val pubSub = if (enablePubSub) PostgresPersistencePubSub("persistence_updates", dataSourceConfiguration) else null
+        val pubSub = if (enablePubSub) PostgresPersistencePubSub(PubSubConfig("persistence_updates", 1000L, 10), dataSourceConfiguration) else null
 
         val sendPostgres = JdbcPersistence(scope, keySerializer, valueSerializer, dataSourceConfiguration.userDataSource, pubSub)
         val receivePostgres = JdbcPersistence(scope, keySerializer, valueSerializer, dataSourceConfiguration.userDataSource, pubSub)

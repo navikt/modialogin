@@ -64,23 +64,21 @@ class RedisPersistence<KEY, VALUE>(
             .mapValues { decode(valueSerializer, it.value) }
     }
 
-    override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration): Result<*> {
+    override suspend fun doPut(key: KEY, value: VALUE, ttl: Duration) {
         val encodedKey = encode(keySerializer, key)
         val encodedValue = encode(valueSerializer, value)
         val ttlInSeconds = ttl.inWholeSeconds
-        return redisPool.useResource {
+        redisPool.useResource {
             it.setex(
                 "$scope:$encodedKey",
                 ttlInSeconds,
                 encodedValue
             )
-            if (pubSub == null) return@useResource
-            runBlocking {
-                val expiry = Clock.System.now().plus(ttlInSeconds.seconds).toLocalDateTime(TimeZone.currentSystemDefault())
-                val data = EncodedSubMessage(scope, encodedKey, encodedValue, expiry)
-                pubSub.publishData(encode(EncodedSubMessage.serializer(), data))
-            }
         }
+        if (pubSub == null) return
+        val expiry = Clock.System.now().plus(ttlInSeconds.seconds).toLocalDateTime(TimeZone.currentSystemDefault())
+        val data = EncodedSubMessage(scope, encodedKey, encodedValue, expiry)
+        pubSub.publishData(encode(EncodedSubMessage.serializer(), data))
     }
 
     override suspend fun doRemove(key: KEY) {

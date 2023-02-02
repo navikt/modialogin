@@ -5,15 +5,16 @@ import com.zaxxer.hikari.pool.HikariPool
 import kotlinx.coroutines.*
 import no.nav.modialogin.DataSourceConfiguration
 import no.nav.modialogin.Logging.log
+import no.nav.modialogin.PubSubConfig
 import no.nav.modialogin.persistence.PersistencePubSub
 import org.postgresql.jdbc.PgConnection
 import org.postgresql.util.PSQLException
 import java.sql.*
 
 class PostgresPersistencePubSub(
-    channelName: String,
+    pubSubConfig: PubSubConfig,
     private val dataSourceConfig: DataSourceConfiguration,
-) : PersistencePubSub(channelName, "postgres") {
+) : PersistencePubSub(pubSubConfig, "postgres") {
 
     private fun testConnection(listener: PgConnection) {
         val stmt = listener.createStatement()
@@ -31,7 +32,7 @@ class PostgresPersistencePubSub(
                 dataSource = dataSourceConfig.createDatasource("user", 0, 1)
                 listener = dataSource.connection.unwrap(PgConnection::class.java)
 
-                val stmt = listener.prepareStatement("LISTEN $channelName")
+                val stmt = listener.prepareStatement("LISTEN ${pubSubConfig.channelName}")
                 stmt.execute()
                 stmt.close()
 

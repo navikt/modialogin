@@ -4,10 +4,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import no.nav.modialogin.Logging.log
+import no.nav.modialogin.PubSubConfig
 import kotlin.concurrent.thread
 
 abstract class PersistencePubSub(
-    open val channelName: String,
+    protected val pubSubConfig: PubSubConfig,
     private val implementationName: String
 ) {
     private var job: Thread? = null
@@ -25,14 +26,14 @@ abstract class PersistencePubSub(
     }
     private fun doStart(retryInterval: Long) {
         running = true
-        log.info("Starting $implementationName subscriber on channel '$channelName'")
+        log.info("Starting $implementationName subscriber on channel '${pubSubConfig.channelName}'")
         job = thread(isDaemon = true, priority = 1) {
             subscribe(retryInterval)
         }
     }
 
     private fun doStop() {
-        log.info("Stopping the $implementationName subscriber on channel '$channelName")
+        log.info("Stopping the $implementationName subscriber on channel '${pubSubConfig.channelName}'")
         running = false
         job?.interrupt()
     }

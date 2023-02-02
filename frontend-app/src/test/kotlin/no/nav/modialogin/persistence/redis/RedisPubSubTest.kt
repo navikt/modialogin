@@ -7,7 +7,6 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.persistence.*
 import no.nav.modialogin.utils.Encoding
-import no.nav.personoversikt.common.utils.Retry
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -48,20 +47,14 @@ class RedisPubSubTest : RedisTestUtils.WithRedis() {
 
         delay(1000L)
 
-        testUtils.sendRedis.doPut(secondKey, testValue, ttl)
+        testUtils.sendRedis.doPut(firstKey, testValue, ttl)
 
         delay(1000L)
 
         container!!.restart()
 
         delay(1000L)
-
-        Retry(Retry.Config(delayLimit = 40.seconds, growthFactor = 1.0, initDelay = 1.seconds)).run {
-            println("hallo")
-            val res = testUtils.sendRedis.doPut(firstKey, testValue, ttl)
-            println(res)
-            if (res.isFailure) throw Exception("Unable to put")
-        }
+        testUtils.sendRedis.doPut(secondKey, testValue, ttl)
 
         val messages = channel.consumeAsFlow().take(2).toList()
 

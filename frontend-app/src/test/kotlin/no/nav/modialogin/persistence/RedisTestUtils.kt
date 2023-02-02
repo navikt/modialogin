@@ -1,6 +1,7 @@
 package no.nav.modialogin.persistence
 
 import kotlinx.serialization.KSerializer
+import no.nav.modialogin.PubSubConfig
 import no.nav.modialogin.persistence.redis.RedisPersistence
 import no.nav.modialogin.persistence.redis.RedisPersistencePubSub
 import no.nav.modialogin.utils.AuthJedisPool
@@ -31,8 +32,8 @@ object RedisTestUtils {
         val sendPool = AuthJedisPool(redisConfig)
         val receivePool = AuthJedisPool(redisConfig)
 
-        val sendPubSub = if (enablePubSub) RedisPersistencePubSub("test", redisConfig) else null
-        val receivePubSub = if (enablePubSub) RedisPersistencePubSub("test", redisConfig) else null
+        val sendPubSub = if (enablePubSub) RedisPersistencePubSub(PubSubConfig("test", 1000L, 10), redisConfig) else null
+        val receivePubSub = if (enablePubSub) RedisPersistencePubSub(PubSubConfig("test", 1000L, 10), redisConfig) else null
 
         val sendRedis = RedisPersistence(scope, keySerializer, valueSerializer, sendPool, sendPubSub)
         val receiveRedis = RedisPersistence(scope, keySerializer, valueSerializer, receivePool, receivePubSub)

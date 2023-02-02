@@ -41,6 +41,11 @@ class FrontendAppConfig(
         getConfig("VAULT_MOUNTPATH"),
     ) { url, mountPath -> DatabaseConfig(url, mountPath) },
     val enablePersistencePubSub: Boolean = getConfig("ENABLE_PERSISTENCE_PUB_SUB")?.toBooleanStrict() ?: false,
+    val pubSubConfig: PubSubConfig? = ConditionalUtils.ifNotNull(
+        getConfig("PUBSUB_CHANNEL_NAME"),
+        getConfig("PUB_RETRY_INTERVAL")?.toLongOrNull() ?: 1000L,
+        getConfig("PUB_MAX_RETRIES")?.toIntOrNull() ?: 10
+    ) { channelName, pubRetryInterval, pubMaxRetries -> PubSubConfig(channelName, pubRetryInterval = pubRetryInterval, pubMaxRetries = pubMaxRetries) }
 ) {
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
     val azureAd: AzureAdConfig = AzureAdConfig.load()
@@ -48,6 +53,9 @@ class FrontendAppConfig(
     init {
         check(redisConfig != null || database != null) {
             "Could not find configuration for Redis or PostgreSQL."
+        }
+        if (enablePersistencePubSub && pubSubConfig == null) {
+            throw IllegalStateException("Make sure you provide the PUBSUB_CHANNEL_NAME in order to enable Pub/Sub")
         }
     }
 
@@ -160,4 +168,10 @@ class AzureAdConfig(
 data class DatabaseConfig(
     val jdbcUrl: String,
     val vaultMountpath: String? = null,
+)
+
+data class PubSubConfig(
+    val channelName: String,
+    val pubRetryInterval: Long,
+    val pubMaxRetries: Int
 )
