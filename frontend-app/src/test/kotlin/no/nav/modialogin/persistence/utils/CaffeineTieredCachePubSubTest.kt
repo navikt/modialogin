@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CaffeineTieredCacheTest : RedisTestUtils.WithRedis() {
+class CaffeineTieredCachePubSubTest : RedisTestUtils.WithRedis() {
 
     private val expirationStrategy = object : Expiry<String, DummyChannelValue> {
         override fun expireAfterCreate(key: String, value: DummyChannelValue, currentTime: Long): Long {
@@ -59,7 +59,8 @@ class CaffeineTieredCacheTest : RedisTestUtils.WithRedis() {
         val caffeineTieredCache = getCaffeineTieredCache(testUtils.receiveRedis)
 
         testUtils.sendRedis.doPut(testKey, testValue, ttl)
-        delay(1000L)
+        delay(2000L)
+
         val entryInCache = caffeineTieredCache.get(testKey)
         Assertions.assertNotNull(entryInCache)
     }
@@ -81,9 +82,9 @@ class CaffeineTieredCacheTest : RedisTestUtils.WithRedis() {
         val valueNotToPersist = DummyChannelValue("do not store me", 2, false)
 
         caffeineTieredCache.put(testKey, valueNotToPersist)
+        delay(2000L)
         testUtils.sendRedis.doPut(testKey, valueToPersist, 1.hours)
-
-        delay(1000L)
+        delay(2000L)
 
         val entryInCache = caffeineTieredCache.get(testKey)
         Assertions.assertEquals(valueToPersist, entryInCache)
@@ -106,9 +107,10 @@ class CaffeineTieredCacheTest : RedisTestUtils.WithRedis() {
         val valueToPersist = DummyChannelValue("store me", 2, false)
 
         caffeineTieredCache.put(testKey, valueToPersist)
+        delay(2000L)
         testUtils.sendRedis.doPut(testKey, valueNotToPersist, 5.minutes)
+        delay(2000L)
 
-        delay(1000L)
 
         val entryInCache = caffeineTieredCache.get(testKey)
         Assertions.assertEquals(valueToPersist, entryInCache)

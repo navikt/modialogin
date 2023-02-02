@@ -24,7 +24,7 @@ class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
         val channel = Channel<DummySubMessage<String, DummyChannelValue>>()
 
         val scope = "test"
-        delay(1000L)
+        delay(2000L)
         val testUtils = PostgresTestUtils.getIntegrationTestUtils(container, scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
 
         val firstKey = "first"
@@ -46,13 +46,13 @@ class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
         val firstExpectedMessage = DummySubMessage(firstKey, testValue, "test", Clock.System.now().plus(10.minutes))
         val secondExpectedMessage = DummySubMessage(secondKey, testValue, "test", Clock.System.now().plus(10.minutes))
 
-        delay(1000L)
+        delay(2000L)
         testUtils.sendPostgres.doPut(firstKey, testValue, ttl)
-        delay(1000L)
+        delay(2000L)
 
         container!!.restart()
 
-        delay(1000L)
+        delay(2000L)
         testUtils.sendPostgres.doPut(secondKey, testValue, ttl)
 
         val messages = channel.consumeAsFlow().take(2).toList()
