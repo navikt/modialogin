@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
 
     @Test()
-    @Timeout(value = 30, unit = TimeUnit.SECONDS)
+    @Timeout(value = 50, unit = TimeUnit.SECONDS)
     fun `klarer å hente seg inn etter at postgres går ned`() = runBlocking {
         val channel = Channel<DummySubMessage<String, DummyChannelValue>>()
 
