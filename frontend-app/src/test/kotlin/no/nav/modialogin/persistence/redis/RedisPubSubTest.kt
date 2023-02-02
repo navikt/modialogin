@@ -10,14 +10,16 @@ import no.nav.modialogin.utils.Encoding
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Timeout
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RedisPubSubTest : RedisTestUtils.WithRedis() {
 
-    //    @Timeout(value = 40, unit = TimeUnit.SECONDS)
     @Test()
+    @Timeout(value = 60, unit = TimeUnit.SECONDS)
     fun `mottar redis-melding på kanal`() = runBlocking {
         val channel = Channel<DummySubMessage<String, DummyChannelValue>>()
 
@@ -44,15 +46,15 @@ class RedisPubSubTest : RedisTestUtils.WithRedis() {
         val firstExpectedMessage = DummySubMessage(firstKey, testValue, "test", Clock.System.now().plus(10.minutes))
         val secondExpectedMessage = DummySubMessage(secondKey, testValue, "test", Clock.System.now().plus(10.minutes))
 
-        delay(1000L)
+        delay(4000L)
 
         testUtils.sendRedis.doPut(firstKey, testValue, ttl)
 
-        delay(1000L)
+        delay(4000L)
 
         container!!.restart()
 
-        delay(1000L)
+        delay(4000L)
         testUtils.sendRedis.doPut(secondKey, testValue, ttl)
 
         val messages = channel.consumeAsFlow().take(2).toList()
