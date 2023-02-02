@@ -34,7 +34,7 @@ class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
         val ttl = 10.minutes
 
         GlobalScope.launch {
-            val sub = testUtils.receivePostgres.pubSub!!.startSubscribing(1000L)
+            val sub = testUtils.receivePostgres.pubSub!!.startSubscribing()
             sub.onEach {
                 val decodedMessage = Encoding.decode(EncodedSubMessage.serializer(), it)
                 val key = Encoding.decode(String.serializer(), decodedMessage.key)

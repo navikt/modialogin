@@ -14,8 +14,8 @@ abstract class PersistencePubSub(
     private var job: Thread? = null
     protected var channel = Channel<String>()
     protected var running = false
-    fun startSubscribing(retryInterval: Long = 5000): Flow<String> {
-        doStart(retryInterval)
+    fun startSubscribing(): Flow<String> {
+        doStart()
         return channel.consumeAsFlow()
     }
 
@@ -24,11 +24,11 @@ abstract class PersistencePubSub(
         doStop()
         channel = Channel()
     }
-    private fun doStart(retryInterval: Long) {
+    private fun doStart() {
         running = true
         log.info("Starting $implementationName subscriber on channel '${pubSubConfig.channelName}'")
         job = thread(isDaemon = true, priority = 1) {
-            subscribe(retryInterval)
+            subscribe()
         }
     }
 
@@ -38,7 +38,7 @@ abstract class PersistencePubSub(
         job?.interrupt()
     }
 
-    abstract fun subscribe(retryInterval: Long)
+    abstract fun subscribe()
     open suspend fun publishData(data: String): Result<*> {
         return Result.success(null)
     }

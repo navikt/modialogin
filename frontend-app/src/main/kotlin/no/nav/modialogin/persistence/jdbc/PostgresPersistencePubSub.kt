@@ -23,7 +23,7 @@ class PostgresPersistencePubSub(
         stmt.close()
     }
 
-    override fun subscribe(retryInterval: Long) {
+    override fun subscribe() {
         while (running) {
             var dataSource: HikariDataSource? = null
             var listener: PgConnection? = null
@@ -47,7 +47,7 @@ class PostgresPersistencePubSub(
                             }
                         }
                     }
-                    Thread.sleep(retryInterval)
+                    Thread.sleep(pubSubConfig.subRetryInterval)
                 }
             } catch (e: Exception) {
                 when (e) {
@@ -55,7 +55,7 @@ class PostgresPersistencePubSub(
                         log.warn("Error when subscribing to Postgres pub/sub", e)
                         if (listener != null) dataSource?.evictConnection(listener)
                         dataSource?.close()
-                        Thread.sleep(retryInterval)
+                        Thread.sleep(pubSubConfig.subRetryInterval)
                     }
                     is SQLException -> {
                         log.warn(

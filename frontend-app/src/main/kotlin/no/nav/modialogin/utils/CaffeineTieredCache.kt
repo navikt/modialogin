@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Expiry
 import com.github.benmanes.caffeine.cache.Ticker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -83,10 +84,13 @@ class CaffeineTieredCache<KEY, VALUE>(
     private suspend fun doSubscribeToPersistentUpdates() {
         if (persistence.pubSub == null) return
 
-        FlowTransformer.mapData(persistence.pubSub.startSubscribing(), EncodedSubMessage.serializer()) {
-            val key = persistence.decodeKey(it.key)
-            val value = persistence.decodeValue(it.value)
-            SubMessage(key, value, it.expiry)
+        val subscription = persistence.pubSub.startSubscribing()
+
+        subscription.map {
+            val decodedMessage = Encoding.decode(EncodedSubMessage.serializer(), it)
+            val key = persistence.decodeKey(decodedMessage.key)
+            val value = persistence.decodeValue(decodedMessage.value)
+            SubMessage(key, value, decodedMessage.expiry)
         }.collect { (key, value, expiry) ->
             val ttl = expiry.epochSeconds - Clock.System.now().epochSeconds
             if (checkIfNewValueFromPubSubShouldBeStored(key, ttl)) {

@@ -6,7 +6,6 @@ import com.github.dockerjava.api.model.PortBinding
 import com.github.dockerjava.api.model.Ports
 import org.testcontainers.containers.Container
 import org.testcontainers.containers.GenericContainer
-import redis.clients.jedis.HostAndPort
 
 abstract class RestartableTestContainer(val originalPort: Int) {
     protected lateinit var container: GenericContainer<*>

@@ -44,8 +44,9 @@ class FrontendAppConfig(
     val pubSubConfig: PubSubConfig? = ConditionalUtils.ifNotNull(
         getConfig("PUBSUB_CHANNEL_NAME"),
         getConfig("PUB_RETRY_INTERVAL")?.toLongOrNull() ?: 1000L,
+        getConfig("SUB_RETRY_INTERVAL")?.toLongOrNull() ?: 1000L,
         getConfig("PUB_MAX_RETRIES")?.toIntOrNull() ?: 10
-    ) { channelName, pubRetryInterval, pubMaxRetries -> PubSubConfig(channelName, pubRetryInterval = pubRetryInterval, pubMaxRetries = pubMaxRetries) }
+    ) { channelName, pubRetryInterval, subRetryInterval, pubMaxRetries -> PubSubConfig(channelName, pubRetryInterval = pubRetryInterval, subRetryInterval = subRetryInterval, pubMaxRetries = pubMaxRetries) }
 ) {
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
     val azureAd: AzureAdConfig = AzureAdConfig.load()
@@ -173,5 +174,6 @@ data class DatabaseConfig(
 data class PubSubConfig(
     val channelName: String,
     val pubRetryInterval: Long,
-    val pubMaxRetries: Int
+    val subRetryInterval: Long,
+    val pubMaxRetries: Int,
 )

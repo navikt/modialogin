@@ -48,7 +48,7 @@ class RedisPersistencePubSub(
         }
     }
 
-    override fun subscribe(retryInterval: Long) {
+    override fun subscribe() {
         while (running) {
             try {
                 val jedis = Jedis(redisConfig.host, redisConfig.port)
@@ -57,7 +57,7 @@ class RedisPersistencePubSub(
             } catch (e: Exception) {
                 log.error("Encountered an exception when subscribing to Redis", e)
             }
-            Thread.sleep(retryInterval)
+            Thread.sleep(pubSubConfig.subRetryInterval)
         }
     }
 }

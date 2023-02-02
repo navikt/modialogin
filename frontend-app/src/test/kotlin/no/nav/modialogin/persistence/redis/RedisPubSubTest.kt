@@ -32,9 +32,8 @@ class RedisPubSubTest : RedisTestUtils.WithRedis() {
         val ttl = 10.minutes
 
         GlobalScope.launch {
-            val sub = testUtils.receiveRedis.pubSub!!.startSubscribing(1000L)
+            val sub = testUtils.receiveRedis.pubSub!!.startSubscribing()
             sub.onEach {
-                println(it)
                 val decodedMessage = Encoding.decode(EncodedSubMessage.serializer(), it)
                 val key = Encoding.decode(String.serializer(), decodedMessage.key)
                 val value = Encoding.decode(DummyChannelValue.serializer(), decodedMessage.value)
