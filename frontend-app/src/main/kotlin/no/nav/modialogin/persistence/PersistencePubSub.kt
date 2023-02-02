@@ -27,7 +27,7 @@ abstract class PersistencePubSub(
     private fun doStart() {
         running = true
         log.info("Starting $implementationName subscriber on channel '${pubSubConfig.channelName}'")
-        job = thread(isDaemon = true, priority = 1) {
+        job = thread(isDaemon = true, priority = 5) {
             subscribe()
         }
     }
