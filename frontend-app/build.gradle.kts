@@ -70,6 +70,7 @@ tasks.withType<KotlinCompile> {
 
 tasks.test {
     useJUnitPlatform()
+    testLogging.showStandardStreams = true
     testLogging {
         events("passed", "skipped", "failed")
     }
