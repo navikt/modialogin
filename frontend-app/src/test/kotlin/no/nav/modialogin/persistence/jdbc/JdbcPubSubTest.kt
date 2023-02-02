@@ -24,7 +24,7 @@ class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
         val channel = Channel<DummySubMessage<String, DummyChannelValue>>()
 
         val scope = "test"
-
+        delay(1000L)
         val testUtils = PostgresTestUtils.getIntegrationTestUtils(container, scope, String.serializer(), DummyChannelValue.serializer(), enablePubSub = true)
 
         val firstKey = "first"
