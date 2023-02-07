@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
+import kotlinx.serialization.builtins.serializer
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.Logging.tjenestekallLogger
+import no.nav.modialogin.features.authfeature.TokenPrincipal
 import no.nav.modialogin.persistence.EncodedSubMessage
 import no.nav.modialogin.persistence.Persistence
 import no.nav.modialogin.persistence.SubMessage
@@ -99,15 +101,19 @@ class CaffeineTieredCache<KEY, VALUE>(
     private fun decodeSubMessage(message: String): SubMessage<KEY, VALUE>? {
         return try {
             val decodedMessage = Encoding.decode(EncodedSubMessage.serializer(), message)
-            val key = persistence.decodeKey(decodedMessage.key)
-            val value = persistence.decodeValue(decodedMessage.value)
-            SubMessage(key, value, decodedMessage.expiry)
+            if (checkIfMessageIsCorrectScope(decodedMessage.scope)) {
+                val key = persistence.decodeKey(decodedMessage.key)
+                val value = persistence.decodeValue(decodedMessage.value)
+                SubMessage(key, value, decodedMessage.expiry)
+            } else null
         } catch (e: Exception) {
             tjenestekallLogger.info("Failed to decode submessage: $message") // TODO: Fjern logging
             log.error("Encountered exception when decoding submessage")
             null
         }
     }
+
+    private fun checkIfMessageIsCorrectScope(scope: String) = scope == persistence.scope
 
     private fun checkIfNewValueFromPubSubShouldBeStored(key: KEY, ttl: Long): Boolean {
         localCache.getIfPresent(key) ?: return true
