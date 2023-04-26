@@ -16,8 +16,8 @@ val kotlinx_version: String by project
 
 plugins {
     id("setup.repository")
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("jvm") version "1.8.21"
+    kotlin("plugin.serialization") version "1.8.21"
 }
 
 dependencies {
@@ -40,7 +40,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("redis.clients:jedis:$jedis_version")
-    implementation("no.nav.common:token-client:$java_common_version")
+    implementation("com.github.navikt.common-java-modules:token-client:$java_common_version")
     implementation("com.github.navikt.modia-common-utils:crypto:$modia_common_version")
     implementation("com.github.navikt.modia-common-utils:ktor-utils:$modia_common_version")
     implementation("com.github.navikt.modia-common-utils:kotlin-utils:$modia_common_version")
@@ -61,11 +61,11 @@ group = "no.nav"
 version = ""
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.test {

@@ -9,8 +9,8 @@ val junit_version: String by project
 plugins {
     application
     id("setup.repository")
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("jvm") version "1.8.21"
+    kotlin("plugin.serialization") version "1.8.21"
 }
 
 dependencies {
@@ -18,7 +18,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.22")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.31")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("redis.clients:jedis:$jedis_version")
 
@@ -29,11 +29,11 @@ group = "no.nav"
 version = ""
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.test {

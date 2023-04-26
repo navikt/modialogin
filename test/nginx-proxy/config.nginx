@@ -1,21 +1,21 @@
 location  /frontend/proxy/open-endpoint/ {
-    proxy_pass http://echo-server/;
+    proxy_pass http://echo-server:8080/;
 }
 
 location  /frontend/proxy/open-endpoint-no-cookie/ {
     proxy_set_header Cookie "";
-    proxy_pass http://echo-server/;
+    proxy_pass http://echo-server:8080/;
 }
 
 location  /frontend/proxy/protected-endpoint/ {
     access_by_lua_file oidc_protected.lua;
-    proxy_pass http://echo-server/;
+    proxy_pass http://echo-server:8080/;
 }
 
 location  /frontend/proxy/protected-endpoint-with-cookie-rewrite/ {
     access_by_lua_file oidc_protected.lua;
     proxy_set_header Cookie "ID_token=$cookie_modia_ID_token;";
-    proxy_pass http://echo-server/;
+    proxy_pass http://echo-server:8080/;
 }
 
 location /frontend/env-data {
