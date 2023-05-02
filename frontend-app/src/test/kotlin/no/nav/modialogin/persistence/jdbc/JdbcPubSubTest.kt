@@ -52,7 +52,7 @@ class JdbcPubSubTest : PostgresTestUtils.WithPostgres() {
 
         container!!.restart()
 
-        delay(2000L)
+        delay(4000L)
         testUtils.sendPostgres.doPut(secondKey, testValue, ttl)
 
         val messages = channel.consumeAsFlow().take(2).toList()

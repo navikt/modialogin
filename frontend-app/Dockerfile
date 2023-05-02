@@ -1,4 +1,4 @@
-FROM navikt/java:11
+FROM navikt/java:17
 
 COPY java-debug.sh /init-scripts/08-java-debug.sh
 
