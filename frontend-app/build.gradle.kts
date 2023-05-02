@@ -10,11 +10,14 @@ val prometheus_version: String by project
 val modia_common_version: String by project
 val junit_version: String by project
 val unleash_version: String by project
+val test_containers_version: String by project
+val postgres_version: String by project
+val kotlinx_version: String by project
 
 plugins {
     id("setup.repository")
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("jvm") version "1.8.21"
+    kotlin("plugin.serialization") version "1.8.21"
 }
 
 dependencies {
@@ -37,7 +40,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("redis.clients:jedis:$jedis_version")
-    implementation("no.nav.common:token-client:$java_common_version")
+    implementation("com.github.navikt.common-java-modules:token-client:$java_common_version")
     implementation("com.github.navikt.modia-common-utils:crypto:$modia_common_version")
     implementation("com.github.navikt.modia-common-utils:ktor-utils:$modia_common_version")
     implementation("com.github.navikt.modia-common-utils:kotlin-utils:$modia_common_version")
@@ -47,7 +50,10 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
     implementation("no.nav:vault-jdbc:1.3.10")
     implementation("org.flywaydb:flyway-core:9.8.3")
-
+    implementation("org.postgresql:postgresql:$postgres_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinx_version")
+    testImplementation("org.testcontainers:testcontainers:$test_containers_version")
+    testImplementation("org.testcontainers:postgresql:$test_containers_version")
     testImplementation("org.junit.jupiter:junit-jupiter:$junit_version")
 }
 
@@ -55,11 +61,11 @@ group = "no.nav"
 version = ""
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.test {

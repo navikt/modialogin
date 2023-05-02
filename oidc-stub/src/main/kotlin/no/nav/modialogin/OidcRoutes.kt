@@ -63,7 +63,7 @@ fun Application.oidc(
                     )
                 }
                 get("jwks.json") {
-                    call.respond(jwks.toJSONObject())
+                    call.respond(jwks.toString())
                 }
             }
 

@@ -9,21 +9,20 @@ import kotlinx.serialization.json.Json
 import no.nav.common.token_client.utils.env.AzureAdEnvironmentVariables
 import no.nav.modialogin.Logging.log
 import no.nav.modialogin.features.authfeature.OidcClient
-import no.nav.modialogin.utils.AuthJedisPool
+import no.nav.modialogin.utils.RedisConfig
 import no.nav.personoversikt.common.utils.ConditionalUtils
 import no.nav.personoversikt.common.utils.EnvUtils.getConfig
 import no.nav.personoversikt.common.utils.EnvUtils.getRequiredConfig
 import java.io.File
 
-class FrontendAppConfig {
-    val appName: String = getRequiredConfig("APP_NAME")
-    val appMode: AppMode = AppMode(getConfig("APP_MODE"))
-    val appVersion: String = getRequiredConfig("APP_VERSION")
-    val cspReportOnly: Boolean = getConfig("CSP_REPORT_ONLY")?.toBooleanStrictOrNull() ?: false
-    val cspDirectives: String = getConfig("CSP_DIRECTIVES") ?: "default src 'self'"
-    val referrerPolicy: String = getConfig("REFERRER_POLICY") ?: "origin"
-    val proxyConfigFile: String = getConfig("PROXY_CONFIG_FILE") ?: "/proxy-config.json"
-    val azureAd: AzureAdConfig = AzureAdConfig.load()
+class FrontendAppConfig(
+    val appName: String = getRequiredConfig("APP_NAME"),
+    val appMode: AppMode = AppMode(getConfig("APP_MODE")),
+    val appVersion: String = getRequiredConfig("APP_VERSION"),
+    val cspReportOnly: Boolean = getConfig("CSP_REPORT_ONLY")?.toBooleanStrictOrNull() ?: false,
+    val cspDirectives: String = getConfig("CSP_DIRECTIVES") ?: "default src 'self'",
+    val referrerPolicy: String = getConfig("REFERRER_POLICY") ?: "origin",
+    val proxyConfigFile: String = getConfig("PROXY_CONFIG_FILE") ?: "/proxy-config.json",
     val unleash: Unleash? = getConfig("UNLEASH_API_URL")?.let {
         val config = UnleashConfig
             .builder()
@@ -31,23 +30,33 @@ class FrontendAppConfig {
             .unleashAPI(it)
             .build()
         DefaultUnleash(config)
-    }
-    val cdnBucketUrl: String? = getConfig("CDN_BUCKET_URL")
-
-    val redis: AuthJedisPool? = ConditionalUtils.ifNotNull(
+    },
+    val cdnBucketUrl: String? = getConfig("CDN_BUCKET_URL"),
+    val redisConfig: RedisConfig? = ConditionalUtils.ifNotNull(
         getConfig("REDIS_HOST"),
         getConfig("REDIS_PASSWORD"),
-    ) { host, password -> AuthJedisPool(host, password) }
-
+    ) { host, password -> RedisConfig(host, 6379, password) },
     val database: DatabaseConfig? = ConditionalUtils.ifNotNull(
         getConfig("DATABASE_JDBC_URL"),
-        getConfig("VAULT_MOUNTPATH")
-    ) { url, mountPath -> DatabaseConfig(url, mountPath) }
+        getConfig("VAULT_MOUNTPATH"),
+    ) { url, mountPath -> DatabaseConfig(url, mountPath) },
+    val enablePersistencePubSub: Boolean = getConfig("ENABLE_PERSISTENCE_PUB_SUB")?.toBooleanStrict() ?: false,
+    val pubSubConfig: PubSubConfig? = ConditionalUtils.ifNotNull(
+        getConfig("PUBSUB_CHANNEL_NAME"),
+        getConfig("PUB_RETRY_INTERVAL")?.toLongOrNull() ?: 1000L,
+        getConfig("SUB_RETRY_INTERVAL")?.toLongOrNull() ?: 1000L,
+        getConfig("PUB_MAX_RETRIES")?.toIntOrNull() ?: 10
+    ) { channelName, pubRetryInterval, subRetryInterval, pubMaxRetries -> PubSubConfig(channelName, pubRetryInterval = pubRetryInterval, subRetryInterval = subRetryInterval, pubMaxRetries = pubMaxRetries) }
+) {
     val proxyConfig: List<ProxyConfig> = readProxyConfig()
+    val azureAd: AzureAdConfig = AzureAdConfig.load()
 
     init {
-        check(redis != null || database != null) {
-            "Could not find configuration for redis or PostgreSQL."
+        check(redisConfig != null || database != null) {
+            "Could not find configuration for Redis or PostgreSQL."
+        }
+        if (enablePersistencePubSub && pubSubConfig == null) {
+            throw IllegalStateException("Make sure you provide the PUBSUB_CHANNEL_NAME in order to enable Pub/Sub")
         }
     }
 
@@ -159,5 +168,12 @@ class AzureAdConfig(
 
 data class DatabaseConfig(
     val jdbcUrl: String,
-    val vaultMountpath: String,
+    val vaultMountpath: String? = null,
+)
+
+data class PubSubConfig(
+    val channelName: String,
+    val pubRetryInterval: Long,
+    val subRetryInterval: Long,
+    val pubMaxRetries: Int,
 )

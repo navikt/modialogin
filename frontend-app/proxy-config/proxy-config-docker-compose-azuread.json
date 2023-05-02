@@ -1,37 +1,37 @@
 [
   {
     "prefix": "api",
-    "url": "http://echo-server/modiapersonoversikt-api",
+    "url": "http://echo-server:8080/modiapersonoversikt-api",
     "rewriteDirectives": [
       "SET_ON_BEHALF_OF_TOKEN prod-fss personoversikt modiapersonoversikt-api"
     ]
   },
   {
     "prefix": "proxy/app1",
-    "url": "http://echo-server/appname1"
+    "url": "http://echo-server:8080/appname1"
   },
   {
     "prefix": "proxy/app2",
-    "url": "http://echo-server/appname2"
+    "url": "http://echo-server:8080/appname2"
   },
   {
     "prefix": "proxy/open-endpoint",
-    "url": "http://echo-server"
+    "url": "http://echo-server:8080"
   },
   {
     "prefix": "proxy/open-endpoint-no-cookie",
-    "url": "http://echo-server",
+    "url": "http://echo-server:8080",
     "rewriteDirectives": [
       "SET_HEADER Cookie ''"
     ]
   },
   {
     "prefix": "proxy/protected-endpoint",
-    "url": "http://echo-server"
+    "url": "http://echo-server:8080"
   },
   {
     "prefix": "proxy/protected-endpoint-with-cookie-rewrite",
-    "url": "http://echo-server",
+    "url": "http://echo-server:8080",
     "rewriteDirectives": [
       "SET_HEADER Cookie 'ID_token=$cookie{loginapp_ID_token}'",
       "SET_HEADER Authroization '$cookie{loginapp_ID_token}'"

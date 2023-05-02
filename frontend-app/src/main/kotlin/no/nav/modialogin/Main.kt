@@ -27,7 +27,7 @@ fun startApplication() {
         scope = "session",
         config = config,
         keySerializer = String.serializer(),
-        valueSerializer = TokenPrincipal.serializer()
+        valueSerializer = TokenPrincipal.serializer(),
     )
     val bffProxyPersistence: Persistence<String, String> = PersistenceFactory.create(
         scope = "bffproxy",
