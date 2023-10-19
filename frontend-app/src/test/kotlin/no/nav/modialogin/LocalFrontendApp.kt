@@ -16,7 +16,7 @@ fun main() {
     System.setProperty("REFERRER_POLICY", "no-referrer")
     System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
 
-    System.setProperty("UNLEASH_API_URL", "http://localhost:8080/unleash")
+    System.setProperty("UNLEASH_SERVER_API_URL", "http://localhost:8080/unleash")
     System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
 
     setupRedis()

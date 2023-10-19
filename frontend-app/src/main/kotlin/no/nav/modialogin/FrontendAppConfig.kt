@@ -23,11 +23,15 @@ class FrontendAppConfig(
     val cspDirectives: String = getConfig("CSP_DIRECTIVES") ?: "default src 'self'",
     val referrerPolicy: String = getConfig("REFERRER_POLICY") ?: "origin",
     val proxyConfigFile: String = getConfig("PROXY_CONFIG_FILE") ?: "/proxy-config.json",
-    val unleash: Unleash? = getConfig("UNLEASH_API_URL")?.let {
+    val unleash: Unleash? = getConfig("UNLEASH_SERVER_API_URL")?.let {
         val config = UnleashConfig
             .builder()
             .appName(getRequiredConfig("APP_NAME"))
-            .unleashAPI(it)
+            .unleashAPI("$it/api")
+            .apiKey(getRequiredConfig("UNLEASH_SERVER_API_TOKEN"))
+            .environment(System.getProperty("UNLEASH_ENVIRONMENT"))
+            .instanceId(System.getProperty("APP_ENVIRONMENT_NAME", "local"))
+            .synchronousFetchOnInitialisation(true)
             .build()
         DefaultUnleash(config)
     },
