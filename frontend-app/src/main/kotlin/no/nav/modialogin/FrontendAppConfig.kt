@@ -31,7 +31,6 @@ class FrontendAppConfig(
             .apiKey(getRequiredConfig("UNLEASH_SERVER_API_TOKEN"))
             .environment(System.getProperty("UNLEASH_ENVIRONMENT"))
             .instanceId(System.getProperty("APP_ENVIRONMENT_NAME", "local"))
-            .synchronousFetchOnInitialisation(true)
             .build()
         DefaultUnleash(config)
     },

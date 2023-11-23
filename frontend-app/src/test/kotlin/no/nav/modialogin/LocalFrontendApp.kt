@@ -17,6 +17,9 @@ fun main() {
     System.setProperty("PROXY_CONFIG_FILE", "./frontend-app/proxy-config/proxy-config.json")
 
     System.setProperty("UNLEASH_SERVER_API_URL", "http://localhost:8080/unleash")
+    System.setProperty("UNLEASH_SERVER_API_TOKEN", "token")
+    System.setProperty("UNLEASH_ENVIRONMENT", "development")
+    System.setProperty("APP_ENVIRONMENT_NAME", "local")
     System.setProperty("CDN_BUCKET_URL", "http://localhost:8091/cdn/frontend/")
 
     setupRedis()

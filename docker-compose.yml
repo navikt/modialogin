@@ -9,7 +9,10 @@ x-environment: &commonFrontendEnv
   CSP_REPORT_ONLY: "true"
   CSP_DIRECTIVES: "default-src 'self'; script-src 'self';"
   REFERRER_POLICY: "no-referrer"
-  UNLEASH_SERVER_API_URL: "https://personoversikt-unleash-api.nav.cloud.nais.io"
+  UNLEASH_SERVER_API_URL: "http://oidc-stub:8080/unleash"
+  UNLEASH_SERVER_API_TOKEN : "token"
+  UNLEASH_ENVIRONMENT: "development"
+  APP_ENVIRONMENT_NAME: "local"
 
   # Dummy JWK randomly generated on a test startup
   AZURE_APP_CLIENT_ID: "foo"
@@ -37,6 +40,7 @@ services:
       - oidc-stub
       - echo-server
       - redis
+      - cdnstub
     environment:
       <<: *commonFrontendEnv
       # Redis configuration
@@ -55,6 +59,7 @@ services:
       - oidc-stub
       - echo-server
       - database
+      - cdnstub
     environment:
       <<: *commonFrontendEnv
       # Database configuration

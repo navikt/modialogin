@@ -30,7 +30,7 @@ fun Application.unleash(vararg features: Pair<String, Boolean>) {
     )
 
     routing {
-        route("unleash") {
+        route("unleash/api") {
             get("client/features") {
                 call.respond(features)
             }
