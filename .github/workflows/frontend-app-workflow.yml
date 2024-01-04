@@ -15,8 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}/modialogin-frontend:${{ github.sha }}
-  BETA_IMAGE: ghcr.io/${{ github.repository }}/modialogin-frontend:${{ github.sha }}-beta
   CI: true
   TZ: Europe/Oslo
 jobs:
@@ -25,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
@@ -45,17 +45,23 @@ jobs:
         run: make integrationtest-teardown
       - name: Publish beta-image
         if: github.ref == 'refs/heads/dev'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
-          docker build --tag ${BETA_IMAGE} frontend-app
-          docker push ${BETA_IMAGE}
+        uses: nais/docker-build-push@v0
+        id: docker-build-push-beta
+        with:
+          team: personoversikt
+          tag: ${{ github.sha }}-beta
+          docker_context: frontend-app
+          dockerfile: 'frontend-app/Dockerfile'
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
       - name: Publish image
         if: github.ref == 'refs/heads/master'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_REPOSITORY} --password-stdin
-          docker build --tag ${IMAGE} frontend-app
-          docker push ${IMAGE}
+        uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: personoversikt
+          tag: ${{ github.sha }}
+          docker_context: frontend-app
+          dockerfile: 'frontend-app/Dockerfile'
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
