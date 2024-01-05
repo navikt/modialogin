@@ -50,6 +50,7 @@ jobs:
         with:
           team: personoversikt
           tag: ${{ github.sha }}-beta
+          image_suffix: 'beta'
           docker_context: frontend-app
           dockerfile: 'frontend-app/Dockerfile'
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
