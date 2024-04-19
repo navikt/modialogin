@@ -49,7 +49,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstash_version")
     implementation("no.nav:vault-jdbc:1.3.10")
-    implementation("org.flywaydb:flyway-core:9.8.3")
+    implementation("org.flywaydb:flyway-core:10.11.1")
     implementation("org.postgresql:postgresql:$postgres_version")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinx_version")
     testImplementation("org.testcontainers:testcontainers:$test_containers_version")
