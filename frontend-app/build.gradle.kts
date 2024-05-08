@@ -16,7 +16,7 @@ val kotlinx_version: String by project
 
 plugins {
     id("setup.repository")
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.9.24"
     kotlin("plugin.serialization") version "1.8.21"
 }
 
