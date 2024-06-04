@@ -80,7 +80,7 @@ private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config
         }
         install(Logging) {
             level = LogLevel.HEADERS
-            logger = object: Logger {
+            logger = object : Logger {
                 override fun log(message: String) {
                     no.nav.modialogin.Logging.tjenestekallLogger.info(message)
                 }
@@ -131,7 +131,8 @@ private suspend inline fun HttpClient.proxyRequest(
                     !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
                             !key.equals(HttpHeaders.ContentLength, ignoreCase = true) &&
                             !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true) &&
-                            !key.equals(HttpHeaders.Upgrade, ignoreCase = true)
+                            !key.equals(HttpHeaders.Upgrade, ignoreCase = true) &&
+                            !key.equals(HttpHeaders.Host, ignoreCase = true)
                 }
                 .forEach { key, value ->
                     appendAll(key, value)
