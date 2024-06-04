@@ -3,6 +3,9 @@ package no.nav.modialogin.features.bffproxyfeature
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -69,10 +72,18 @@ private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config
             // Setting infinte socket timeout, thus allowing source system to propagate its own timeout exception
             socketTimeout = 0
         }
-        followRedirects = false
+        followRedirects = true
         defaultRequest {
             headers {
                 append(HttpHeaders.XCorrelationId, KotlinUtils.callId())
+            }
+        }
+        install(Logging) {
+            level = LogLevel.HEADERS
+            logger = object: Logger {
+                override fun log(message: String) {
+                    no.nav.modialogin.Logging.tjenestekallLogger.info(message)
+                }
             }
         }
     }
