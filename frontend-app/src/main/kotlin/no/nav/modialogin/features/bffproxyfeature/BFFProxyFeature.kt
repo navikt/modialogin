@@ -72,7 +72,7 @@ private fun Route.createProxyHandler(appName: String, bffProxy: BFFProxy, config
             // Setting infinte socket timeout, thus allowing source system to propagate its own timeout exception
             socketTimeout = 0
         }
-        followRedirects = true
+        followRedirects = false
         defaultRequest {
             headers {
                 append(HttpHeaders.XCorrelationId, KotlinUtils.callId())
